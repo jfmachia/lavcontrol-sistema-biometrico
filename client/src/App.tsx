@@ -12,6 +12,7 @@ import UsersView from "@/components/users-view";
 import DevicesView from "@/components/devices-view";
 import LogsView from "@/components/logs-view";
 import AlertsView from "@/components/alerts-view";
+import Logs from "@/pages/logs";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -98,7 +99,7 @@ function Router() {
       
       <Route path="/logs">
         <ProtectedRoute>
-          <LogsView />
+          <Logs />
         </ProtectedRoute>
       </Route>
       

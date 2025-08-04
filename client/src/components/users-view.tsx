@@ -13,6 +13,7 @@ interface FacialRecognizedUser {
   id: number;
   name: string;
   email: string;
+  profileImage?: string;
   isActive: boolean;
   createdAt: string;
 }
@@ -161,9 +162,17 @@ export default function UsersView() {
                     <tr key={user.id}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="h-10 w-10 bg-gray-300 rounded-full flex items-center justify-center">
-                            <User className="h-5 w-5 text-gray-600" />
-                          </div>
+                          {user.profileImage ? (
+                            <img 
+                              src={user.profileImage} 
+                              alt={user.name}
+                              className="h-10 w-10 rounded-full object-cover border border-gray-200"
+                            />
+                          ) : (
+                            <div className="h-10 w-10 bg-gray-300 rounded-full flex items-center justify-center">
+                              <User className="h-5 w-5 text-gray-600" />
+                            </div>
+                          )}
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900">{user.name}</div>
                             <div className="text-sm text-gray-500">ID: {user.id}</div>

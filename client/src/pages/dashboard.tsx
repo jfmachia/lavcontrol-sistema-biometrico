@@ -10,6 +10,11 @@ interface RecentActivity {
   type: "access" | "device" | "user" | "alert";
   message: string;
   timestamp: string;
+  user?: {
+    id: number;
+    name: string;
+    profileImage?: string;
+  };
 }
 
 interface DeviceStatus {
@@ -87,6 +92,11 @@ export default function Dashboard() {
           ? `${log.user.name} ${log.status === "success" ? "acessou" : "tentou acessar"} ${log.device?.name || "dispositivo"}`
           : `Tentativa de acesso ${log.status === "success" ? "bem-sucedida" : "negada"} em ${log.device?.name || "dispositivo"}`,
         timestamp: log.timestamp,
+        user: log.user ? {
+          id: log.user.id,
+          name: log.user.name,
+          profileImage: log.user.profileImage
+        } : undefined,
       })) as RecentActivity[];
     },
   });
@@ -135,7 +145,17 @@ export default function Dashboard() {
                   
                   return (
                     <div key={activity.id || index} className="flex items-center">
-                      <div className={`h-2 w-2 ${config.color} rounded-full mr-3`}></div>
+                      <div className="flex items-center mr-3">
+                        {activity.user?.profileImage ? (
+                          <img 
+                            src={activity.user.profileImage} 
+                            alt={activity.user.name}
+                            className="h-8 w-8 rounded-full object-cover border border-gray-200"
+                          />
+                        ) : (
+                          <div className={`h-2 w-2 ${config.color} rounded-full`}></div>
+                        )}
+                      </div>
                       <div className="flex-1">
                         <p className="text-sm text-gray-900">{activity.message}</p>
                         <p className="text-xs text-gray-500">{getTimeAgo(activity.timestamp)}</p>
