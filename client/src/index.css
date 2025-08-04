@@ -57,3 +57,35 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+/* Custom scrollbar styles for hi-tech look */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-track-transparent {
+  scrollbar-color: transparent transparent;
+}
+
+.scrollbar-thumb-blue-400\/30 {
+  scrollbar-color: rgba(96, 165, 250, 0.3) transparent;
+}
+
+/* Webkit scrollbars for Chrome/Safari */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-track-transparent::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thumb-blue-400\/30::-webkit-scrollbar-thumb {
+  background-color: rgba(96, 165, 250, 0.3);
+  border-radius: 3px;
+}
+
+.scrollbar-thumb-blue-400\/30::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(96, 165, 250, 0.5);
+}

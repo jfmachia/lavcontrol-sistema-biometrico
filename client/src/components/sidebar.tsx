@@ -8,7 +8,7 @@ import { Link } from "wouter";
 const navItems = [
   { path: "/dashboard", icon: BarChart3, label: "Dashboard" },
   { path: "/users", icon: Users, label: "Reconhecidos" },
-  { path: "/devices", icon: Cpu, label: "Dispositivos" },
+  { path: "/devices", icon: Cpu, label: "Lojas" },
   { path: "/logs", icon: ClipboardList, label: "Logs de Acesso" },
   { path: "/alerts", icon: Bell, label: "Alertas" },
 ];

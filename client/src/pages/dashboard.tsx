@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DashboardStats from "@/components/dashboard-stats";
 import TrafficChart from "@/components/traffic-chart";
+import RealTimeAccess from "@/components/real-time-access";
 import { AuthService } from "@/lib/auth";
 import { Clock, CheckCircle, AlertCircle, Cpu } from "lucide-react";
 
@@ -76,9 +77,9 @@ export default function Dashboard() {
   });
 
   const { data: logs, isLoading: logsLoading } = useQuery({
-    queryKey: ["/api/access-logs", { limit: 5 }],
+    queryKey: ["/api/access-logs", { limit: 10 }],
     queryFn: async () => {
-      const response = await fetch("/api/access-logs?limit=5", {
+      const response = await fetch("/api/access-logs?limit=10", {
         headers: AuthService.getAuthHeaders(),
       });
       if (!response.ok) throw new Error("Failed to fetch recent logs");
@@ -89,8 +90,8 @@ export default function Dashboard() {
         id: log.id,
         type: log.status === "success" ? "access" : "alert",
         message: log.user 
-          ? `${log.user.name} ${log.status === "success" ? "acessou" : "tentou acessar"} ${log.device?.name || "dispositivo"}`
-          : `Tentativa de acesso ${log.status === "success" ? "bem-sucedida" : "negada"} em ${log.device?.name || "dispositivo"}`,
+          ? `${log.user.name} ${log.status === "success" ? "acessou" : "tentou acessar"} ${log.device?.store?.name || log.device?.name || "loja"}`
+          : `Tentativa de acesso ${log.status === "success" ? "bem-sucedida" : "negada"} em ${log.device?.store?.name || log.device?.name || "loja"}`,
         timestamp: log.timestamp,
         user: log.user ? {
           id: log.user.id,
@@ -102,63 +103,74 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950 p-6">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-sm text-gray-600">Visão geral do sistema de controle de acesso</p>
+        <div className="flex items-center gap-4 mb-2">
+          <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
+          <h1 className="text-3xl font-bold text-white">Dashboard de Controle</h1>
+        </div>
+        <p className="text-blue-300/70">Sistema de monitoramento em tempo real</p>
       </div>
 
       <DashboardStats />
 
-      <div className="mb-6">
-        <TrafficChart />
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+        <div className="xl:col-span-2">
+          <TrafficChart />
+        </div>
+        <div>
+          <RealTimeAccess />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="bg-gradient-to-br from-slate-900/50 to-blue-900/30 border-slate-700/50 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle>Atividade Recente</CardTitle>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Clock className="h-5 w-5 text-blue-400" />
+              Atividade Recente
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {logsLoading ? (
               <div className="space-y-4">
                 {[...Array(4)].map((_, i) => (
                   <div key={i} className="animate-pulse flex items-center">
-                    <div className="h-2 w-2 bg-gray-200 rounded-full mr-3"></div>
+                    <div className="h-2 w-2 bg-blue-400/20 rounded-full mr-3"></div>
                     <div className="flex-1 space-y-2">
-                      <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-                      <div className="h-2 bg-gray-200 rounded w-1/4"></div>
+                      <div className="h-3 bg-blue-400/20 rounded w-3/4"></div>
+                      <div className="h-2 bg-blue-400/20 rounded w-1/4"></div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : logs?.length === 0 ? (
               <div className="text-center py-8">
-                <Clock className="mx-auto h-8 w-8 text-gray-400" />
-                <p className="mt-2 text-sm text-gray-500">Nenhuma atividade recente</p>
+                <Clock className="mx-auto h-8 w-8 text-blue-400/60" />
+                <p className="mt-2 text-sm text-blue-300/60">Nenhuma atividade recente</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3 max-h-80 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-blue-400/30">
                 {logs?.map((activity, index) => {
                   const config = getActivityIcon(activity.type);
                   const Icon = config.icon;
                   
                   return (
-                    <div key={activity.id || index} className="flex items-center">
+                    <div key={activity.id || index} className="flex items-center p-2 rounded-lg hover:bg-white/5 transition-colors">
                       <div className="flex items-center mr-3">
                         {activity.user?.profileImage ? (
                           <img 
                             src={activity.user.profileImage} 
                             alt={activity.user.name}
-                            className="h-8 w-8 rounded-full object-cover border border-gray-200"
+                            className="h-8 w-8 rounded-full object-cover border border-blue-400/30"
                           />
                         ) : (
                           <div className={`h-2 w-2 ${config.color} rounded-full`}></div>
                         )}
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm text-gray-900">{activity.message}</p>
-                        <p className="text-xs text-gray-500">{getTimeAgo(activity.timestamp)}</p>
+                        <p className="text-sm text-white">{activity.message}</p>
+                        <p className="text-xs text-blue-300/60">{getTimeAgo(activity.timestamp)}</p>
                       </div>
                     </div>
                   );
@@ -168,9 +180,12 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gradient-to-br from-slate-900/50 to-indigo-900/30 border-slate-700/50 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle>Status dos Dispositivos</CardTitle>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Cpu className="h-5 w-5 text-indigo-400" />
+              Status das Lojas
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {devicesLoading ? (
@@ -178,40 +193,40 @@ export default function Dashboard() {
                 {[...Array(4)].map((_, i) => (
                   <div key={i} className="animate-pulse flex items-center justify-between">
                     <div className="flex items-center">
-                      <div className="h-3 w-3 bg-gray-200 rounded-full mr-3"></div>
+                      <div className="h-3 w-3 bg-indigo-400/20 rounded-full mr-3"></div>
                       <div className="space-y-2">
-                        <div className="h-3 bg-gray-200 rounded w-24"></div>
-                        <div className="h-2 bg-gray-200 rounded w-16"></div>
+                        <div className="h-3 bg-indigo-400/20 rounded w-24"></div>
+                        <div className="h-2 bg-indigo-400/20 rounded w-16"></div>
                       </div>
                     </div>
-                    <div className="h-5 bg-gray-200 rounded w-16"></div>
+                    <div className="h-5 bg-indigo-400/20 rounded w-16"></div>
                   </div>
                 ))}
               </div>
             ) : devices?.length === 0 ? (
               <div className="text-center py-8">
-                <Cpu className="mx-auto h-8 w-8 text-gray-400" />
-                <p className="mt-2 text-sm text-gray-500">Nenhum dispositivo cadastrado</p>
+                <Cpu className="mx-auto h-8 w-8 text-indigo-400/60" />
+                <p className="mt-2 text-sm text-indigo-300/60">Nenhuma loja cadastrada</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {devices?.slice(0, 4).map((device) => {
                   const statusConfig = getStatusConfig(device.status);
                   
                   return (
-                    <div key={device.id} className="flex items-center justify-between">
+                    <div key={device.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-white/5 transition-colors">
                       <div className="flex items-center">
                         <div className={`h-3 w-3 ${statusConfig.dotColor} rounded-full mr-3`}></div>
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{device.name}</p>
-                          <p className="text-xs text-gray-500">{device.deviceId}</p>
+                          <p className="text-sm font-medium text-white">{device.store?.name || device.name}</p>
+                          <p className="text-xs text-indigo-300/60">{device.deviceId}</p>
                         </div>
                       </div>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        statusConfig.variant === "default" ? "bg-green-100 text-green-800" :
-                        statusConfig.variant === "destructive" ? "bg-red-100 text-red-800" :
-                        statusConfig.variant === "secondary" ? "bg-yellow-100 text-yellow-800" :
-                        "bg-gray-100 text-gray-800"
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                        statusConfig.variant === "default" ? "bg-green-500/20 text-green-400 border-green-400/30" :
+                        statusConfig.variant === "destructive" ? "bg-red-500/20 text-red-400 border-red-400/30" :
+                        statusConfig.variant === "secondary" ? "bg-yellow-500/20 text-yellow-400 border-yellow-400/30" :
+                        "bg-gray-500/20 text-gray-400 border-gray-400/30"
                       }`}>
                         {statusConfig.label}
                       </span>

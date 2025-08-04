@@ -101,6 +101,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Store routes
+  app.get("/api/stores", authenticateToken, async (req, res) => {
+    try {
+      const stores = await storage.getStores();
+      res.json(stores);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to fetch stores" });
+    }
+  });
+
+  app.post("/api/stores", authenticateToken, async (req, res) => {
+    try {
+      const store = await storage.createStore(req.body);
+      res.status(201).json(store);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to create store" });
+    }
+  });
+
   // Dashboard routes
   app.get("/api/dashboard/stats", authenticateToken, async (req, res) => {
     try {

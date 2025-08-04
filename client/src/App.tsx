@@ -9,7 +9,7 @@ import Register from "@/pages/register";
 import Dashboard from "@/pages/dashboard";
 import Sidebar from "@/components/sidebar";
 import UsersView from "@/components/users-view";
-import DevicesView from "@/components/devices-view";
+import StoresView from "@/components/stores-view";
 import LogsView from "@/components/logs-view";
 import AlertsView from "@/components/alerts-view";
 import Logs from "@/pages/logs";
@@ -93,7 +93,7 @@ function Router() {
       
       <Route path="/devices">
         <ProtectedRoute>
-          <DevicesView />
+          <StoresView />
         </ProtectedRoute>
       </Route>
       

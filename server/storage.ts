@@ -1,6 +1,6 @@
 import { 
-  users, devices, accessLogs, alerts,
-  type User, type InsertUser, type Device, type InsertDevice,
+  users, stores, devices, accessLogs, alerts,
+  type User, type InsertUser, type Store, type InsertStore, type Device, type InsertDevice,
   type AccessLog, type InsertAccessLog, type Alert, type InsertAlert
 } from "@shared/schema";
 import { db } from "./db";
@@ -15,12 +15,19 @@ export interface IStorage {
   getUsers(): Promise<User[]>;
   getFacialRecognizedUsers(): Promise<Pick<User, 'id' | 'name' | 'email' | 'isActive' | 'createdAt'>[]>;
   
+  // Stores
+  getStore(id: number): Promise<Store | undefined>;
+  createStore(store: InsertStore): Promise<Store>;
+  updateStore(id: number, store: Partial<InsertStore>): Promise<Store | undefined>;
+  getStores(): Promise<Store[]>;
+  getStoresByUser(userId: number): Promise<Store[]>;
+
   // Devices
   getDevice(id: number): Promise<Device | undefined>;
   getDeviceByDeviceId(deviceId: string): Promise<Device | undefined>;
   createDevice(device: InsertDevice): Promise<Device>;
   updateDevice(id: number, device: Partial<InsertDevice>): Promise<Device | undefined>;
-  getDevices(): Promise<Device[]>;
+  getDevices(): Promise<(Device & { store?: Store })[]>;
   updateDeviceStatus(deviceId: string, status: string, lastPing?: Date): Promise<void>;
   
   // Access Logs
@@ -124,8 +131,52 @@ export class DatabaseStorage implements IStorage {
     return device || undefined;
   }
 
-  async getDevices(): Promise<Device[]> {
-    return await db.select().from(devices).orderBy(desc(devices.createdAt));
+  async getDevices(): Promise<(Device & { store?: Store })[]> {
+    const devicesData = await db
+      .select()
+      .from(devices)
+      .leftJoin(stores, eq(devices.storeId, stores.id))
+      .orderBy(desc(devices.createdAt));
+
+    return devicesData.map(row => ({
+      ...row.devices,
+      store: row.stores || undefined,
+    }));
+  }
+
+  // Store methods
+  async getStore(id: number): Promise<Store | undefined> {
+    const [store] = await db.select().from(stores).where(eq(stores.id, id));
+    return store || undefined;
+  }
+
+  async createStore(insertStore: InsertStore): Promise<Store> {
+    const [store] = await db
+      .insert(stores)
+      .values(insertStore)
+      .returning();
+    return store;
+  }
+
+  async updateStore(id: number, updateData: Partial<InsertStore>): Promise<Store | undefined> {
+    const [store] = await db
+      .update(stores)
+      .set(updateData)
+      .where(eq(stores.id, id))
+      .returning();
+    return store || undefined;
+  }
+
+  async getStores(): Promise<Store[]> {
+    return await db.select().from(stores).orderBy(desc(stores.createdAt));
+  }
+
+  async getStoresByUser(userId: number): Promise<Store[]> {
+    return await db
+      .select()
+      .from(stores)
+      .where(eq(stores.userId, userId))
+      .orderBy(desc(stores.createdAt));
   }
 
   async updateDeviceStatus(deviceId: string, status: string, lastPing?: Date): Promise<void> {

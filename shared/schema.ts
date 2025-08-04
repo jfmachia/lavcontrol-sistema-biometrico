@@ -14,11 +14,20 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
+export const stores = pgTable("stores", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  address: text("address"),
+  userId: integer("user_id").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
 export const devices = pgTable("devices", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   deviceId: text("device_id").notNull().unique(),
-  location: text("location"),
+  storeId: integer("store_id").notNull(),
   status: text("status").default("offline").notNull(), // online, offline, maintenance
   lastPing: timestamp("last_ping"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
@@ -47,9 +56,22 @@ export const alerts = pgTable("alerts", {
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   accessLogs: many(accessLogs),
+  stores: many(stores),
 }));
 
-export const devicesRelations = relations(devices, ({ many }) => ({
+export const storesRelations = relations(stores, ({ one, many }) => ({
+  user: one(users, {
+    fields: [stores.userId],
+    references: [users.id],
+  }),
+  devices: many(devices),
+}));
+
+export const devicesRelations = relations(devices, ({ one, many }) => ({
+  store: one(stores, {
+    fields: [devices.storeId],
+    references: [stores.id],
+  }),
   accessLogs: many(accessLogs),
   alerts: many(alerts),
 }));
@@ -73,6 +95,11 @@ export const alertsRelations = relations(alerts, ({ one }) => ({
 }));
 
 // Insert schemas
+export const insertStoreSchema = createInsertSchema(stores).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -109,6 +136,8 @@ export const registerSchema = z.object({
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type Store = typeof stores.$inferSelect;
+export type InsertStore = z.infer<typeof insertStoreSchema>;
 export type Device = typeof devices.$inferSelect;
 export type InsertDevice = z.infer<typeof insertDeviceSchema>;
 export type AccessLog = typeof accessLogs.$inferSelect;
