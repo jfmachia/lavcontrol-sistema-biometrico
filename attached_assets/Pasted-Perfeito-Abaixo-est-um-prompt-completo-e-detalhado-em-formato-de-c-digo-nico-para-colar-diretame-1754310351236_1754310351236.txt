@@ -1,0 +1,196 @@
+Perfeito! Abaixo está um prompt completo e detalhado em formato de código único, para colar diretamente no Replit AI ou pedir a um programador para criar. Ele descreve o projeto inteiro: tecnologias, telas, banco de dados, estrutura de código, instruções de montagem e funcionalidades — tudo em uma única janela de código.
+
+⸻
+
+✅ PROMPT DETALHADO PARA O REPLIT
+
+🧠 OBJETIVO:
+Crie um sistema SaaS completo para controle de acesso de lojas e condomínios, com cadastro/login, dashboard, usuários, dispositivos, logs, e envio de comandos MQTT.
+
+---
+
+🧰 TECNOLOGIAS:
+
+🟢 Backend:
+- Node.js (Express)
+- PostgreSQL
+- MQTT (via `mqtt.js`)
+- JWT para autenticação
+- bcryptjs para senha
+- dotenv para variáveis de ambiente
+
+🟣 Frontend (API-only por enquanto):
+- JSON APIs (padrão REST)
+- Painel será construído depois com React
+
+🟡 Comunicação:
+- MQTT via broker público (ex: mqtt://broker.emqx.io)
+
+---
+
+📁 ESTRUTURA DO PROJETO:
+
+controle-acesso-saas/
+├── index.js               # Servidor principal
+├── .env                   # Variáveis de ambiente
+├── package.json           # Dependências
+
+---
+
+📦 DEPENDÊNCIAS:
+
+- express
+- pg
+- dotenv
+- cors
+- bcryptjs
+- jsonwebtoken
+- mqtt
+
+---
+
+🧱 BANCO DE DADOS (PostgreSQL):
+
+Crie essas tabelas no seu banco externo (Supabase, Railway, Neon, ElephantSQL etc):
+
+```sql
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL
+);
+
+CREATE TABLE access_logs (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  device_id TEXT,
+  action TEXT
+);
+
+
+⸻
+
+🔐 VARIÁVEIS .env:
+
+PORT=3000
+DB_URL=postgresql://usuario:senha@host:5432/database
+JWT_SECRET=chave_super_secreta
+MQTT_URL=mqtt://broker.emqx.io
+
+
+⸻
+
+🚀 INSTRUÇÕES DE MONTAGEM NO REPLIT:
+	1.	Crie novo projeto Node.js
+	2.	Apague o index.js gerado e substitua pelo abaixo
+	3.	Crie arquivo .env com as variáveis acima
+	4.	Instale as dependências:
+
+npm install express pg dotenv cors bcryptjs jsonwebtoken mqtt
+
+	5.	Execute o projeto com node index.js
+
+⸻
+
+🧩 ARQUIVO ÚNICO index.js (cole inteiro):
+
+const express = require("express");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+const dotenv = require("dotenv");
+const cors = require("cors");
+const { Client } = require("pg");
+const mqtt = require("mqtt");
+
+dotenv.config();
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// PostgreSQL
+const db = new Client({ connectionString: process.env.DB_URL });
+db.connect();
+
+// MQTT
+const mqttClient = mqtt.connect(process.env.MQTT_URL);
+mqttClient.on("connect", () => console.log("MQTT conectado"));
+
+// Middleware JWT
+function verifyToken(req, res, next) {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).send("Token ausente");
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
+    next();
+  } catch {
+    res.status(403).send("Token inválido");
+  }
+}
+
+// Registro
+app.post("/auth/register", async (req, res) => {
+  const { email, password, name } = req.body;
+  const hashed = await bcrypt.hash(password, 10);
+  try {
+    await db.query("INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3)", [name, email, hashed]);
+    res.send("Usuário registrado");
+  } catch {
+    res.status(500).send("Erro ao registrar");
+  }
+});
+
+// Login
+app.post("/auth/login", async (req, res) => {
+  const { email, password } = req.body;
+  const result = await db.query("SELECT * FROM users WHERE email=$1", [email]);
+  const user = result.rows[0];
+  if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+    return res.status(401).send("Credenciais inválidas");
+  }
+  const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "1d" });
+  res.json({ token });
+});
+
+// Dashboard
+app.get("/dashboard", verifyToken, async (req, res) => {
+  const result = await db.query("SELECT COUNT(*) FROM access_logs WHERE user_id=$1", [req.user.id]);
+  res.json({ acessos: result.rows[0].count });
+});
+
+// Envio de comando ao dispositivo
+app.post("/device/send", verifyToken, (req, res) => {
+  const { device_id, action, data } = req.body;
+  const payload = JSON.stringify({ action, data });
+  mqttClient.publish(`device/${device_id}/command`, payload);
+  res.send("Comando enviado via MQTT");
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log("Servidor rodando na porta", PORT));
+
+
+⸻
+
+📊 ROTEIRO DE TELAS (para frontend futuro):
+	1.	Login / Registro
+	2.	Dashboard (KPIs, logs recentes)
+	3.	Lista de usuários cadastrados
+	4.	Cadastro de novo usuário
+	5.	Upload de usuários via CSV
+	6.	Lista de dispositivos e status
+	7.	Envio de comandos (reset, bloqueio, upload rosto, liberar)
+	8.	Logs de entrada
+	9.	Alertas e horários configuráveis
+
+⸻
+
+✔️ PRONTO!
+Com isso, o backend do SaaS já roda 100% funcional no Replit, com autenticação JWT, PostgreSQL e comandos via MQTT.
+
+Pode agora expandir com painel web em React ou usar N8N para automatizações via WhatsApp e alertas.
+
+---
+
+Se quiser, posso gerar também um **modelo de painel React**, **rotas para dashboard avançado**, ou o fluxo N8N para cadastro de usuários via WhatsApp. Deseja algum desses agora?
