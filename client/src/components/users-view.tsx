@@ -9,7 +9,7 @@ import { AuthService } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import AddUserModal from "./modals/add-user-modal";
 
-interface User {
+interface FacialRecognizedUser {
   id: number;
   name: string;
   email: string;
@@ -23,14 +23,15 @@ export default function UsersView() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Buscar usuários que foram reconhecidos pelo sistema facial
   const { data: users, isLoading } = useQuery({
-    queryKey: ["/api/users"],
+    queryKey: ["/api/users/facial-recognized"],
     queryFn: async () => {
-      const response = await fetch("/api/users", {
+      const response = await fetch("/api/users/facial-recognized", {
         headers: AuthService.getAuthHeaders(),
       });
-      if (!response.ok) throw new Error("Failed to fetch users");
-      return response.json() as Promise<User[]>;
+      if (!response.ok) throw new Error("Failed to fetch facial recognized users");
+      return response.json() as Promise<FacialRecognizedUser[]>;
     },
   });
 
@@ -79,8 +80,8 @@ export default function UsersView() {
     <div className="p-6">
       <div className="mb-6 flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Gerenciamento de Usuários</h2>
-          <p className="text-sm text-gray-600">Gerencie usuários cadastrados no sistema</p>
+          <h2 className="text-xl font-bold text-gray-900">Usuários Reconhecidos</h2>
+          <p className="text-sm text-gray-600">Usuários identificados pelo reconhecimento facial</p>
         </div>
         <div className="flex space-x-3">
           <Button variant="outline" onClick={handleUploadCSV}>
@@ -97,7 +98,7 @@ export default function UsersView() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Lista de Usuários</CardTitle>
+            <CardTitle>Usuários com Reconhecimento Facial</CardTitle>
             <div className="relative w-64">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
@@ -128,9 +129,9 @@ export default function UsersView() {
           ) : filteredUsers.length === 0 ? (
             <div className="text-center py-8">
               <User className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhum usuário encontrado</h3>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhum usuário reconhecido</h3>
               <p className="mt-1 text-sm text-gray-500">
-                {searchTerm ? "Tente ajustar sua busca" : "Comece adicionando um novo usuário"}
+                {searchTerm ? "Tente ajustar sua busca" : "Nenhum usuário foi identificado pelo reconhecimento facial ainda"}
               </p>
             </div>
           ) : (

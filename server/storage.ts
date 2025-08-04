@@ -13,6 +13,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined>;
   getUsers(): Promise<User[]>;
+  getFacialRecognizedUsers(): Promise<Pick<User, 'id' | 'name' | 'email' | 'isActive' | 'createdAt'>[]>;
   
   // Devices
   getDevice(id: number): Promise<Device | undefined>;
@@ -72,6 +73,24 @@ export class DatabaseStorage implements IStorage {
 
   async getUsers(): Promise<User[]> {
     return await db.select().from(users).orderBy(desc(users.createdAt));
+  }
+
+  async getFacialRecognizedUsers(): Promise<Pick<User, 'id' | 'name' | 'email' | 'isActive' | 'createdAt'>[]> {
+    // Buscar usuários únicos que tiveram acesso reconhecido por reconhecimento facial
+    const recognizedUsers = await db
+      .selectDistinct({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        isActive: users.isActive,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .innerJoin(accessLogs, eq(users.id, accessLogs.userId))
+      .where(eq(accessLogs.method, "facial_recognition"))
+      .orderBy(desc(users.createdAt));
+
+    return recognizedUsers;
   }
 
   async getDevice(id: number): Promise<Device | undefined> {

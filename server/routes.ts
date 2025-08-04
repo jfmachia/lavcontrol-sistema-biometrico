@@ -128,6 +128,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Buscar usuários reconhecidos pelo reconhecimento facial
+  app.get("/api/users/facial-recognized", authenticateToken, async (req, res) => {
+    try {
+      const recognizedUsers = await storage.getFacialRecognizedUsers();
+      res.json(recognizedUsers);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to fetch facial recognized users" });
+    }
+  });
+
   app.post("/api/users", authenticateToken, async (req, res) => {
     try {
       const { name, email, password } = req.body;

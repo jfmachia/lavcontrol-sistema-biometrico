@@ -7,7 +7,7 @@ import { Link } from "wouter";
 
 const navItems = [
   { path: "/dashboard", icon: BarChart3, label: "Dashboard" },
-  { path: "/users", icon: Users, label: "Usuários" },
+  { path: "/users", icon: Users, label: "Reconhecidos" },
   { path: "/devices", icon: Cpu, label: "Dispositivos" },
   { path: "/logs", icon: ClipboardList, label: "Logs de Acesso" },
   { path: "/alerts", icon: Bell, label: "Alertas" },
@@ -36,15 +36,13 @@ export default function Sidebar() {
             
             return (
               <li key={item.path}>
-                <Link href={item.path}>
-                  <a className={`flex items-center px-3 py-2 text-sm font-medium rounded-md group ${
-                    isActive 
-                      ? "text-primary bg-primary/10" 
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                  }`}>
-                    <Icon className="mr-3 h-5 w-5" />
-                    {item.label}
-                  </a>
+                <Link href={item.path} className={`flex items-center px-3 py-2 text-sm font-medium rounded-md group ${
+                  isActive 
+                    ? "text-primary bg-primary/10" 
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                }`}>
+                  <Icon className="mr-3 h-5 w-5" />
+                  {item.label}
                 </Link>
               </li>
             );

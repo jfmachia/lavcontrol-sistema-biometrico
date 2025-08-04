@@ -123,8 +123,8 @@ export default function Register() {
 
               <div className="text-center">
                 <span className="text-sm text-gray-600">Já tem uma conta? </span>
-                <Link href="/login">
-                  <a className="font-medium text-primary hover:text-primary/80">Faça login</a>
+                <Link href="/login" className="font-medium text-primary hover:text-primary/80">
+                  Faça login
                 </Link>
               </div>
             </form>

@@ -103,8 +103,8 @@ export default function Login() {
 
               <div className="text-center">
                 <span className="text-sm text-gray-600">Não tem uma conta? </span>
-                <Link href="/register">
-                  <a className="font-medium text-primary hover:text-primary/80">Registre-se</a>
+                <Link href="/register" className="font-medium text-primary hover:text-primary/80">
+                  Registre-se
                 </Link>
               </div>
             </form>
