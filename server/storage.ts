@@ -41,6 +41,10 @@ export interface IStorage {
     todayAccess: number;
     activeAlerts: number;
   }>;
+  getTrafficChart(): Promise<Array<{
+    date: string;
+    count: number;
+  }>>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -240,6 +244,26 @@ export class DatabaseStorage implements IStorage {
       todayAccess: todayAccessResult.count,
       activeAlerts: activeAlertsResult.count,
     };
+  }
+
+  async getTrafficChart(): Promise<Array<{ date: string; count: number; }>> {
+    // Buscar dados dos últimos 7 dias
+    const result = await db
+      .select({
+        date: sql<string>`DATE(${accessLogs.timestamp}) as date`,
+        count: count()
+      })
+      .from(accessLogs)
+      .where(
+        and(
+          eq(accessLogs.status, "success"),
+          gte(accessLogs.timestamp, sql`NOW() - INTERVAL '7 days'`)
+        )
+      )
+      .groupBy(sql`DATE(${accessLogs.timestamp})`)
+      .orderBy(sql`DATE(${accessLogs.timestamp})`);
+
+    return result;
   }
 }
 

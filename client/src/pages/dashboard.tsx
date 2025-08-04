@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DashboardStats from "@/components/dashboard-stats";
+import TrafficChart from "@/components/traffic-chart";
 import { AuthService } from "@/lib/auth";
 import { Clock, CheckCircle, AlertCircle, Cpu } from "lucide-react";
 
@@ -98,6 +99,10 @@ export default function Dashboard() {
       </div>
 
       <DashboardStats />
+
+      <div className="mb-6">
+        <TrafficChart />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>

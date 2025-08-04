@@ -111,6 +111,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/dashboard/traffic-chart", authenticateToken, async (req, res) => {
+    try {
+      const chartData = await storage.getTrafficChart();
+      res.json(chartData);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to fetch traffic chart" });
+    }
+  });
+
   // Users routes
   app.get("/api/users", authenticateToken, async (req, res) => {
     try {
