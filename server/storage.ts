@@ -433,15 +433,16 @@ export class DatabaseStorage implements IStorage {
     
     try {
       const result = await pool.query(`
-        INSERT INTO devices (name, type, status, store_id, location, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+        INSERT INTO devices (name, device_id, type, status, store_id, location, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
         RETURNING *
       `, [
         deviceData.name,
+        deviceData.deviceId,
         deviceData.type || 'facial',
         deviceData.status || 'offline',
         deviceData.storeId,
-        deviceData.location
+        deviceData.location || 'Entrada Principal'
       ]);
       
       return result.rows[0];

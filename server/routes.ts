@@ -259,7 +259,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/devices", authenticateToken, async (req, res) => {
+  app.post("/api/devices", async (req, res) => {
     try {
       const { name, deviceId, storeId } = req.body;
       
@@ -281,7 +281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/devices/:id", authenticateToken, async (req, res) => {
+  app.delete("/api/devices/:id", async (req, res) => {
     try {
       const deviceId = parseInt(req.params.id);
       await storage.deleteDevice(deviceId);
