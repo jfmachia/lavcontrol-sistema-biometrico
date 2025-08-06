@@ -1,15 +1,24 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-neonConfig.webSocketConstructor = ws;
+// Configure connection for your VPS PostgreSQL
+const connectionConfig = {
+  host: process.env.POSTGRES_HOST || '212.85.1.24',
+  port: parseInt(process.env.POSTGRES_PORT || '5435'),
+  database: process.env.POSTGRES_DB || 'postgres',  
+  user: process.env.POSTGRES_USER || 'postgres',
+  password: process.env.POSTGRES_PASSWORD || '',
+  ssl: false, // Disable SSL for local VPS connection
+};
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
+// Use DATABASE_URL if provided, otherwise use individual config
+let pool: Pool;
+if (process.env.DATABASE_URL) {
+  pool = new Pool({ connectionString: process.env.DATABASE_URL });
+} else {
+  pool = new Pool(connectionConfig);
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle({ client: pool, schema });
+export const db = drizzle(pool, { schema });
+export { pool };
