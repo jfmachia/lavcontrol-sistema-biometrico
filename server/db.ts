@@ -2,10 +2,10 @@ import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-// Conectar ao banco PostgreSQL da VPS (212.85.1.24:5435)
+// Conectar ao banco PostgreSQL da VPS (148.230.78.128:5432)
 const connectionConfig = {
-  host: '212.85.1.24',
-  port: 5435,
+  host: '148.230.78.128',
+  port: 5432,
   database: 'postgres',
   user: 'postgres', 
   password: process.env.VPS_POSTGRES_PASSWORD || '929d54bc0ff22387163f04cfb3b3d0fa',
