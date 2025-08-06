@@ -8,13 +8,13 @@ const connectionConfig = {
   port: 5432,
   database: 'postgres',
   user: 'postgres', 
-  password: process.env.VPS_POSTGRES_PASSWORD || '929d54bc0ff22387163f04cfb3b3d0fa',
+  password: '929d54bc0ff22387163f04cfb3b3d0fa',
   ssl: false,
   connectTimeoutMS: 10000,
   idleTimeoutMillis: 30000,
 };
 
-console.log('🔌 Conectando ao PostgreSQL da VPS (212.85.1.24:5435)...');
+console.log('🔌 Conectando ao PostgreSQL da VPS (148.230.78.128:5432)...');
 console.log(`🔑 Tentando conectar com usuário: ${connectionConfig.user}`);
 const pool = new Pool(connectionConfig);
 
