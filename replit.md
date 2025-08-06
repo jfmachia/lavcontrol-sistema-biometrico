@@ -7,7 +7,7 @@ LavControl é um sistema completo de controle de acesso biométrico para lojas e
 Preferred communication style: Português simples e direto.
 System name: LavControl
 MQTT integration: Via N8N (external service handles database updates)
-Alert system: Para classificação de clientes das lavanderias (amarelo = atenção, VIP = perfil especial, bloqueado = acesso negado)
+Alert system: Para classificação de clientes das lavanderias (alert = amarelo/atenção, vip = perfil especial, blocked = bloqueado/acesso negado, active = ativo)
 Layout: Seguir o design da imagem anexa com esquema de cores específico
 Dark Mode: Sistema totalmente implementado em modo escuro/dark mode
 KPIs: Tráfego de usuários entrando nas lojas deve ser exibido corretamente nos dashboards
@@ -38,7 +38,7 @@ KPIs: Tráfego de usuários entrando nas lojas deve ser exibido corretamente nos
   - `stores`: Lojas com campos específicos do sistema (loja, nome_loja, endereco, etc.)
   - `devices`: Dispositivos físicos com status e localização
   - `access_logs`: Logs de acesso com suporte para clientes e dispositivos
-  - `clients`: Clientes das lavanderias (usuários finais) com níveis de classificação (ativo, amarelo, VIP, bloqueado)
+  - `clients`: Clientes das lavanderias (usuários finais) com níveis de classificação (active, alert, vip, blocked)
   - `alerts`: Notificações do sistema
 - **Conexão**: Pool direto ao PostgreSQL VPS ignorando DATABASE_URL local
 - **Autenticação**: bcrypt para senhas, sistema de tentativas e bloqueio temporal

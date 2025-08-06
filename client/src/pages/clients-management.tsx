@@ -82,13 +82,14 @@ export default function ClientsManagement() {
       case "active":
       case "ativo":
         return <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Ativo</Badge>;
+      case "alert":
       case "amarelo":
       case "yellow":
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"><AlertTriangle className="w-3 h-3 mr-1" />Atenção</Badge>;
+        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"><AlertTriangle className="w-3 h-3 mr-1" />Alerta</Badge>;
       case "vip":
         return <Badge variant="secondary" className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"><Star className="w-3 h-3 mr-1" />VIP</Badge>;
-      case "bloqueado":
       case "blocked":
+      case "bloqueado":
         return <Badge variant="destructive">Bloqueado</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
@@ -283,16 +284,17 @@ export default function ClientsManagement() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => setSelectedClient(client)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
+                      <div className="flex items-center gap-2">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => setSelectedClient(client)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
                         <DialogContent className="sm:max-w-[425px]">
                           <DialogHeader>
                             <DialogTitle>Detalhes do Cliente</DialogTitle>
@@ -351,7 +353,19 @@ export default function ClientsManagement() {
                             </div>
                           )}
                         </DialogContent>
-                      </Dialog>
+                        </Dialog>
+                        
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => {
+                            setEditingClient(client);
+                            setIsEditDialogOpen(true);
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -418,9 +432,9 @@ export default function ClientsManagement() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="active">Ativo</SelectItem>
-                    <SelectItem value="amarelo">Amarelo (Atenção)</SelectItem>
+                    <SelectItem value="alert">Alerta (Amarelo)</SelectItem>
                     <SelectItem value="vip">VIP</SelectItem>
-                    <SelectItem value="bloqueado">Bloqueado</SelectItem>
+                    <SelectItem value="blocked">Bloqueado</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
