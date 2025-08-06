@@ -697,97 +697,230 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateStore(id: number, updateData: any): Promise<any | undefined> {
+    // IMPORTANTE: execute_sql_tool usa DATABASE_URL, vou usar a mesma
     const { Pool } = await import('pg');
     const pool = new Pool({
-      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
-      ssl: false,
+      connectionString: process.env.DATABASE_URL,
     });
+    
+    console.log('🔧 Atualizando loja ID:', id, 'com dados:', JSON.stringify(updateData, null, 2));
+    console.log('🔧 INICIO DO DEBUG DE COLUNAS...');
+    
+    // Verificar todas as colunas disponíveis e garantir que estou no banco certo
+    try {
+      console.log('🔧 Fazendo query das colunas...');
+      const allColumns = await pool.query(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'stores' 
+        ORDER BY column_name
+      `);
+      console.log('🔍 TODAS as colunas da tabela stores:', allColumns.rows.map(r => r.column_name).join(', '));
+      
+      const specificColumns = await pool.query(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'stores' 
+        AND column_name IN ('horario_seg_sex', 'valor_lv', 'valor_s', 'nome_loja')
+      `);
+      console.log('🎯 Colunas específicas encontradas:', specificColumns.rows);
+    } catch (e) {
+      console.log('❌ Erro ao verificar colunas:', e);
+    }
+    console.log('🔧 FIM DO DEBUG DE COLUNAS...');
     
     const fields = [];
     const values = [];
     let paramCount = 1;
     
-    if (updateData.name) {
+    // Usar apenas as colunas que existem na tabela real baseado na resposta anterior
+    if (updateData.name !== undefined) {
       fields.push(`name = $${paramCount++}`);
       values.push(updateData.name);
     }
-    if (updateData.nomeLoja) {
-      fields.push(`nome_loja = $${paramCount++}`);
-      values.push(updateData.nomeLoja);
-    }
-    if (updateData.address) {
+    if (updateData.address !== undefined) {
       fields.push(`address = $${paramCount++}`);
       values.push(updateData.address);
     }
-    if (updateData.endereco) {
-      fields.push(`endereco = $${paramCount++}`);
-      values.push(updateData.endereco);
-    }
-    if (updateData.phone) {
+    if (updateData.phone !== undefined) {
       fields.push(`phone = $${paramCount++}`);
       values.push(updateData.phone);
     }
-    if (updateData.manager) {
-      fields.push(`manager = $${paramCount++}`);
-      values.push(updateData.manager);
-    }
-    if (updateData.managerName) {
+    if (updateData.managerName !== undefined) {
       fields.push(`manager_name = $${paramCount++}`);
       values.push(updateData.managerName);
     }
-    if (updateData.horarioSegSex) {
-      fields.push(`horario_seg_sex = $${paramCount++}`);
-      values.push(updateData.horarioSegSex);
-    }
-    if (updateData.horarioSabado) {
-      fields.push(`horario_sabado = $${paramCount++}`);
-      values.push(updateData.horarioSabado);
-    }
-    if (updateData.horarioDom) {
-      fields.push(`horario_dom = $${paramCount++}`);
-      values.push(updateData.horarioDom);
-    }
-    if (updateData.whatsAtendimento) {
+    
+    // Agora que confirmamos que as colunas existem, vamos usá-las todas
+    if (updateData.whatsAtendimento !== undefined) {
       fields.push(`whats_atendimento = $${paramCount++}`);
       values.push(updateData.whatsAtendimento);
     }
-    if (updateData.valorLv || updateData.valor_lv) {
+    if (updateData.horarioSegSex !== undefined) {
+      fields.push(`horario_seg_sex = $${paramCount++}`);
+      values.push(updateData.horarioSegSex);
+    }
+    if (updateData.horarioSabado !== undefined) {
+      fields.push(`horario_sabado = $${paramCount++}`);
+      values.push(updateData.horarioSabado);
+    }
+    if (updateData.horarioDom !== undefined) {
+      fields.push(`horario_dom = $${paramCount++}`);
+      values.push(updateData.horarioDom);
+    }
+    if (updateData.valorLv !== undefined) {
       fields.push(`valor_lv = $${paramCount++}`);
-      values.push(updateData.valorLv || updateData.valor_lv);
+      values.push(updateData.valorLv);
     }
-    if (updateData.valorS || updateData.valor_s) {
+    if (updateData.valorS !== undefined) {
       fields.push(`valor_s = $${paramCount++}`);
-      values.push(updateData.valorS || updateData.valor_s);
+      values.push(updateData.valorS);
     }
-    if (updateData.valorLv2 || updateData.valor_lv2) {
+    if (updateData.valorLv2 !== undefined) {
       fields.push(`valor_lv2 = $${paramCount++}`);
-      values.push(updateData.valorLv2 || updateData.valor_lv2);
+      values.push(updateData.valorLv2);
     }
-    if (updateData.valorS2 || updateData.valor_s2) {
+    if (updateData.valorS2 !== undefined) {
       fields.push(`valor_s2 = $${paramCount++}`);
-      values.push(updateData.valorS2 || updateData.valor_s2);
+      values.push(updateData.valorS2);
     }
-    if (updateData.biometria) {
+    if (updateData.senhaPorta !== undefined) {
+      fields.push(`senha_porta = $${paramCount++}`);
+      values.push(updateData.senhaPorta);
+    }
+    if (updateData.senhaWifi !== undefined) {
+      fields.push(`senha_wifi = $${paramCount++}`);
+      values.push(updateData.senhaWifi);
+    }
+    if (updateData.biometria !== undefined) {
       fields.push(`biometria = $${paramCount++}`);
       values.push(updateData.biometria);
     }
+    if (updateData.estacionamento !== undefined) {
+      fields.push(`estacionamento = $${paramCount++}`);
+      values.push(updateData.estacionamento);
+    }
+    if (updateData.delivery !== undefined) {
+      fields.push(`delivery = $${paramCount++}`);
+      values.push(updateData.delivery);
+    }
+    if (updateData.cashBack !== undefined) {
+      fields.push(`cash_back = $${paramCount++}`);
+      values.push(updateData.cashBack);
+    }
+    if (updateData.cupons !== undefined) {
+      fields.push(`cupons = $${paramCount++}`);
+      values.push(updateData.cupons);
+    }
+    if (updateData.observacoes !== undefined) {
+      fields.push(`observacoes = $${paramCount++}`);
+      values.push(updateData.observacoes);
+    }
+    if (updateData.pontoReferencia !== undefined) {
+      fields.push(`ponto_referencia = $${paramCount++}`);
+      values.push(updateData.pontoReferencia);
+    }
+    if (updateData.promocao !== undefined) {
+      fields.push(`promocao = $${paramCount++}`);
+      values.push(updateData.promocao);
+    }
+    
+    // Campos básicos também
     if (updateData.isActive !== undefined) {
       fields.push(`is_active = $${paramCount++}`);
       values.push(updateData.isActive);
     }
+    if (updateData.city !== undefined) {
+      fields.push(`city = $${paramCount++}`);
+      values.push(updateData.city);
+    }
+    if (updateData.state !== undefined) {
+      fields.push(`state = $${paramCount++}`);
+      values.push(updateData.state);
+    }
+    if (updateData.zipCode !== undefined) {
+      fields.push(`zip_code = $${paramCount++}`);
+      values.push(updateData.zipCode);
+    }
+
+    if (fields.length === 0) {
+      console.log('❌ Nenhum campo para atualizar. UpdateData recebido:', JSON.stringify(updateData, null, 2));
+      console.log('❌ Verificando condições dos campos...');
+      console.log('horarioSegSex presente?', updateData.horarioSegSex !== undefined);
+      console.log('valorLv presente?', updateData.valorLv !== undefined);
+      await pool.end();
+      return null;
+    }
     
+    // Sempre atualizar o timestamp
     fields.push(`updated_at = NOW()`);
-    values.push(id);
+    values.push(id); // ID para WHERE clause
     
-    const result = await pool.query(`
+    const query = `
       UPDATE stores 
       SET ${fields.join(', ')}
       WHERE id = $${paramCount}
       RETURNING *
-    `, values);
+    `;
     
-    await pool.end();
-    return result.rows[0] || undefined;
+    console.log('📝 Query SQL:', query);
+    console.log('📝 Valores:', values);
+    
+    try {
+      // Primeiro testar conectividade e ver qual tabela estamos acessando
+      const tableCheck = await pool.query(`
+        SELECT table_name, column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'stores' 
+        ORDER BY column_name
+      `);
+      console.log('🔍 Tabela stores encontrada com colunas:', tableCheck.rows.map(r => r.column_name));
+      
+      const result = await pool.query(query, values);
+      
+      if (result.rows.length === 0) {
+        console.log('❌ Loja não encontrada para ID:', id);
+        await pool.end();
+        return null;
+      }
+      
+      const row = result.rows[0];
+      const updatedStore = {
+        id: row.id,
+        name: row.name || row.nome_loja,
+        address: row.address || row.endereco,
+        phone: row.phone,
+        managerName: row.manager_name || row.manager,
+        whatsAtendimento: row.whats_atendimento,
+        horarioSegSex: row.horario_seg_sex,
+        horarioSabado: row.horario_sabado,
+        horarioDom: row.horario_dom,
+        valorLv: row.valor_lv,
+        valorS: row.valor_s,
+        valorLv2: row.valor_lv2,
+        valorS2: row.valor_s2,
+        senhaPorta: row.senha_porta,
+        senhaWifi: row.senha_wifi,
+        biometria: row.biometria,
+        estacionamento: row.estacionamento,
+        delivery: row.delivery,
+        cashBack: row.cash_back,
+        cupons: row.cupons,
+        observacoes: row.observacoes,
+        pontoReferencia: row.ponto_referencia,
+        promocao: row.promocao,
+        updatedAt: row.updated_at
+      };
+      
+      console.log('✅ Loja atualizada com sucesso:', updatedStore.id);
+      await pool.end();
+      return updatedStore;
+      
+    } catch (error) {
+      console.error('❌ Erro ao executar query de update:', error);
+      await pool.end();
+      throw error;
+    }
   }
 
   async getStores(): Promise<any[]> {
