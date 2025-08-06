@@ -210,9 +210,8 @@ export default function UsersManagement() {
             <div className="space-y-2">
               <Label>Filtrar por loja</Label>
               <StoreSelector 
-                selectedStoreId={selectedStoreId}
-                onStoreChange={setSelectedStoreId}
-                showAllOption={true}
+                selectedStores={selectedStoreId ? [selectedStoreId] : []}
+                onStoreChange={(stores) => setSelectedStoreId(stores.length > 0 ? stores[0] : null)}
               />
             </div>
           </div>

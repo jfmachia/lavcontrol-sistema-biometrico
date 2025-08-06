@@ -331,7 +331,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedUser = await storage.updateUser(userId, updateData);
       res.json(updatedUser);
     } catch (error: any) {
-      res.status(400).json({ message: error.message || "Failed to update user" });
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: error.message || "Failed to update user" });
     }
   });
 
@@ -363,7 +364,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         address,
         phone,
         manager,
-        biometry,
+        biometria: biometry,
         isActive: isActive !== false,
         userId: (req as any).user.id
       });
@@ -520,8 +521,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { storeId, userId } = req.body;
       
       // Verificar se loja e usuário existem
-      const store = await storage.getStoreById(storeId);
-      const user = await storage.getUserById(userId);
+      const store = await storage.getStore(storeId);
+      const user = await storage.getUser(userId);
       
       if (!store || !user) {
         return res.status(404).json({ message: "Loja ou usuário não encontrado" });
