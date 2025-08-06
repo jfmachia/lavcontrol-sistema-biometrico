@@ -700,8 +700,18 @@ export class DatabaseStorage implements IStorage {
     });
     
     const result = await pool.query(`
-      SELECT * FROM stores 
-      ORDER BY created_at DESC
+      SELECT s.*, 
+             COALESCE(d.device_count, 0) as device_count,
+             COALESCE(d.devices_online, 0) as devices_online
+      FROM stores s 
+      LEFT JOIN (
+        SELECT store_id,
+               COUNT(*) as device_count,
+               COUNT(CASE WHEN status = 'online' THEN 1 END) as devices_online
+        FROM devices 
+        GROUP BY store_id
+      ) d ON s.id = d.store_id
+      ORDER BY s.created_at DESC
     `);
     
     await pool.end();
@@ -719,6 +729,8 @@ export class DatabaseStorage implements IStorage {
       isActive: row.is_active,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
+      deviceCount: parseInt(row.device_count) || 0,
+      devicesOnline: parseInt(row.devices_online) || 0,
 
       nomeLoja: row.nome_loja,
       nomeIa: row.nome_ia,
