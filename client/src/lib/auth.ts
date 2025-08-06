@@ -13,8 +13,8 @@ export interface AuthResponse {
 }
 
 export class AuthService {
-  private static TOKEN_KEY = "access_token";
-  private static USER_KEY = "user_data";
+  private static TOKEN_KEY = "token";
+  private static USER_KEY = "user";
 
   static getToken(): string | null {
     return localStorage.getItem(this.TOKEN_KEY);

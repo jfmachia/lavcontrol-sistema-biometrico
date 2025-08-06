@@ -380,9 +380,9 @@ export class DatabaseStorage implements IStorage {
   async getAvailableDevices(): Promise<Device[]> {
     // Get devices that are not linked to any store's biometry field
     const linkedDeviceIds = await db
-      .selectDistinct({ deviceId: stores.biometry })
+      .selectDistinct({ deviceId: stores.biometria })
       .from(stores)
-      .where(sql`${stores.biometry} IS NOT NULL`);
+      .where(sql`${stores.biometria} IS NOT NULL`);
 
     const linkedIds = linkedDeviceIds.map(row => row.deviceId).filter(Boolean);
 
@@ -401,27 +401,33 @@ export class DatabaseStorage implements IStorage {
     store_name: string; 
     access_count: number;
   }>> {
-    // Buscar dados das últimas 24 horas agrupados por hora e loja
-    const result = await db
-      .select({
-        time: sql<string>`DATE_TRUNC('hour', ${accessLogs.timestamp}) as time`,
-        store_name: sql<string>`COALESCE(${stores.name}, ${stores.nomeLoja}) as store_name`,
-        access_count: count()
-      })
-      .from(accessLogs)
-      .leftJoin(devices, eq(accessLogs.deviceId, devices.id))
-      .leftJoin(stores, eq(devices.storeId, stores.id))
-      .where(
-        and(
-          eq(accessLogs.status, "success"),
-          gte(accessLogs.timestamp, sql`NOW() - INTERVAL '24 hours'`),
-          sql`(${stores.name} IS NOT NULL OR ${stores.nomeLoja} IS NOT NULL)`
-        )
-      )
-      .groupBy(sql`DATE_TRUNC('hour', ${accessLogs.timestamp})`, sql`COALESCE(${stores.name}, ${stores.nomeLoja})`)
-      .orderBy(sql`DATE_TRUNC('hour', ${accessLogs.timestamp})`, sql`COALESCE(${stores.name}, ${stores.nomeLoja})`);
+    try {
+      // Usar raw SQL para evitar problemas de sintaxe
+      const result = await db.execute(sql`
+        SELECT 
+          DATE_TRUNC('hour', al.timestamp) as time,
+          s.nome_loja as store_name,
+          COUNT(*) as access_count
+        FROM access_logs al
+        LEFT JOIN devices d ON al.device_id = d.id
+        LEFT JOIN stores s ON d.store_id = s.id  
+        WHERE 
+          al.status = 'success' 
+          AND al.timestamp > NOW() - INTERVAL '24 hours'
+          AND s.nome_loja IS NOT NULL
+        GROUP BY DATE_TRUNC('hour', al.timestamp), s.nome_loja
+        ORDER BY DATE_TRUNC('hour', al.timestamp), s.nome_loja
+      `);
 
-    return result;
+      return result.rows.map((row: any) => ({
+        time: row.time,
+        store_name: row.store_name,
+        access_count: parseInt(row.access_count)
+      }));
+    } catch (error) {
+      console.error('Error in getWaveChartData:', error);
+      return [];
+    }
   }
 }
 

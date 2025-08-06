@@ -113,19 +113,19 @@ export function Dashboard() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Dashboard LavControl</h1>
-          <p className="text-slate-400">
+          <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard LavControl</h1>
+          <p className="text-muted-foreground">
             Bem-vindo, {user?.name}! Monitore seu sistema de controle de acesso.
           </p>
         </div>
-        <div className="lavcontrol-card p-4 rounded-xl">
+        <div className="bg-card border rounded-xl p-4">
           <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-green-400" />
-            <span className="text-sm text-white">Sistema Online</span>
+            <Shield className="w-5 h-5 text-green-500" />
+            <span className="text-sm text-foreground">Sistema Online</span>
           </div>
         </div>
       </div>
@@ -135,12 +135,12 @@ export function Dashboard() {
         {statCards.map((card, index) => {
           const Icon = card.icon;
           return (
-            <Card key={index} className="lavcontrol-card border-0">
+            <Card key={index} className="bg-card border">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-slate-400 mb-1">{card.title}</p>
-                    <p className="text-2xl font-bold text-white">{card.value}</p>
+                    <p className="text-sm text-muted-foreground mb-1">{card.title}</p>
+                    <p className="text-2xl font-bold text-foreground">{card.value}</p>
                   </div>
                   <div className={`${card.bgColor} p-3 rounded-lg`}>
                     <Icon className={`w-6 h-6 ${card.color}`} />
@@ -155,10 +155,10 @@ export function Dashboard() {
       {/* Charts and Data */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Traffic Chart */}
-        <Card className="lavcontrol-card border-0">
+        <Card className="bg-card border">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-blue-400" />
+            <CardTitle className="text-foreground flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-primary" />
               Tráfego de Acessos (7 dias)
             </CardTitle>
           </CardHeader>
@@ -206,9 +206,9 @@ export function Dashboard() {
         </Card>
 
         {/* Facial Recognition Users */}
-        <Card className="lavcontrol-card border-0">
+        <Card className="bg-card border">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-foreground flex items-center gap-2">
               <Eye className="w-5 h-5 text-green-400" />
               Usuários com Biometria
             </CardTitle>
@@ -233,9 +233,9 @@ export function Dashboard() {
       </div>
 
       {/* Quick Actions */}
-      <Card className="lavcontrol-card border-0">
+      <Card className="bg-card border">
         <CardHeader>
-          <CardTitle className="text-white">Ações Rápidas</CardTitle>
+          <CardTitle className="text-foreground">Ações Rápidas</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

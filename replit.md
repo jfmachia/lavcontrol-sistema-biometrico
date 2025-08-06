@@ -9,6 +9,8 @@ System name: LavControl
 MQTT integration: Via N8N (external service handles database updates)
 Alert system: Para classificação de usuários (amarelo = notificação, VIP = perfil especial)
 Layout: Seguir o design da imagem anexa com esquema de cores específico
+Dark Mode: Sistema totalmente implementado em modo escuro/dark mode
+KPIs: Tráfego de usuários entrando nas lojas deve ser exibido corretamente nos dashboards
 
 # System Architecture
 
