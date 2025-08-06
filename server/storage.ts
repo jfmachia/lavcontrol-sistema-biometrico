@@ -240,7 +240,7 @@ export class DatabaseStorage implements IStorage {
     });
     
     const result = await pool.query(`
-      SELECT c.*, s.nome_loja as store_name
+      SELECT c.*, s.name as store_name
       FROM clients c
       LEFT JOIN stores s ON c.store_id = s.id
       ORDER BY c.created_at DESC
@@ -488,17 +488,7 @@ export class DatabaseStorage implements IStorage {
     });
     
     const result = await pool.query(`
-      SELECT id, name, address, phone, city, state, zip_code, manager_name, 
-             opening_hours, is_active, created_at, updated_at,
-             nome_loja, nome_ia, nv_loja, endereco, senha_porta, senha_wifi, 
-             horario_seg_sex, horario_sabado, 
-             horario_dom, whats_atendimento, ponto_referencia, valor_lv, valor_s,
-             cesto_grande, valor_lv2, valor_s2, estacionamento, delivery,
-             deixou, assistente, cash_back, cupons, promocao, data,
-             instancia_loja, lvs_numero, s2_numero, observacao_tentativas_solucao,
-             observacoes, cidade, estado, latitude, longitude, numero,
-             ordem, voz, msg_ini, biometria, user_id, manager
-      FROM stores 
+      SELECT * FROM stores 
       ORDER BY created_at DESC
     `);
     
@@ -603,7 +593,7 @@ export class DatabaseStorage implements IStorage {
     const result = await pool.query(`
       SELECT al.id, al.user_id, al.client_id, al.device_id, al.store_id,
              al.access_type, al.method, al.success, al.details, al.created_at,
-             al.status, al.timestamp,
+             al.action, al.status, al.timestamp,
              u.name as user_name, u.email as user_email,
              c.name as client_name,
              d.name as device_name

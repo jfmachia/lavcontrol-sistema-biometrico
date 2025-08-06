@@ -1,0 +1,40 @@
+use-websocket.ts:63 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}isTrusted: truebubbles: falsecancelBubble: falsecancelable: falsecomposed: falsecurrentTarget: WebSocket {url: 'wss://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/ws', readyState: 3, bufferedAmount: 0, onopen: ƒ, onerror: ƒ, …}defaultPrevented: falseeventPhase: 0returnValue: truesrcElement: WebSocket {url: 'wss://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/ws', readyState: 3, bufferedAmount: 0, onopen: ƒ, onerror: ƒ, …}target: WebSocket {url: 'wss://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/ws', readyState: 3, bufferedAmount: 0, onopen: ƒ, onerror: ƒ, …}timeStamp: 2788.899999976158type: "error"[[Prototype]]: Event
+ws.onerror @ use-websocket.ts:63
+error
+connectWebSocket @ use-websocket.ts:62
+(anônimo) @ use-websocket.ts:73
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=31234f04:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=31234f04:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=31234f04:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=31234f04:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=31234f04:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=31234f04:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=31234f04:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=31234f04:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=31234f04:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=31234f04:19432
+commitRoot @ chunk-RPCDYKBN.js?v=31234f04:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=31234f04:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=31234f04:18718
+workLoop @ chunk-RPCDYKBN.js?v=31234f04:197
+flushWork @ chunk-RPCDYKBN.js?v=31234f04:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=31234f04:384Entenda o erroAI
+        
+          
+          
+          
+            
+          
+          
+            Ative os Console insights nas Configurações para receber assistência de IA para entender e resolver avisos e erros do console.
+            
+      Saiba mais
+    
+          
+        
+          
+        
+      
+use-websocket.ts:55 WebSocket disconnected
+use-websocket.ts:19 WebSocket connected for real-time updates
+use-websocket.ts:29 Real-time updates enabled: Real-time updates enabled
