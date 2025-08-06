@@ -57,9 +57,11 @@ export default function StoresView() {
 
   const updateStoreMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: any }) =>
-      apiRequest(`/api/stores/${id}`, "PATCH", data),
+      apiRequest(`/api/stores/${id}`, "PUT", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/stores"] });
+      queryClient.refetchQueries({ queryKey: ["/api/stores"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stores/statistics"] });
       setEditingStore(null);
       toast({
         title: "Loja atualizada",
@@ -239,28 +241,108 @@ export default function StoresView() {
                 <div className="flex justify-end space-x-2 pt-4 border-t">
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Edit2 className="w-4 h-4" />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditingStore(store)}
+                      >
+                        <Edit2 className="w-4 h-4 mr-2" />
+                        Editar
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
                         <DialogTitle>Editar Loja</DialogTitle>
                       </DialogHeader>
-                      <div className="space-y-4">
-                        <div>
-                          <Label>Nome da Loja</Label>
-                          <Input defaultValue={store.nome_loja} />
+                      {editingStore && (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="edit-store-code">Código da Loja</Label>
+                            <Input
+                              id="edit-store-code"
+                              value={editingStore.loja || ""}
+                              onChange={(e) =>
+                                setEditingStore({ ...editingStore, loja: e.target.value })
+                              }
+                              placeholder="LV001"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="edit-store-name">Nome da Loja</Label>
+                            <Input
+                              id="edit-store-name"
+                              value={editingStore.nome_loja || ""}
+                              onChange={(e) =>
+                                setEditingStore({ ...editingStore, nome_loja: e.target.value })
+                              }
+                              placeholder="Shopping Center ABC"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="edit-store-address">Endereço</Label>
+                            <Input
+                              id="edit-store-address"
+                              value={editingStore.endereco || ""}
+                              onChange={(e) =>
+                                setEditingStore({ ...editingStore, endereco: e.target.value })
+                              }
+                              placeholder="Rua das Flores, 123"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="edit-store-phone">Telefone</Label>
+                            <Input
+                              id="edit-store-phone"
+                              value={editingStore.telefone || ""}
+                              onChange={(e) =>
+                                setEditingStore({ ...editingStore, telefone: e.target.value })
+                              }
+                              placeholder="(11) 99999-9999"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="edit-store-manager">Responsável</Label>
+                            <Input
+                              id="edit-store-manager"
+                              value={editingStore.gerente || ""}
+                              onChange={(e) =>
+                                setEditingStore({ ...editingStore, gerente: e.target.value })
+                              }
+                              placeholder="Nome do responsável"
+                            />
+                          </div>
+
+                          <div className="flex justify-end space-x-2">
+                            <Button
+                              variant="outline"
+                              onClick={() => setEditingStore(null)}
+                            >
+                              Cancelar
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                updateStoreMutation.mutate({
+                                  id: editingStore.id,
+                                  data: {
+                                    loja: editingStore.loja,
+                                    nome_loja: editingStore.nome_loja,
+                                    endereco: editingStore.endereco,
+                                    telefone: editingStore.telefone,
+                                    gerente: editingStore.gerente,
+                                  },
+                                })
+                              }
+                              disabled={updateStoreMutation.isPending}
+                            >
+                              {updateStoreMutation.isPending ? "Salvando..." : "Salvar"}
+                            </Button>
+                          </div>
                         </div>
-                        <div>
-                          <Label>Telefone</Label>
-                          <Input defaultValue={store.telefone} />
-                        </div>
-                        <div className="flex justify-end space-x-2">
-                          <Button variant="outline">Cancelar</Button>
-                          <Button>Salvar</Button>
-                        </div>
-                      </div>
+                      )}
                     </DialogContent>
                   </Dialog>
                   <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">

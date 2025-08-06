@@ -44,6 +44,7 @@ export default function UsersManagement() {
       apiRequest(`/api/users/${id}`, "PATCH", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      queryClient.refetchQueries({ queryKey: ["/api/users"] });
       setEditingUser(null);
       toast({
         title: "Usuário atualizado",
@@ -272,8 +273,33 @@ export default function UsersManagement() {
                         </DialogHeader>
                         {editingUser && (
                           <div className="space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="edit-name">Nome do Cliente</Label>
+                              <Input
+                                id="edit-name"
+                                value={editingUser.name || ""}
+                                onChange={(e) =>
+                                  setEditingUser({ ...editingUser, name: e.target.value })
+                                }
+                                placeholder="Nome completo"
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="edit-email">Email do Cliente</Label>
+                              <Input
+                                id="edit-email"
+                                type="email"
+                                value={editingUser.email || ""}
+                                onChange={(e) =>
+                                  setEditingUser({ ...editingUser, email: e.target.value })
+                                }
+                                placeholder="email@exemplo.com"
+                              />
+                            </div>
+
                             <div>
-                              <Label>Status do Usuário</Label>
+                              <Label>Classificação do Cliente</Label>
                               <Select
                                 value={editingUser.alertLevel}
                                 onValueChange={(value) =>
@@ -284,9 +310,9 @@ export default function UsersManagement() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="normal">Normal</SelectItem>
-                                  <SelectItem value="amarelo">Alerta Amarelo</SelectItem>
-                                  <SelectItem value="vip">VIP</SelectItem>
+                                  <SelectItem value="normal">✓ Cliente Normal</SelectItem>
+                                  <SelectItem value="amarelo">⚠️ Alerta Amarelo</SelectItem>
+                                  <SelectItem value="vip">👑 Cliente VIP</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
@@ -325,6 +351,8 @@ export default function UsersManagement() {
                                   updateUserMutation.mutate({
                                     id: editingUser.id,
                                     data: {
+                                      name: editingUser.name,
+                                      email: editingUser.email,
                                       alertLevel: editingUser.alertLevel,
                                       isBlocked: editingUser.isBlocked || false,
                                       isActive: editingUser.isActive !== false,
