@@ -1,10 +1,14 @@
 # Overview
 
-This is a comprehensive SaaS application for access control management designed for stores and condominiums. The system provides user authentication, device management, access logging, and real-time MQTT communication for controlling physical access devices. Built as a full-stack web application with a modern React frontend and Express.js backend, it offers a complete dashboard for managing users, devices, access logs, and system alerts.
+LavControl é um sistema completo de controle de acesso biométrico para lojas e condomínios. O sistema oferece autenticação de usuários, gestão de dispositivos, registro de acessos e comunicação MQTT em tempo real via N8N para controle de dispositivos físicos de acesso. Construído como uma aplicação web full-stack com frontend React moderno e backend Express.js, oferece um dashboard completo para gerenciar usuários, dispositivos, logs de acesso e alertas do sistema.
 
 # User Preferences
 
-Preferred communication style: Simple, everyday language.
+Preferred communication style: Português simples e direto.
+System name: LavControl
+MQTT integration: Via N8N (external service handles database updates)
+Alert system: Para classificação de usuários (amarelo = notificação, VIP = perfil especial)
+Layout: Seguir o design da imagem anexa com esquema de cores específico
 
 # System Architecture
 
