@@ -57,7 +57,7 @@ export default function StoresView() {
 
   const updateStoreMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: any }) =>
-      apiRequest(`/api/stores/${id}`, "PUT", data),
+      apiRequest(`/api/stores/${id}`, "PATCH", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/stores"] });
       queryClient.refetchQueries({ queryKey: ["/api/stores"] });
@@ -78,15 +78,16 @@ export default function StoresView() {
   });
 
   const filteredStores = stores?.filter((store: any) =>
-    store.nome_loja?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    store.loja?.toLowerCase().includes(searchTerm.toLowerCase())
+    store.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    store.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    store.managerName?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getStatusBadge = (store: any) => {
-    if (store.status === "online") {
-      return <Badge className="bg-green-500 text-white">Online</Badge>;
+    if (store.isActive !== false) {
+      return <Badge className="bg-green-500 text-white">Ativa</Badge>;
     }
-    return <Badge variant="secondary">Offline</Badge>;
+    return <Badge variant="secondary">Inativa</Badge>;
   };
 
   return (
@@ -200,7 +201,7 @@ export default function StoresView() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
                     <Store className="w-5 h-5 text-primary" />
-                    {store.nome_loja}
+                    {store.name || store.nome_loja}
                   </CardTitle>
                   {getStatusBadge(store)}
                 </div>
@@ -209,15 +210,15 @@ export default function StoresView() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <MapPin className="w-4 h-4" />
-                    Código: {store.loja}
+                    {store.address || store.endereco || "Sem endereço"}
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Phone className="w-4 h-4" />
-                    {store.telefone || "Sem telefone"}
+                    {store.phone || store.telefone || "Sem telefone"}
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Clock className="w-4 h-4" />
-                    Criado em: {new Date(store.created_at || Date.now()).toLocaleDateString('pt-BR')}
+                    Gerente: {store.managerName || store.manager_name || "Não definido"}
                   </div>
                 </div>
 
@@ -257,26 +258,14 @@ export default function StoresView() {
                       {editingStore && (
                         <div className="space-y-4">
                           <div className="space-y-2">
-                            <Label htmlFor="edit-store-code">Código da Loja</Label>
-                            <Input
-                              id="edit-store-code"
-                              value={editingStore.loja || ""}
-                              onChange={(e) =>
-                                setEditingStore({ ...editingStore, loja: e.target.value })
-                              }
-                              placeholder="LV001"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
                             <Label htmlFor="edit-store-name">Nome da Loja</Label>
                             <Input
                               id="edit-store-name"
-                              value={editingStore.nome_loja || ""}
+                              value={editingStore.name || ""}
                               onChange={(e) =>
-                                setEditingStore({ ...editingStore, nome_loja: e.target.value })
+                                setEditingStore({ ...editingStore, name: e.target.value })
                               }
-                              placeholder="Shopping Center ABC"
+                              placeholder="Nome da loja"
                             />
                           </div>
 
@@ -284,9 +273,9 @@ export default function StoresView() {
                             <Label htmlFor="edit-store-address">Endereço</Label>
                             <Input
                               id="edit-store-address"
-                              value={editingStore.endereco || ""}
+                              value={editingStore.address || ""}
                               onChange={(e) =>
-                                setEditingStore({ ...editingStore, endereco: e.target.value })
+                                setEditingStore({ ...editingStore, address: e.target.value })
                               }
                               placeholder="Rua das Flores, 123"
                             />
@@ -296,23 +285,23 @@ export default function StoresView() {
                             <Label htmlFor="edit-store-phone">Telefone</Label>
                             <Input
                               id="edit-store-phone"
-                              value={editingStore.telefone || ""}
+                              value={editingStore.phone || ""}
                               onChange={(e) =>
-                                setEditingStore({ ...editingStore, telefone: e.target.value })
+                                setEditingStore({ ...editingStore, phone: e.target.value })
                               }
                               placeholder="(11) 99999-9999"
                             />
                           </div>
 
                           <div className="space-y-2">
-                            <Label htmlFor="edit-store-manager">Responsável</Label>
+                            <Label htmlFor="edit-store-manager">Gerente</Label>
                             <Input
                               id="edit-store-manager"
-                              value={editingStore.gerente || ""}
+                              value={editingStore.managerName || ""}
                               onChange={(e) =>
-                                setEditingStore({ ...editingStore, gerente: e.target.value })
+                                setEditingStore({ ...editingStore, managerName: e.target.value })
                               }
-                              placeholder="Nome do responsável"
+                              placeholder="Nome do gerente"
                             />
                           </div>
 
@@ -328,11 +317,10 @@ export default function StoresView() {
                                 updateStoreMutation.mutate({
                                   id: editingStore.id,
                                   data: {
-                                    loja: editingStore.loja,
-                                    nome_loja: editingStore.nome_loja,
-                                    endereco: editingStore.endereco,
-                                    telefone: editingStore.telefone,
-                                    gerente: editingStore.gerente,
+                                    name: editingStore.name,
+                                    address: editingStore.address,
+                                    phone: editingStore.phone,
+                                    managerName: editingStore.managerName,
                                   },
                                 })
                               }
