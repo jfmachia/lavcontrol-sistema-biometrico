@@ -4,6 +4,8 @@ import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// ===== MAIN TABLES =====
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -27,7 +29,7 @@ export const stores = pgTable("stores", {
   senha_porta: text("senha_porta"),
   senha_wifi: text("senha_wifi"),
   horario_seg_sex: text("horario_seg_sex"),
-  horario_sab: text("horario_sab"),
+  horario_sabado: text("horario_sabado"), // Fixed column name
   horario_dom: text("horario_dom"),
   whats_atendimento: text("whats_atendimento"),
   ponto_referencia: text("ponto_referencia"),
@@ -98,7 +100,45 @@ export const alerts = pgTable("alerts", {
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
-// Relations
+// ===== LAUNDRY FRANCHISE SYSTEM TABLES =====
+
+export const clients = pgTable("clients", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").unique(),
+  phone: text("phone"),
+  cpf: text("cpf").unique(),
+  birthDate: timestamp("birth_date"),
+  address: text("address"),
+  profileImage: text("profile_image"),
+  alertLevel: text("alert_level").default("normal").notNull(), // normal, amarelo, vip
+  isBlocked: boolean("is_blocked").default(false),
+  isActive: boolean("is_active").default(true).notNull(),
+  storeId: integer("store_id"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const clientEntries = pgTable("client_entries", {
+  id: serial("id").primaryKey(),
+  clientId: integer("client_id"),
+  storeId: integer("store_id"),
+  deviceId: integer("device_id"),
+  entryType: text("entry_type").notNull(), // 'entry', 'exit', 'machine_use'
+  machineType: text("machine_type"), // 'lavadora', 'secadora', 'centrifuga'
+  machineNumber: text("machine_number"),
+  serviceType: text("service_type"), // 'lavagem', 'secagem', 'lavagem_e_secagem'
+  paymentMethod: text("payment_method"), // 'dinheiro', 'cartao', 'pix', 'credito_app'
+  amountPaid: text("amount_paid"), // Using text to handle decimal values
+  durationMinutes: integer("duration_minutes"),
+  status: text("status").default("active").notNull(), // 'active', 'completed', 'cancelled'
+  entryTime: timestamp("entry_time").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  exitTime: timestamp("exit_time"),
+  notes: text("notes"),
+});
+
+// ===== RELATIONS =====
+
 export const usersRelations = relations(users, ({ many }) => ({
   accessLogs: many(accessLogs),
   stores: many(stores),
@@ -110,6 +150,7 @@ export const storesRelations = relations(stores, ({ one, many }) => ({
     references: [users.id],
   }),
   devices: many(devices),
+  clients: many(clients),
 }));
 
 export const devicesRelations = relations(devices, ({ one, many }) => ({
@@ -119,6 +160,7 @@ export const devicesRelations = relations(devices, ({ one, many }) => ({
   }),
   accessLogs: many(accessLogs),
   alerts: many(alerts),
+  clientEntries: many(clientEntries),
 }));
 
 export const accessLogsRelations = relations(accessLogs, ({ one }) => ({
@@ -139,7 +181,31 @@ export const alertsRelations = relations(alerts, ({ one }) => ({
   }),
 }));
 
-// Insert schemas
+export const clientsRelations = relations(clients, ({ one, many }) => ({
+  store: one(stores, {
+    fields: [clients.storeId],
+    references: [stores.id],
+  }),
+  entries: many(clientEntries),
+}));
+
+export const clientEntriesRelations = relations(clientEntries, ({ one }) => ({
+  client: one(clients, {
+    fields: [clientEntries.clientId],
+    references: [clients.id],
+  }),
+  store: one(stores, {
+    fields: [clientEntries.storeId],
+    references: [stores.id],
+  }),
+  device: one(devices, {
+    fields: [clientEntries.deviceId],
+    references: [devices.id],
+  }),
+}));
+
+// ===== INSERT SCHEMAS =====
+
 export const insertStoreSchema = createInsertSchema(stores).omit({
   id: true,
   createdAt: true,
@@ -166,7 +232,19 @@ export const insertAlertSchema = createInsertSchema(alerts).omit({
   createdAt: true,
 });
 
-// Auth schemas
+export const insertClientSchema = createInsertSchema(clients).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertClientEntrySchema = createInsertSchema(clientEntries).omit({
+  id: true,
+  entryTime: true,
+});
+
+// ===== AUTH SCHEMAS =====
+
 export const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
@@ -179,7 +257,8 @@ export const registerSchema = z.object({
   role: z.enum(["master", "franqueado", "tecnico"]).default("franqueado"),
 });
 
-// Types
+// ===== TYPES =====
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Store = typeof stores.$inferSelect;
@@ -190,5 +269,9 @@ export type AccessLog = typeof accessLogs.$inferSelect;
 export type InsertAccessLog = z.infer<typeof insertAccessLogSchema>;
 export type Alert = typeof alerts.$inferSelect;
 export type InsertAlert = z.infer<typeof insertAlertSchema>;
+export type Client = typeof clients.$inferSelect;
+export type InsertClient = z.infer<typeof insertClientSchema>;
+export type ClientEntry = typeof clientEntries.$inferSelect;
+export type InsertClientEntry = z.infer<typeof insertClientEntrySchema>;
 export type LoginData = z.infer<typeof loginSchema>;
 export type RegisterData = z.infer<typeof registerSchema>;
