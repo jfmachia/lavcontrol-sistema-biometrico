@@ -427,9 +427,9 @@ export class DatabaseStorage implements IStorage {
     const result = await pool.query(`
       SELECT id, name, address, phone, city, state, zip_code, manager_name, 
              opening_hours, is_active, created_at, updated_at,
-             loja, nome_loja, nome_ia, nv_loja, endereco, senha_porta, 
-             senha_wifi, horario_seg_sex, horario_sabado, horario_dom,
-             whats_atendimento, ponto_referencia, valor_lv, valor_s,
+             nome_loja, nome_ia, nv_loja, endereco, senha_porta, senha_wifi, 
+             horario_seg_sex, horario_sabado, 
+             horario_dom, whats_atendimento, ponto_referencia, valor_lv, valor_s,
              cesto_grande, valor_lv2, valor_s2, estacionamento, delivery,
              deixou, assistente, cash_back, cupons, promocao, data,
              instancia_loja, lvs_numero, s2_numero, observacao_tentativas_solucao,
@@ -454,7 +454,7 @@ export class DatabaseStorage implements IStorage {
       isActive: row.is_active,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
-      loja: row.loja,
+
       nomeLoja: row.nome_loja,
       nomeIa: row.nome_ia,
       nvLoja: row.nv_loja,
@@ -507,13 +507,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateDeviceStatus(deviceId: string, status: string, lastPing?: Date): Promise<void> {
-    await db
-      .update(devices)
-      .set({ 
-        status, 
-        lastPing: lastPing || new Date() 
-      })
-      .where(eq(devices.deviceId, deviceId));
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+    
+    await pool.query(`
+      UPDATE devices 
+      SET status = $1, last_ping = $2, updated_at = NOW()
+      WHERE device_id = $3
+    `, [status, lastPing || new Date(), deviceId]);
+    
+    await pool.end();
   }
 
   async createAccessLog(insertLog: InsertAccessLog): Promise<AccessLog> {
@@ -534,7 +540,7 @@ export class DatabaseStorage implements IStorage {
     const result = await pool.query(`
       SELECT al.id, al.user_id, al.client_id, al.device_id, al.store_id,
              al.access_type, al.method, al.success, al.details, al.created_at,
-             al.action, al.status, al.timestamp,
+             al.status, al.timestamp,
              u.name as user_name, u.email as user_email,
              c.name as client_name,
              d.name as device_name
@@ -603,55 +609,57 @@ export class DatabaseStorage implements IStorage {
     todayAccess: number;
     activeAlerts: number;
   }> {
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const [totalUsersResult] = await db
-      .select({ count: count() })
-      .from(users)
-      .where(eq(users.isActive, true));
+    // Get all stats in one query
+    const result = await pool.query(`
+      SELECT 
+        (SELECT COUNT(*) FROM users WHERE is_active = true) as total_users,
+        (SELECT COUNT(*) FROM devices WHERE status = 'online') as active_devices,
+        (SELECT COUNT(*) FROM access_logs WHERE created_at >= $1 AND success = true) as today_access,
+        (SELECT COUNT(*) FROM alerts WHERE status = 'active') as active_alerts
+    `, [today]);
 
-    const [activeDevicesResult] = await db
-      .select({ count: count() })
-      .from(devices)
-      .where(eq(devices.status, "online"));
+    await pool.end();
 
-    const [todayAccessResult] = await db
-      .select({ count: count() })
-      .from(accessLogs)
-      .where(gte(accessLogs.timestamp, today));
-
-    const [activeAlertsResult] = await db
-      .select({ count: count() })
-      .from(alerts)
-      .where(eq(alerts.isResolved, false));
-
+    const row = result.rows[0];
     return {
-      totalUsers: totalUsersResult.count,
-      activeDevices: activeDevicesResult.count,
-      todayAccess: todayAccessResult.count,
-      activeAlerts: activeAlertsResult.count,
+      totalUsers: parseInt(row.total_users),
+      activeDevices: parseInt(row.active_devices),
+      todayAccess: parseInt(row.today_access),
+      activeAlerts: parseInt(row.active_alerts),
     };
   }
 
   async getTrafficChart(): Promise<Array<{ date: string; count: number; }>> {
-    // Buscar dados dos últimos 7 dias
-    const result = await db
-      .select({
-        date: sql<string>`DATE(${accessLogs.timestamp}) as date`,
-        count: count()
-      })
-      .from(accessLogs)
-      .where(
-        and(
-          eq(accessLogs.status, "success"),
-          gte(accessLogs.timestamp, sql`NOW() - INTERVAL '7 days'`)
-        )
-      )
-      .groupBy(sql`DATE(${accessLogs.timestamp})`)
-      .orderBy(sql`DATE(${accessLogs.timestamp})`);
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
 
-    return result;
+    const result = await pool.query(`
+      SELECT DATE(created_at) as date, COUNT(*) as count
+      FROM access_logs
+      WHERE success = true 
+        AND created_at >= NOW() - INTERVAL '7 days'
+      GROUP BY DATE(created_at)
+      ORDER BY DATE(created_at)
+    `);
+
+    await pool.end();
+    
+    return result.rows.map(row => ({
+      date: row.date,
+      count: parseInt(row.count)
+    }));
   }
 
   async getStoreStatistics(): Promise<{
@@ -664,41 +672,45 @@ export class DatabaseStorage implements IStorage {
     today.setHours(0, 0, 0, 0);
 
     // Total stores
-    const [totalStoresResult] = await db
-      .select({ count: count() })
-      .from(stores)
-      .where(eq(stores.isActive, true));
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+
+    // Total stores
+    const totalStoresResult = await pool.query(`
+      SELECT COUNT(*) as count FROM stores WHERE is_active = true
+    `);
 
     // Online stores (stores with online devices)
-    const [onlineStoresResult] = await db
-      .select({ count: count() })
-      .from(stores)
-      .leftJoin(devices, eq(stores.id, devices.storeId))
-      .where(and(
-        eq(stores.isActive, true),
-        eq(devices.status, "online")
-      ));
+    const onlineStoresResult = await pool.query(`
+      SELECT COUNT(DISTINCT s.id) as count 
+      FROM stores s
+      LEFT JOIN devices d ON s.id = d.store_id
+      WHERE s.is_active = true AND d.status = 'online'
+    `);
 
-    // Total access logs today
-    const [totalAccessResult] = await db
-      .select({ count: count() })
-      .from(accessLogs)
-      .where(and(
-        eq(accessLogs.status, "success"),
-        gte(accessLogs.timestamp, today)
-      ));
+
+    
+    const totalAccessResult = await pool.query(`
+      SELECT COUNT(*) as count 
+      FROM access_logs 
+      WHERE success = true AND created_at >= $1
+    `, [today]);
 
     // Active devices
-    const [activeDevicesResult] = await db
-      .select({ count: count() })
-      .from(devices)
-      .where(eq(devices.status, "online"));
+    const activeDevicesResult = await pool.query(`
+      SELECT COUNT(*) as count FROM devices WHERE status = 'online'
+    `);
+
+    await pool.end();
 
     return {
-      totalStores: totalStoresResult.count,
-      onlineStores: onlineStoresResult.count,
-      totalAccess: totalAccessResult.count,
-      activeDevices: activeDevicesResult.count,
+      totalStores: parseInt(totalStoresResult.rows[0].count),
+      onlineStores: parseInt(onlineStoresResult.rows[0].count),
+      totalAccess: parseInt(totalAccessResult.rows[0].count),
+      activeDevices: parseInt(activeDevicesResult.rows[0].count),
     };
   }
 
@@ -734,7 +746,7 @@ export class DatabaseStorage implements IStorage {
       const result = await pool.query(`
         SELECT created_at as timestamp
         FROM access_logs 
-        WHERE created_at >= $1 AND (status = 'success' OR success = true)
+        WHERE created_at >= $1 AND success = true
         ORDER BY created_at
       `, [twentyFourHoursAgo]);
       
