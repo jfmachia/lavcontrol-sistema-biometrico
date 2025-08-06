@@ -7,16 +7,16 @@ import { z } from "zod";
 // ===== MAIN TABLES =====
 
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey(), // Changed to varchar to match VPS database
+  id: varchar("id").primaryKey(),
   email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   name: varchar("name"),
   password: varchar("password"),
-  role: varchar("role").default("utilizador"), // admin, franqueado, tecnico, utilizador
+  role: varchar("role").default("utilizador"),
   isActive: boolean("is_active").default(true),
-  alertLevel: varchar("alert_level").default("verde"), // verde, amarelo, vip
+  alertLevel: varchar("alert_level").default("verde"),
   failedLoginAttempts: integer("failed_login_attempts").default(0),
   lockedUntil: timestamp("locked_until"),
   resetToken: varchar("reset_token"),

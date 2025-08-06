@@ -80,14 +80,59 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  async getUser(id: number): Promise<User | undefined> {
+  async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user || undefined;
+    console.log(`🔍 Buscando usuário por email: ${email}`);
+    try {
+      // Usar conexão direta do pool para contornar problemas de schema
+      const { pool } = await import('./db');
+      console.log(`🔧 Executando query direta no pool para: ${email}`);
+      
+      // Primeiro verificar todos os emails na tabela
+      const allUsers = await pool.query('SELECT email FROM users LIMIT 10');
+      console.log(`📋 Todos os emails no banco:`, allUsers.rows.map(r => r.email));
+      
+      const result = await pool.query(
+        'SELECT id, email, name, password, role, is_active, alert_level, failed_login_attempts, locked_until, reset_token, reset_token_expires, last_login, created_at, updated_at FROM users WHERE email = $1',
+        [email]
+      );
+      
+      console.log(`📊 Resultado da query:`, result.rows);
+      console.log(`📊 Número de linhas retornadas:`, result.rows.length);
+      
+      if (result.rows.length === 0) {
+        console.log(`👤 Usuário retornado: nenhum`);
+        return undefined;
+      }
+      
+      const row = result.rows[0];
+      const user = {
+        id: row.id,
+        email: row.email,
+        name: row.name,
+        password: row.password,
+        role: row.role,
+        isActive: row.is_active,
+        alertLevel: row.alert_level,
+        failedLoginAttempts: row.failed_login_attempts,
+        lockedUntil: row.locked_until ? new Date(row.locked_until) : null,
+        resetToken: row.reset_token,
+        resetTokenExpires: row.reset_token_expires ? new Date(row.reset_token_expires) : null,
+        lastLogin: row.last_login ? new Date(row.last_login) : null,
+        createdAt: new Date(row.created_at),
+        updatedAt: new Date(row.updated_at),
+      };
+      
+      console.log(`👤 Usuário retornado: ${user.name} (${user.email})`);
+      return user;
+    } catch (error) {
+      console.log(`❌ Erro na query getUserByEmail:`, error);
+      return undefined;
+    }
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
@@ -98,7 +143,7 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async updateUser(id: number, updateData: Partial<InsertUser>): Promise<User | undefined> {
+  async updateUser(id: string, updateData: Partial<InsertUser>): Promise<User | undefined> {
     const [user] = await db
       .update(users)
       .set(updateData)
@@ -132,19 +177,41 @@ export class DatabaseStorage implements IStorage {
   // ===== AUTHENTICATION METHODS =====
   
   async authenticateUser(email: string, password: string): Promise<User | null> {
+    console.log(`🔐 Tentativa de login para: ${email}`);
+    
     const user = await this.getUserByEmail(email);
-    if (!user) return null;
+    if (!user) {
+      console.log(`❌ Usuário não encontrado: ${email}`);
+      return null;
+    }
+    
+    console.log(`👤 Usuário encontrado: ${user.name} (ID: ${user.id}, Tipo ID: ${typeof user.id})`);
+    console.log(`🔒 Status: active=${user.isActive}, locked=${user.lockedUntil}`);
     
     // Check if user is locked
     if (user.lockedUntil && user.lockedUntil > new Date()) {
+      console.log(`🔒 Usuário bloqueado até: ${user.lockedUntil}`);
       return null;
     }
     
     // Check if user is active
-    if (!user.isActive) return null;
+    if (!user.isActive) {
+      console.log(`⏸️ Usuário inativo: ${email}`);
+      return null;
+    }
     
     // Verify password
+    if (!user.password) {
+      console.log(`🔑 Senha não definida para usuário: ${email}`);
+      return null;
+    }
+    
+    console.log(`🔐 Verificando senha para: ${email}`);
+    console.log(`🔑 Hash no banco: ${user.password.substring(0, 20)}...`);
+    
     const isValidPassword = await bcrypt.compare(password, user.password);
+    console.log(`✅ Senha válida: ${isValidPassword}`);
+    
     if (!isValidPassword) {
       await this.increaseFailedAttempts(email);
       return null;
@@ -154,10 +221,11 @@ export class DatabaseStorage implements IStorage {
     await this.resetFailedAttempts(email);
     await this.updateLastLogin(user.id);
     
+    console.log(`✅ Login bem-sucedido para: ${email}`);
     return user;
   }
 
-  async updateLastLogin(id: number): Promise<void> {
+  async updateLastLogin(id: string): Promise<void> {
     await db.update(users)
       .set({ lastLogin: new Date() })
       .where(eq(users.id, id));
@@ -211,7 +279,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.email, email));
   }
 
-  async updatePassword(id: number, hashedPassword: string): Promise<void> {
+  async updatePassword(id: string, hashedPassword: string): Promise<void> {
     await db.update(users)
       .set({ 
         password: hashedPassword,

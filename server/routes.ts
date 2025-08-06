@@ -84,11 +84,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/auth/login", async (req, res) => {
     try {
+      console.log(`🚪 Tentativa de login recebida:`, req.body);
+      
       const validatedData = loginSchema.parse(req.body);
+      console.log(`✅ Dados validados:`, validatedData);
       
       // Authenticate user with enhanced security
       const user = await storage.authenticateUser(validatedData.email, validatedData.password);
+      console.log(`🔍 Resultado da autenticação:`, user ? 'Sucesso' : 'Falhou');
+      
       if (!user) {
+        console.log(`❌ Falha na autenticação para: ${validatedData.email}`);
         return res.status(401).json({ message: "Credenciais inválidas ou conta bloqueada" });
       }
 
@@ -99,6 +105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { expiresIn: "24h" }
       );
 
+      console.log(`✅ Login bem-sucedido para: ${user.email}`);
       res.json({ 
         token, 
         user: { 
@@ -110,6 +117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } 
       });
     } catch (error: any) {
+      console.log(`❌ Erro no login:`, error);
       res.status(400).json({ message: error.message || "Falha no login" });
     }
   });

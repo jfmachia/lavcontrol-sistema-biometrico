@@ -2,8 +2,8 @@ import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-// Conectar ao banco PostgreSQL da VPS usando a DATABASE_URL fornecida
-const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres';
+// Configuração direta para PostgreSQL da VPS
+const connectionString = 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres';
 
 const connectionConfig = {
   connectionString,
@@ -13,7 +13,7 @@ const connectionConfig = {
 };
 
 console.log('🔌 Conectando ao PostgreSQL da VPS (148.230.78.128:5432)...');
-console.log('🔑 Usando DATABASE_URL:', connectionString);
+console.log('🔑 Usando conexão direta à VPS:', connectionString.replace(/:[^:]+@/, ':****@'));
 const pool = new Pool(connectionConfig);
 
 // Testar conexão e criar tabelas se necessário
