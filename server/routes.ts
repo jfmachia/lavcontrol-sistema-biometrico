@@ -5,7 +5,9 @@ import { storage } from "./storage";
 import { mqttService } from "./mqtt";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import { loginSchema, registerSchema, insertDeviceSchema } from "@shared/schema";
+import { loginSchema, registerSchema, insertDeviceSchema, forgotPasswordSchema, resetPasswordSchema, changePasswordSchema } from "@shared/schema";
+import crypto from "crypto";
+import nodemailer from "nodemailer";
 
 // WebSocket clients storage
 const wsClients = new Set<WebSocket>();
@@ -84,16 +86,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = loginSchema.parse(req.body);
       
-      // Find user
-      const user = await storage.getUserByEmail(validatedData.email);
+      // Authenticate user with enhanced security
+      const user = await storage.authenticateUser(validatedData.email, validatedData.password);
       if (!user) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-
-      // Check password
-      const isValidPassword = await bcrypt.compare(validatedData.password, user.password);
-      if (!isValidPassword) {
-        return res.status(401).json({ message: "Invalid credentials" });
+        return res.status(401).json({ message: "Credenciais inválidas ou conta bloqueada" });
       }
 
       // Generate JWT
@@ -109,11 +105,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: user.id, 
           name: user.name, 
           email: user.email,
-          role: user.role 
+          role: user.role,
+          alertLevel: user.alertLevel
         } 
       });
     } catch (error: any) {
-      res.status(400).json({ message: error.message || "Login failed" });
+      res.status(400).json({ message: error.message || "Falha no login" });
+    }
+  });
+
+  // Forgot password route
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const validatedData = forgotPasswordSchema.parse(req.body);
+      
+      const user = await storage.getUserByEmail(validatedData.email);
+      if (!user) {
+        // Don't reveal if email exists or not for security
+        return res.json({ message: "Se o email existir, você receberá instruções para redefinir a senha" });
+      }
+
+      // Generate reset token
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const resetTokenExpires = new Date(Date.now() + 3600000); // 1 hour
+      
+      await storage.updateResetToken(validatedData.email, resetToken, resetTokenExpires);
+      
+      // In a real app, you would send an email here
+      // For now, we'll just return the token for testing
+      console.log(`Reset token for ${validatedData.email}: ${resetToken}`);
+      
+      res.json({ message: "Se o email existir, você receberá instruções para redefinir a senha" });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Erro ao processar solicitação" });
+    }
+  });
+
+  // Reset password route
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const validatedData = resetPasswordSchema.parse(req.body);
+      
+      const user = await storage.getUserByResetToken(validatedData.token);
+      if (!user || !user.resetTokenExpires || user.resetTokenExpires < new Date()) {
+        return res.status(400).json({ message: "Token inválido ou expirado" });
+      }
+
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(validatedData.password, 12);
+      
+      // Update password and clear reset token
+      await storage.updatePassword(user.id, hashedPassword);
+      
+      res.json({ message: "Senha redefinida com sucesso" });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Erro ao redefinir senha" });
+    }
+  });
+
+  // Change password route (requires authentication)
+  app.post("/api/auth/change-password", authenticateToken, async (req: any, res) => {
+    try {
+      const validatedData = changePasswordSchema.parse(req.body);
+      
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      // Verify current password
+      const isCurrentPasswordValid = await bcrypt.compare(validatedData.currentPassword, user.password);
+      if (!isCurrentPasswordValid) {
+        return res.status(400).json({ message: "Senha atual incorreta" });
+      }
+
+      // Hash new password
+      const hashedNewPassword = await bcrypt.hash(validatedData.newPassword, 12);
+      
+      // Update password
+      await storage.updatePassword(user.id, hashedNewPassword);
+      
+      res.json({ message: "Senha alterada com sucesso" });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Erro ao alterar senha" });
+    }
+  });
+
+  // Get current user (requires authentication)
+  app.get("/api/auth/me", authenticateToken, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      res.json({ 
+        id: user.id, 
+        name: user.name, 
+        email: user.email,
+        role: user.role,
+        alertLevel: user.alertLevel,
+        lastLogin: user.lastLogin
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Erro ao buscar usuário" });
     }
   });
 

@@ -5,6 +5,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, gte, count, sql } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 
 export interface IStorage {
   // Users
@@ -14,6 +15,16 @@ export interface IStorage {
   updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined>;
   getUsers(): Promise<User[]>;
   getFacialRecognizedUsers(): Promise<Pick<User, 'id' | 'name' | 'email' | 'isActive' | 'createdAt'>[]>;
+  
+  // Authentication
+  authenticateUser(email: string, password: string): Promise<User | null>;
+  updateLastLogin(id: number): Promise<void>;
+  increaseFailedAttempts(email: string): Promise<void>;
+  resetFailedAttempts(email: string): Promise<void>;
+  lockUser(email: string, lockUntil: Date): Promise<void>;
+  getUserByResetToken(token: string): Promise<User | undefined>;
+  updateResetToken(email: string, token: string | null, expires?: Date | null): Promise<void>;
+  updatePassword(id: number, hashedPassword: string): Promise<void>;
   
   // Stores
   getStore(id: number): Promise<Store | undefined>;
@@ -116,6 +127,99 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(users.createdAt));
 
     return recognizedUsers;
+  }
+
+  // ===== AUTHENTICATION METHODS =====
+  
+  async authenticateUser(email: string, password: string): Promise<User | null> {
+    const user = await this.getUserByEmail(email);
+    if (!user) return null;
+    
+    // Check if user is locked
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      return null;
+    }
+    
+    // Check if user is active
+    if (!user.isActive) return null;
+    
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      await this.increaseFailedAttempts(email);
+      return null;
+    }
+    
+    // Reset failed attempts and update last login
+    await this.resetFailedAttempts(email);
+    await this.updateLastLogin(user.id);
+    
+    return user;
+  }
+
+  async updateLastLogin(id: number): Promise<void> {
+    await db.update(users)
+      .set({ lastLogin: new Date() })
+      .where(eq(users.id, id));
+  }
+
+  async increaseFailedAttempts(email: string): Promise<void> {
+    const user = await this.getUserByEmail(email);
+    if (!user) return;
+    
+    const newAttempts = (user.failedLoginAttempts || 0) + 1;
+    const updateData: any = { failedLoginAttempts: newAttempts };
+    
+    // Lock account after 5 failed attempts for 15 minutes
+    if (newAttempts >= 5) {
+      updateData.lockedUntil = new Date(Date.now() + 15 * 60 * 1000);
+    }
+    
+    await db.update(users)
+      .set(updateData)
+      .where(eq(users.email, email));
+  }
+
+  async resetFailedAttempts(email: string): Promise<void> {
+    await db.update(users)
+      .set({ 
+        failedLoginAttempts: 0,
+        lockedUntil: null
+      })
+      .where(eq(users.email, email));
+  }
+
+  async lockUser(email: string, lockUntil: Date): Promise<void> {
+    await db.update(users)
+      .set({ lockedUntil })
+      .where(eq(users.email, email));
+  }
+
+  async getUserByResetToken(token: string): Promise<User | undefined> {
+    const [user] = await db.select()
+      .from(users)
+      .where(eq(users.resetToken, token));
+    return user || undefined;
+  }
+
+  async updateResetToken(email: string, token: string | null, expires?: Date | null): Promise<void> {
+    await db.update(users)
+      .set({ 
+        resetToken: token,
+        resetTokenExpires: expires || null
+      })
+      .where(eq(users.email, email));
+  }
+
+  async updatePassword(id: number, hashedPassword: string): Promise<void> {
+    await db.update(users)
+      .set({ 
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpires: null,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, id));
   }
 
   async getDevice(id: number): Promise<Device | undefined> {

@@ -7,16 +7,23 @@ import { z } from "zod";
 // ===== MAIN TABLES =====
 
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  password: text("password").notNull(),
-  role: text("role").default("franqueado").notNull(), // admin, franqueado, tecnico, utilizador
-  profileImage: text("profile_image"),
-  alertLevel: text("alert_level").default("normal").notNull(), // normal, amarelo, vip
-  isBlocked: boolean("is_blocked").default(false),
-  isActive: boolean("is_active").default(true).notNull(),
-  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  id: varchar("id").primaryKey(), // Changed to varchar to match VPS database
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  name: varchar("name"),
+  password: varchar("password"),
+  role: varchar("role").default("utilizador"), // admin, franqueado, tecnico, utilizador
+  isActive: boolean("is_active").default(true),
+  alertLevel: varchar("alert_level").default("verde"), // verde, amarelo, vip
+  failedLoginAttempts: integer("failed_login_attempts").default(0),
+  lockedUntil: timestamp("locked_until"),
+  resetToken: varchar("reset_token"),
+  resetTokenExpires: timestamp("reset_token_expires"),
+  lastLogin: timestamp("last_login"),
+  createdAt: timestamp("created_at").default(sql`NOW()`),
+  updatedAt: timestamp("updated_at").default(sql`NOW()`),
 });
 
 export const stores = pgTable("stores", {
@@ -252,15 +259,29 @@ export const insertClientEntrySchema = createInsertSchema(clientEntries).omit({
 // ===== AUTH SCHEMAS =====
 
 export const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
+  email: z.string().email("Email inválido"),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
 });
 
 export const registerSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(6),
-  role: z.enum(["master", "franqueado", "tecnico"]).default("franqueado"),
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  email: z.string().email("Email inválido"),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+  role: z.enum(["admin", "franqueado", "tecnico", "utilizador"]).default("franqueado"),
+});
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().email("Email inválido"),
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1, "Token é obrigatório"),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Senha atual é obrigatória"),
+  newPassword: z.string().min(6, "Nova senha deve ter pelo menos 6 caracteres"),
 });
 
 // ===== TYPES =====
@@ -281,3 +302,6 @@ export type ClientEntry = typeof clientEntries.$inferSelect;
 export type InsertClientEntry = z.infer<typeof insertClientEntrySchema>;
 export type LoginData = z.infer<typeof loginSchema>;
 export type RegisterData = z.infer<typeof registerSchema>;
+export type ForgotPasswordData = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordData = z.infer<typeof resetPasswordSchema>;
+export type ChangePasswordData = z.infer<typeof changePasswordSchema>;
