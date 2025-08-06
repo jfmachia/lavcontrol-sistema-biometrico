@@ -172,6 +172,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Wave chart data - dados para gráfico em ondas por loja
+  app.get("/api/dashboard/wave-chart", authenticateToken, async (req, res) => {
+    try {
+      const waveData = await storage.getWaveChartData();
+      res.json(waveData);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to fetch wave chart data" });
+    }
+  });
+
   // Users routes
   app.get("/api/users", authenticateToken, async (req, res) => {
     try {

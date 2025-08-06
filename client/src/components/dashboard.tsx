@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useAuth } from "@/hooks/use-auth";
+import { WaveChart } from "@/components/wave-chart";
 
 interface DashboardStats {
   totalUsers: number;
@@ -257,6 +258,9 @@ export function Dashboard() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Gráfico em Ondas - Tráfego por Loja */}
+      <WaveChart className="col-span-full" />
     </div>
   );
 }

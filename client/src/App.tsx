@@ -4,11 +4,13 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
-import { Navigation } from "@/components/navigation";
+import { NavigationSidebar } from "@/components/navigation-sidebar";
 import { Dashboard } from "@/components/dashboard";
 import { UsersManagement } from "@/components/users-management";
 import { AccessControl } from "@/components/access-control";
 import { BiometryManagement } from "@/components/biometry-management";
+import { Reports } from "@/pages/reports";
+import { Settings } from "@/pages/settings";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import StoresView from "@/components/stores-view";
@@ -32,9 +34,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen lavcontrol-gradient flex">
-      <Navigation />
-      <main className="flex-1 p-6">
+    <div className="min-h-screen bg-background flex">
+      <NavigationSidebar className="w-64 border-r" />
+      <main className="flex-1 p-6 overflow-y-auto">
         {children}
       </main>
     </div>
@@ -74,7 +76,8 @@ function Router() {
         </PublicRoute>
       </Route>
       
-      <Route path="/dashboard">
+      {/* Rotas principais do sistema */}
+      <Route path="/">
         <ProtectedRoute>
           <Dashboard />
         </ProtectedRoute>
@@ -92,33 +95,9 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
-      <Route path="/devices">
-        <ProtectedRoute>
-          <StoresView />
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/store/register">
-        <ProtectedRoute>
-          <StoresView />
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/user/register">
-        <ProtectedRoute>
-          <UsersManagement />
-        </ProtectedRoute>
-      </Route>
-      
       <Route path="/access-control">
         <ProtectedRoute>
           <AccessControl />
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/alerts">
-        <ProtectedRoute>
-          <AlertsView />
         </ProtectedRoute>
       </Route>
       
@@ -128,8 +107,22 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
-      <Route path="/">
-        <Redirect to="/dashboard" />
+      <Route path="/alerts">
+        <ProtectedRoute>
+          <AlertsView />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/reports">
+        <ProtectedRoute>
+          <Reports />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/settings">
+        <ProtectedRoute>
+          <Settings />
+        </ProtectedRoute>
       </Route>
       
       <Route component={NotFound} />

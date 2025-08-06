@@ -59,6 +59,11 @@ export interface IStorage {
     date: string;
     count: number;
   }>>;
+  getWaveChartData(): Promise<Array<{
+    time: string;
+    store_name: string;
+    access_count: number;
+  }>>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -389,6 +394,34 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(devices)
       .where(sql`${devices.deviceId} NOT IN (${linkedIds.map(id => `'${id}'`).join(', ')})`);
+  }
+
+  async getWaveChartData(): Promise<Array<{
+    time: string;
+    store_name: string; 
+    access_count: number;
+  }>> {
+    // Buscar dados das últimas 24 horas agrupados por hora e loja
+    const result = await db
+      .select({
+        time: sql<string>`DATE_TRUNC('hour', ${accessLogs.timestamp}) as time`,
+        store_name: sql<string>`COALESCE(${stores.name}, ${stores.nomeLoja}) as store_name`,
+        access_count: count()
+      })
+      .from(accessLogs)
+      .leftJoin(devices, eq(accessLogs.deviceId, devices.id))
+      .leftJoin(stores, eq(devices.storeId, stores.id))
+      .where(
+        and(
+          eq(accessLogs.status, "success"),
+          gte(accessLogs.timestamp, sql`NOW() - INTERVAL '24 hours'`),
+          sql`(${stores.name} IS NOT NULL OR ${stores.nomeLoja} IS NOT NULL)`
+        )
+      )
+      .groupBy(sql`DATE_TRUNC('hour', ${accessLogs.timestamp})`, sql`COALESCE(${stores.name}, ${stores.nomeLoja})`)
+      .orderBy(sql`DATE_TRUNC('hour', ${accessLogs.timestamp})`, sql`COALESCE(${stores.name}, ${stores.nomeLoja})`);
+
+    return result;
   }
 }
 
