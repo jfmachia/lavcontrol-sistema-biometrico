@@ -651,13 +651,29 @@ export class DatabaseStorage implements IStorage {
       ssl: false,
     });
     
-    await pool.query(`
-      UPDATE devices 
-      SET status = $1, last_ping = $2, updated_at = NOW()
-      WHERE device_id = $3
-    `, [status, lastPing || new Date(), deviceId]);
-    
-    await pool.end();
+    try {
+      // Verificar estrutura da tabela devices
+      const columnsResult = await pool.query(`
+        SELECT column_name FROM information_schema.columns 
+        WHERE table_name = 'devices'
+      `);
+      
+      const columns = columnsResult.rows.map(r => r.column_name);
+      
+      // Usar id se device_id não existir
+      const deviceColumn = columns.includes('device_id') ? 'device_id' : 'id';
+      
+      await pool.query(`
+        UPDATE devices 
+        SET status = $1, last_ping = $2, updated_at = NOW()
+        WHERE ${deviceColumn} = $3
+      `, [status, lastPing || new Date(), deviceId]);
+      
+    } catch (error) {
+      console.error('Error handling device status update:', error);
+    } finally {
+      await pool.end();
+    }
   }
 
   async createAccessLog(insertLog: InsertAccessLog): Promise<AccessLog> {
@@ -675,23 +691,51 @@ export class DatabaseStorage implements IStorage {
       ssl: false,
     });
     
-    const result = await pool.query(`
-      SELECT al.id, al.user_id, al.client_id, al.device_id, al.store_id,
-             al.access_type, al.method, al.success, al.details, al.created_at,
-             al.action, al.status, al.timestamp,
-             u.name as user_name, u.email as user_email,
-             c.name as client_name,
-             d.name as device_name
-      FROM access_logs al
-      LEFT JOIN users u ON al.user_id::text = u.id::text
-      LEFT JOIN clients c ON al.client_id = c.id
-      LEFT JOIN devices d ON al.device_id = d.id
-      ORDER BY al.created_at DESC
-      LIMIT $1
-    `, [limit]);
-    
-    await pool.end();
-    return result.rows;
+    try {
+      // Primeiro vamos descobrir qual tabela usar
+      const tablesResult = await pool.query(`
+        SELECT table_name FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name IN ('access_logs', 'client_entries', 'entries')
+      `);
+      
+      if (tablesResult.rows.length === 0) {
+        return [];
+      }
+      
+      const tableName = tablesResult.rows[0].table_name;
+      
+      // Agora vamos descobrir as colunas da tabela
+      const columnsResult = await pool.query(`
+        SELECT column_name FROM information_schema.columns 
+        WHERE table_name = $1 
+        ORDER BY ordinal_position
+      `, [tableName]);
+      
+      const columns = columnsResult.rows.map(r => r.column_name);
+      
+      // Query básica adaptativa
+      let query = `SELECT * FROM ${tableName} ORDER BY `;
+      
+      if (columns.includes('created_at')) {
+        query += 'created_at DESC';
+      } else if (columns.includes('timestamp')) {
+        query += 'timestamp DESC';
+      } else {
+        query += 'id DESC';
+      }
+      
+      query += ' LIMIT $1';
+      
+      const result = await pool.query(query, [limit]);
+      return result.rows;
+      
+    } catch (error) {
+      console.error('Erro ao buscar logs de acesso:', error);
+      return [];
+    } finally {
+      await pool.end();
+    }
   }
 
   async getAccessLogsByDevice(deviceId: number, limit = 50): Promise<AccessLog[]> {
