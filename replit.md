@@ -31,16 +31,17 @@ KPIs: Tráfego de usuários entrando nas lojas deve ser exibido corretamente nos
 - **Real-time Communication**: MQTT client for device command transmission
 
 ## Database Design
-- **Database**: PostgreSQL VPS exclusivamente (148.230.78.128:5432) - banco local desabilitado
-- **Schema Definition**: Estrutura real do banco VPS com campos específicos em `shared/schema.ts`
+- **Database**: PostgreSQL VPS exclusivamente (148.230.78.128:5432) - configuração fixa no código
+- **Schema Definition**: Estrutura completa do banco VPS com campos específicos das lavanderias
 - **Core Tables**:
   - `users`: Contas de usuário (donos/técnicos) com autenticação por email e sistema de bloqueio
-  - `stores`: Lojas com campos específicos do sistema (loja, nome_loja, endereco, etc.)
+  - `stores`: Lojas com campos específicos das lavanderias (horario_seg_sex, valor_lv, valor_s, senha_wifi, whats_atendimento, etc.)
   - `devices`: Dispositivos físicos com status e localização
   - `access_logs`: Logs de acesso com suporte para clientes e dispositivos
   - `clients`: Clientes das lavanderias (usuários finais) com níveis de classificação (active, alert, vip, blocked)
   - `alerts`: Notificações do sistema
-- **Conexão**: Pool direto ao PostgreSQL VPS ignorando DATABASE_URL local
+- **Conexão**: Pool direto ao PostgreSQL VPS com credenciais fixas no código
+- **Store Settings**: Sistema completo de configuração de lavanderias funcionando corretamente
 - **Autenticação**: bcrypt para senhas, sistema de tentativas e bloqueio temporal
 
 ## Authentication & Authorization

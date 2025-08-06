@@ -697,37 +697,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateStore(id: number, updateData: any): Promise<any | undefined> {
-    // IMPORTANTE: execute_sql_tool usa DATABASE_URL, vou usar a mesma
+    // Usar conexão VPS conforme solicitado pelo usuário
     const { Pool } = await import('pg');
     const pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
+      host: '148.230.78.128',
+      port: 5432,
+      user: 'postgres',
+      password: '929d54bc0ff22387163f04cfb3b3d0fa',
+      database: 'postgres',
+      ssl: false,
     });
     
     console.log('🔧 Atualizando loja ID:', id, 'com dados:', JSON.stringify(updateData, null, 2));
-    console.log('🔧 INICIO DO DEBUG DE COLUNAS...');
-    
-    // Verificar todas as colunas disponíveis e garantir que estou no banco certo
-    try {
-      console.log('🔧 Fazendo query das colunas...');
-      const allColumns = await pool.query(`
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name = 'stores' 
-        ORDER BY column_name
-      `);
-      console.log('🔍 TODAS as colunas da tabela stores:', allColumns.rows.map(r => r.column_name).join(', '));
-      
-      const specificColumns = await pool.query(`
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name = 'stores' 
-        AND column_name IN ('horario_seg_sex', 'valor_lv', 'valor_s', 'nome_loja')
-      `);
-      console.log('🎯 Colunas específicas encontradas:', specificColumns.rows);
-    } catch (e) {
-      console.log('❌ Erro ao verificar colunas:', e);
-    }
-    console.log('🔧 FIM DO DEBUG DE COLUNAS...');
     
     const fields = [];
     const values = [];
@@ -844,10 +825,7 @@ export class DatabaseStorage implements IStorage {
     }
 
     if (fields.length === 0) {
-      console.log('❌ Nenhum campo para atualizar. UpdateData recebido:', JSON.stringify(updateData, null, 2));
-      console.log('❌ Verificando condições dos campos...');
-      console.log('horarioSegSex presente?', updateData.horarioSegSex !== undefined);
-      console.log('valorLv presente?', updateData.valorLv !== undefined);
+      console.log('❌ Nenhum campo para atualizar');
       await pool.end();
       return null;
     }
@@ -867,15 +845,6 @@ export class DatabaseStorage implements IStorage {
     console.log('📝 Valores:', values);
     
     try {
-      // Primeiro testar conectividade e ver qual tabela estamos acessando
-      const tableCheck = await pool.query(`
-        SELECT table_name, column_name 
-        FROM information_schema.columns 
-        WHERE table_name = 'stores' 
-        ORDER BY column_name
-      `);
-      console.log('🔍 Tabela stores encontrada com colunas:', tableCheck.rows.map(r => r.column_name));
-      
       const result = await pool.query(query, values);
       
       if (result.rows.length === 0) {
