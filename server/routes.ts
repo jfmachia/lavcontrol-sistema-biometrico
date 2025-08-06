@@ -663,7 +663,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Simular entradas automáticas para demonstração (apenas em desenvolvimento)
+  // Simulação desabilitada temporariamente para corrigir schema
+  /*
   if (process.env.NODE_ENV === 'development') {
     let simulationCounter = 0;
     setInterval(async () => {
@@ -697,6 +698,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }, 30000); // A cada 30 segundos
   }
+  */
 
   return httpServer;
 }

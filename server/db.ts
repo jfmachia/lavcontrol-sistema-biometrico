@@ -2,7 +2,7 @@ import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-// Configuração direta para PostgreSQL da VPS
+// Configuração FORÇADA para PostgreSQL da VPS - ignorar DATABASE_URL
 const connectionString = 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres';
 
 const connectionConfig = {

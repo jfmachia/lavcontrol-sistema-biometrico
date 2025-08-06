@@ -31,14 +31,17 @@ KPIs: Tráfego de usuários entrando nas lojas deve ser exibido corretamente nos
 - **Real-time Communication**: MQTT client for device command transmission
 
 ## Database Design
-- **Schema Definition**: Centralized in `shared/schema.ts` using Drizzle schema definitions
+- **Database**: PostgreSQL VPS exclusivamente (148.230.78.128:5432) - banco local desabilitado
+- **Schema Definition**: Estrutura real do banco VPS com campos específicos em `shared/schema.ts`
 - **Core Tables**:
-  - `users`: User accounts with email authentication
-  - `devices`: Physical access control devices with status tracking
-  - `access_logs`: Audit trail of all access attempts and device commands
-  - `alerts`: System notifications for offline devices and security events
-- **Relationships**: Proper foreign key relationships between users, devices, and logs
-- **Migrations**: Drizzle Kit for schema migrations and database management
+  - `users`: Contas de usuário com autenticação por email e sistema de bloqueio
+  - `stores`: Lojas com campos específicos do sistema (loja, nome_loja, endereco, etc.)
+  - `devices`: Dispositivos físicos com status e localização
+  - `access_logs`: Logs de acesso com suporte para clientes e dispositivos
+  - `clients`: Clientes das lavanderias com níveis de alerta
+  - `alerts`: Notificações do sistema
+- **Conexão**: Pool direto ao PostgreSQL VPS ignorando DATABASE_URL local
+- **Autenticação**: bcrypt para senhas, sistema de tentativas e bloqueio temporal
 
 ## Authentication & Authorization
 - **Strategy**: JWT token-based authentication stored in localStorage

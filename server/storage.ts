@@ -88,18 +88,21 @@ export class DatabaseStorage implements IStorage {
   async getUserByEmail(email: string): Promise<User | undefined> {
     console.log(`🔍 Buscando usuário por email: ${email}`);
     try {
-      // Usar conexão direta do pool para contornar problemas de schema
-      const { pool } = await import('./db');
-      console.log(`🔧 Executando query direta no pool para: ${email}`);
+      // Criar nova pool de conexões para forçar dados atuais
+      const { Pool } = await import('pg');
+      const freshPool = new Pool({
+        connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+        ssl: false,
+      });
       
-      // Primeiro verificar todos os emails na tabela
-      const allUsers = await pool.query('SELECT email FROM users LIMIT 10');
-      console.log(`📋 Todos os emails no banco:`, allUsers.rows.map(r => r.email));
+      console.log(`🔧 Executando query com nova pool para: ${email}`);
       
-      const result = await pool.query(
+      const result = await freshPool.query(
         'SELECT id, email, name, password, role, is_active, alert_level, failed_login_attempts, locked_until, reset_token, reset_token_expires, last_login, created_at, updated_at FROM users WHERE email = $1',
         [email]
       );
+      
+      await freshPool.end();
       
       console.log(`📊 Resultado da query:`, result.rows);
       console.log(`📊 Número de linhas retornadas:`, result.rows.length);
@@ -362,7 +365,77 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getStores(): Promise<Store[]> {
-    return await db.select().from(stores).orderBy(desc(stores.createdAt));
+    const { pool } = await import('./db');
+    const result = await pool.query(`
+      SELECT id, name, address, phone, city, state, zip_code, manager_name, 
+             opening_hours, is_active, created_at, updated_at,
+             loja, nome_loja, nome_ia, nv_loja, endereco, senha_porta, 
+             senha_wifi, horario_seg_sex, horario_sabado, horario_dom,
+             whats_atendimento, ponto_referencia, valor_lv, valor_s,
+             cesto_grande, valor_lv2, valor_s2, estacionamento, delivery,
+             deixou, assistente, cash_back, cupons, promocao, data,
+             instancia_loja, lvs_numero, s2_numero, observacao_tentativas_solucao,
+             observacoes, cidade, estado, latitude, longitude, numero,
+             ordem, voz, msg_ini, biometria, user_id, manager
+      FROM stores 
+      ORDER BY created_at DESC
+    `);
+    
+    return result.rows.map((row: any) => ({
+      id: row.id,
+      name: row.name || row.nome_loja,
+      address: row.address || row.endereco,
+      phone: row.phone,
+      city: row.city || row.cidade,
+      state: row.state || row.estado,
+      zipCode: row.zip_code,
+      managerName: row.manager_name || row.manager,
+      openingHours: row.opening_hours,
+      isActive: row.is_active,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      loja: row.loja,
+      nomeLoja: row.nome_loja,
+      nomeIa: row.nome_ia,
+      nvLoja: row.nv_loja,
+      endereco: row.endereco,
+      senhaPorta: row.senha_porta,
+      senhaWifi: row.senha_wifi,
+      horarioSegSex: row.horario_seg_sex,
+      horarioSabado: row.horario_sabado,
+      horarioDom: row.horario_dom,
+      whatsAtendimento: row.whats_atendimento,
+      pontoReferencia: row.ponto_referencia,
+      valorLv: row.valor_lv,
+      valorS: row.valor_s,
+      cestoGrande: row.cesto_grande,
+      valorLv2: row.valor_lv2,
+      valorS2: row.valor_s2,
+      estacionamento: row.estacionamento,
+      delivery: row.delivery,
+      deixou: row.deixou,
+      assistente: row.assistente,
+      cashBack: row.cash_back,
+      cupons: row.cupons,
+      promocao: row.promocao,
+      data: row.data,
+      instanciaLoja: row.instancia_loja,
+      lvsNumero: row.lvs_numero,
+      s2Numero: row.s2_numero,
+      observacaoTentativasSolucao: row.observacao_tentativas_solucao,
+      observacoes: row.observacoes,
+      cidadeVps: row.cidade,
+      estadoVps: row.estado,
+      latitude: row.latitude,
+      longitude: row.longitude,
+      numero: row.numero,
+      ordem: row.ordem,
+      voz: row.voz,
+      msgIni: row.msg_ini,
+      biometria: row.biometria,
+      userId: row.user_id,
+      manager: row.manager,
+    }));
   }
 
   async getStoresByUser(userId: number): Promise<Store[]> {
