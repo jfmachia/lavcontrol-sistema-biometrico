@@ -1,3 +1,6 @@
+// FORÇAR DATABASE_URL PARA VPS POSTGRESQL ANTES DE QUALQUER IMPORTAÇÃO
+process.env.DATABASE_URL = 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres';
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";

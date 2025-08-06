@@ -91,7 +91,11 @@ export class DatabaseStorage implements IStorage {
       // Criar nova pool de conexões para forçar dados atuais
       const { Pool } = await import('pg');
       const freshPool = new Pool({
-        connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+        host: '148.230.78.128',
+        port: 5432,
+        user: 'postgres',
+        password: '929d54bc0ff22387163f04cfb3b3d0fa',
+        database: 'postgres',
         ssl: false,
       });
       
