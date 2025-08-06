@@ -43,7 +43,10 @@ export default function StoresView() {
   // Buscar dispositivos quando uma loja está sendo editada
   const { data: storeDevices = [] } = useQuery<any[]>({
     queryKey: ["/api/devices/by-store", editingStore?.id],
-    queryFn: () => apiRequest(`/api/devices/by-store/${editingStore?.id}`, 'GET'),
+    queryFn: async () => {
+      const response = await apiRequest(`/api/devices/by-store/${editingStore?.id}`, 'GET');
+      return await response.json();
+    },
     enabled: !!editingStore?.id,
   });
 
