@@ -13,6 +13,7 @@ import { AccessControl } from "@/components/access-control";
 import { BiometryManagement } from "@/components/biometry-management";
 import { DeviceRegistration } from "@/components/device-registration";
 import { Reports } from "@/pages/reports";
+import UsersManagementPage from "@/pages/users-management";
 import { Settings } from "@/pages/settings";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
@@ -95,6 +96,12 @@ function Router() {
       <Route path="/users">
         <ProtectedRoute>
           <UsersManagement />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/users-management">
+        <ProtectedRoute>
+          <UsersManagementPage />
         </ProtectedRoute>
       </Route>
       

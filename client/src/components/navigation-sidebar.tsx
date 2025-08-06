@@ -45,6 +45,13 @@ const navigationItems: NavigationItem[] = [
     roles: ['admin', 'franqueado']
   },
   {
+    name: 'Gerenciar Clientes',
+    href: '/users-management',
+    icon: UserCheck,
+    description: 'Editar status e configurações de clientes',
+    roles: ['admin', 'franqueado']
+  },
+  {
     name: 'Controle de Acesso',
     href: '/access-control',
     icon: Shield,

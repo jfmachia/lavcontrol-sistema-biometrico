@@ -266,6 +266,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint para atualizar usuário
+  app.patch("/api/users/:id", authenticateToken, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { name, email, isBlocked, alertLevel, isActive } = req.body;
+      
+      const updatedUser = await storage.updateUser(userId, {
+        name,
+        email,
+        isBlocked,
+        alertLevel,
+        isActive,
+      });
+      
+      res.json(updatedUser);
+    } catch (error: any) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: error.message || "Failed to update user" });
+    }
+  });
+
   app.post("/api/users", authenticateToken, async (req, res) => {
     try {
       const { name, email, password, role, alertLevel, storeId } = req.body;

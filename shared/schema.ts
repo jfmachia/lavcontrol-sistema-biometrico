@@ -12,6 +12,7 @@ export const users = pgTable("users", {
   role: text("role").default("franqueado").notNull(), // admin, franqueado, tecnico, utilizador
   profileImage: text("profile_image"),
   alertLevel: text("alert_level").default("normal").notNull(), // normal, amarelo, vip
+  isBlocked: boolean("is_blocked").default(false),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
