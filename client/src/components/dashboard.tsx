@@ -57,7 +57,42 @@ export function Dashboard() {
     queryKey: ["/api/users/facial-recognized"],
   });
 
+  // Buscar logs de acesso para KPI de usuários entrando
+  const { data: accessLogs = [] } = useQuery<any[]>({
+    queryKey: ["/api/access-logs"],
+    refetchInterval: 3000, // Atualiza a cada 3 segundos
+    refetchIntervalInBackground: true,
+  });
 
+
+
+  // Calcular usuários únicos entrando nas lojas hoje
+  const todayUniqueUsers = React.useMemo(() => {
+    if (!accessLogs || accessLogs.length === 0) return 0;
+    
+    const today = new Date().toDateString();
+    const todayLogs = accessLogs.filter(log => {
+      const logDate = new Date(log.timestamp).toDateString();
+      return logDate === today && log.action.includes('entry');
+    });
+    
+    const uniqueUserIds = new Set(todayLogs.map(log => log.userId));
+    return uniqueUserIds.size;
+  }, [accessLogs]);
+
+  // Calcular usuários entrando nas últimas 2 horas
+  const recentUsers = React.useMemo(() => {
+    if (!accessLogs || accessLogs.length === 0) return 0;
+    
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    const recentLogs = accessLogs.filter(log => {
+      const logDate = new Date(log.timestamp);
+      return logDate >= twoHoursAgo && log.action.includes('entry');
+    });
+    
+    const uniqueUserIds = new Set(recentLogs.map(log => log.userId));
+    return uniqueUserIds.size;
+  }, [accessLogs]);
 
   const statCards = user?.role === "master" ? [
     {
@@ -87,6 +122,13 @@ export function Dashboard() {
       icon: Smartphone,
       color: "text-purple-400",
       bgColor: "bg-purple-500/20"
+    },
+    {
+      title: "Usuários Entrando",
+      value: todayUniqueUsers,
+      icon: Eye,
+      color: "text-cyan-400",
+      bgColor: "bg-cyan-500/20"
     }
   ] : [
     {
@@ -111,11 +153,11 @@ export function Dashboard() {
       bgColor: "bg-orange-500/20"
     },
     {
-      title: "Alertas Ativos",
-      value: stats?.activeAlerts || 0,
-      icon: AlertTriangle,
-      color: "text-red-400",
-      bgColor: "bg-red-500/20"
+      title: "Usuários Entrando",
+      value: todayUniqueUsers,
+      icon: Eye,
+      color: "text-cyan-400",
+      bgColor: "bg-cyan-500/20"
     }
   ];
 
@@ -138,7 +180,7 @@ export function Dashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {statCards.map((card, index) => {
           const Icon = card.icon;
           return (
@@ -148,6 +190,11 @@ export function Dashboard() {
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">{card.title}</p>
                     <p className="text-2xl font-bold text-foreground">{card.value}</p>
+                    {card.title === "Usuários Entrando" && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {recentUsers} nas últimas 2h
+                      </p>
+                    )}
                   </div>
                   <div className={`${card.bgColor} p-3 rounded-lg`}>
                     <Icon className={`w-6 h-6 ${card.color}`} />
