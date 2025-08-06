@@ -59,6 +59,13 @@ const navigationItems: NavigationItem[] = [
     roles: ['admin', 'tecnico']
   },
   {
+    name: 'Dispositivos',
+    href: '/devices',
+    icon: Building,
+    description: 'Cadastrar e gerenciar dispositivos',
+    roles: ['admin', 'tecnico']
+  },
+  {
     name: 'Alertas',
     href: '/alerts',
     icon: AlertTriangle,

@@ -10,6 +10,7 @@ import { Dashboard } from "@/components/dashboard";
 import { UsersManagement } from "@/components/users-management";
 import { AccessControl } from "@/components/access-control";
 import { BiometryManagement } from "@/components/biometry-management";
+import { DeviceRegistration } from "@/components/device-registration";
 import { Reports } from "@/pages/reports";
 import { Settings } from "@/pages/settings";
 import Login from "@/pages/login";
@@ -105,6 +106,12 @@ function Router() {
       <Route path="/biometry">
         <ProtectedRoute>
           <BiometryManagement />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/devices">
+        <ProtectedRoute>
+          <DeviceRegistration />
         </ProtectedRoute>
       </Route>
       

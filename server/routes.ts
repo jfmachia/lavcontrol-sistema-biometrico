@@ -143,6 +143,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Device routes
+  app.get("/api/devices", authenticateToken, async (req, res) => {
+    try {
+      const devices = await storage.getAllDevices();
+      res.json(devices);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to fetch devices" });
+    }
+  });
+
+  app.post("/api/devices", authenticateToken, async (req, res) => {
+    try {
+      const { name, deviceId, storeId } = req.body;
+      
+      if (!name || !deviceId || !storeId) {
+        return res.status(400).json({ message: "Todos os campos são obrigatórios" });
+      }
+
+      const device = await storage.createDevice({
+        name,
+        deviceId,
+        storeId: parseInt(storeId),
+        status: "offline"
+      });
+      
+      res.json(device);
+    } catch (error: any) {
+      console.error("Error creating device:", error);
+      res.status(500).json({ message: "Erro ao cadastrar dispositivo" });
+    }
+  });
+
+  app.delete("/api/devices/:id", authenticateToken, async (req, res) => {
+    try {
+      const deviceId = parseInt(req.params.id);
+      await storage.deleteDevice(deviceId);
+      res.json({ message: "Dispositivo removido com sucesso" });
+    } catch (error: any) {
+      console.error("Error deleting device:", error);
+      res.status(500).json({ message: "Erro ao remover dispositivo" });
+    }
+  });
+
   // Available devices for linking to stores
   app.get("/api/devices/available", authenticateToken, async (req, res) => {
     try {

@@ -35,6 +35,8 @@ export interface IStorage {
   updateDevice(id: number, device: Partial<InsertDevice>): Promise<Device | undefined>;
   getDevices(): Promise<(Device & { store?: Store })[]>;
   getAvailableDevices(): Promise<Device[]>;
+  getAllDevices(): Promise<Device[]>;
+  deleteDevice(id: number): Promise<void>;
   updateDeviceStatus(deviceId: string, status: string, lastPing?: Date): Promise<void>;
   
   // Access Logs
@@ -154,6 +156,14 @@ export class DatabaseStorage implements IStorage {
       ...row.devices,
       store: row.stores || undefined,
     }));
+  }
+
+  async getAllDevices(): Promise<Device[]> {
+    return await db.select().from(devices).orderBy(desc(devices.createdAt));
+  }
+
+  async deleteDevice(id: number): Promise<void> {
+    await db.delete(devices).where(eq(devices.id, id));
   }
 
   // Store methods
