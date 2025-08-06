@@ -14,11 +14,14 @@ import { useToast } from '@/hooks/use-toast';
 interface Device {
   id: number;
   name: string;
-  deviceId: string;
+  deviceId?: string;
   storeId: number;
+  store_id?: number;
   status: string;
-  lastPing: string | null;
+  lastPing?: string | null;
+  last_seen?: string | null;
   createdAt: string;
+  created_at?: string;
 }
 
 interface Store {
@@ -286,7 +289,8 @@ export function DeviceRegistration() {
           ) : (
             <div className="grid gap-4">
               {devices.map((device: Device) => {
-                const store = stores.find((s: Store) => s.id === device.storeId);
+                const storeId = device.storeId || device.store_id;
+                const store = stores.find((s: Store) => s.id === storeId);
                 return (
                   <div
                     key={device.id}
@@ -298,9 +302,9 @@ export function DeviceRegistration() {
                       </div>
                       <div>
                         <h3 className="font-semibold text-foreground">{device.name}</h3>
-                        <p className="text-sm text-muted-foreground">ID: {device.deviceId}</p>
+                        <p className="text-sm text-muted-foreground">ID: {device.deviceId || device.id}</p>
                         <p className="text-sm text-muted-foreground">
-                          Loja: {store ? (store.nome_loja || store.loja) : 'Não informado'}
+                          Loja: {store ? (store.nome_loja || store.loja || store.name) : 'Não informado'}
                         </p>
                       </div>
                     </div>
@@ -311,9 +315,9 @@ export function DeviceRegistration() {
                         <span className="ml-1 capitalize">{device.status}</span>
                       </Badge>
                       
-                      {device.lastPing && (
+                      {(device.lastPing || device.last_seen) && (
                         <div className="text-xs text-muted-foreground">
-                          Último ping: {new Date(device.lastPing).toLocaleString('pt-BR')}
+                          Último ping: {new Date(device.lastPing || device.last_seen || '').toLocaleString('pt-BR')}
                         </div>
                       )}
                       
@@ -321,7 +325,12 @@ export function DeviceRegistration() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          setEditingDevice(device);
+                          // Normalizar os campos para o estado local
+                          const normalizedDevice = {
+                            ...device,
+                            storeId: device.storeId || device.store_id || 0
+                          };
+                          setEditingDevice(normalizedDevice);
                           setIsEditDialogOpen(true);
                         }}
                         className="text-blue-500 hover:text-blue-700 hover:bg-blue-50"
