@@ -22,8 +22,9 @@ interface Device {
 
 interface Store {
   id: number;
-  nome_loja: string;
-  loja: string;
+  nome_loja?: string;
+  name?: string;
+  loja?: string;
 }
 
 export function DeviceRegistration() {
@@ -37,14 +38,19 @@ export function DeviceRegistration() {
   });
 
   // Buscar todos os dispositivos
-  const { data: devices = [], isLoading: devicesLoading } = useQuery({
+  const { data: devices = [], isLoading: devicesLoading } = useQuery<Device[]>({
     queryKey: ['/api/devices'],
   });
 
   // Buscar lojas disponíveis
-  const { data: stores = [], isLoading: storesLoading } = useQuery({
+  const { data: stores = [], isLoading: storesLoading, error: storesError } = useQuery<Store[]>({
     queryKey: ['/api/stores'],
   });
+
+  // Debug das lojas
+  console.log('Stores data:', stores);
+  console.log('Stores loading:', storesLoading);
+  console.log('Stores error:', storesError);
 
   // Mutação para cadastrar dispositivo
   const registerMutation = useMutation({
@@ -194,10 +200,12 @@ export function DeviceRegistration() {
                   <SelectContent>
                     {storesLoading ? (
                       <SelectItem value="loading" disabled>Carregando lojas...</SelectItem>
+                    ) : storesError ? (
+                      <SelectItem value="error" disabled>Erro ao carregar lojas</SelectItem>
                     ) : stores.length > 0 ? (
-                      stores.map((store: Store) => (
+                      stores.map((store: any) => (
                         <SelectItem key={store.id} value={store.id.toString()}>
-                          {store.nome_loja || store.loja}
+                          {store.nome_loja || store.name || store.loja || `Loja ${store.id}`}
                         </SelectItem>
                       ))
                     ) : (
