@@ -46,13 +46,16 @@ export default function ClientsManagement() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case "active":
       case "ativo":
         return <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Ativo</Badge>;
       case "amarelo":
+      case "yellow":
         return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"><AlertTriangle className="w-3 h-3 mr-1" />Atenção</Badge>;
       case "vip":
         return <Badge variant="secondary" className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"><Star className="w-3 h-3 mr-1" />VIP</Badge>;
       case "bloqueado":
+      case "blocked":
         return <Badge variant="destructive">Bloqueado</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
@@ -104,7 +107,7 @@ export default function ClientsManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {clients.filter(c => c.status === "ativo").length}
+              {clients.filter(c => c.status === "active" || c.status === "ativo").length}
             </div>
           </CardContent>
         </Card>
@@ -116,7 +119,7 @@ export default function ClientsManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {clients.filter(c => c.status === "amarelo").length}
+              {clients.filter(c => c.status === "amarelo" || c.status === "yellow").length}
             </div>
           </CardContent>
         </Card>
@@ -148,11 +151,14 @@ export default function ClientsManagement() {
                 />
               </div>
             </div>
-            <StoreSelector
+            {/* <StoreSelector
               selectedStoreId={selectedStoreId}
               onStoreChange={setSelectedStoreId}
               placeholder="Filtrar por loja"
-            />
+            /> */}
+            <Button variant="outline" onClick={() => setSelectedStoreId(null)}>
+              Todas as Lojas
+            </Button>
           </div>
         </CardHeader>
         <CardContent>

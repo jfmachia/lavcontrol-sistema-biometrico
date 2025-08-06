@@ -245,7 +245,13 @@ export default function StoresView() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setEditingStore(store)}
+                        onClick={() => setEditingStore({
+                          ...store,
+                          name: store.name,
+                          address: store.address, 
+                          phone: store.phone,
+                          managerName: store.managerName || store.manager_name
+                        })}
                       >
                         <Edit2 className="w-4 h-4 mr-2" />
                         Editar
