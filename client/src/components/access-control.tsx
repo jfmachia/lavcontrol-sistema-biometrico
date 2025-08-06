@@ -48,10 +48,13 @@ export function AccessControl() {
   });
 
   const filteredLogs = accessLogs?.filter((log: any) => {
-    const matchesSearch = log.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         log.device?.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || log.status === statusFilter;
-    const matchesDevice = deviceFilter === "all" || log.deviceId.toString() === deviceFilter;
+    const matchesSearch = log.user_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         log.client_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         log.details?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "all" || 
+                         (statusFilter === "success" && log.success) ||
+                         (statusFilter === "denied" && !log.success);
+    const matchesDevice = deviceFilter === "all" || log.device_id?.toString() === deviceFilter;
     
     return matchesSearch && matchesStatus && matchesDevice;
   });
@@ -241,39 +244,44 @@ export function AccessControl() {
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center">
-                        {getStatusIcon(log.status)}
+                        {getStatusIcon(log.success ? "success" : "denied")}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-medium text-white">
-                            {log.user?.name || "Usuário Desconhecido"}
+                            {log.client_name || log.user_name || "Sistema"}
                           </h3>
-                          {log.user?.alertLevel && getAlertBadge(log.user.alertLevel)}
+                          {log.access_type === "vip" && (
+                            <Badge className="bg-green-500/20 text-green-400 border-green-400/30">
+                              <Star className="w-3 h-3 mr-1" />
+                              VIP
+                            </Badge>
+                          )}
                         </div>
                         <div className="flex items-center gap-4 text-sm text-slate-400">
                           <span className="flex items-center gap-1">
                             <User className="w-3 h-3" />
-                            {log.user?.email || "N/A"}
+                            {log.method || "facial"}
                           </span>
                           <span className="flex items-center gap-1">
                             <Smartphone className="w-3 h-3" />
-                            {log.device?.name || "Dispositivo Desconhecido"}
+                            Device {log.device_id} - Loja {log.store_id}
                           </span>
                           <span className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />
-                            {format(new Date(log.timestamp), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })}
+                            {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })}
                           </span>
                         </div>
-                        {log.action && (
+                        {log.details && (
                           <p className="text-sm text-slate-300 mt-1">
-                            Ação: {log.action}
+                            {log.details}
                           </p>
                         )}
                       </div>
                     </div>
-                    <Badge className={`border ${getStatusColor(log.status)}`}>
-                      {getStatusIcon(log.status)}
-                      <span className="ml-1 capitalize">{log.status}</span>
+                    <Badge className={`border ${getStatusColor(log.success ? "success" : "denied")}`}>
+                      {getStatusIcon(log.success ? "success" : "denied")}
+                      <span className="ml-1 capitalize">{log.success ? "Permitido" : "Negado"}</span>
                     </Badge>
                   </div>
                 </div>

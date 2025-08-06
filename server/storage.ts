@@ -383,78 +383,206 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id));
   }
 
-  async getDevice(id: number): Promise<Device | undefined> {
-    const [device] = await db.select().from(devices).where(eq(devices.id, id));
-    return device || undefined;
-  }
-
-  async getDeviceByDeviceId(deviceId: string): Promise<Device | undefined> {
-    const [device] = await db.select().from(devices).where(eq(devices.deviceId, deviceId));
-    return device || undefined;
-  }
-
-  async createDevice(insertDevice: InsertDevice): Promise<Device> {
-    const [device] = await db
-      .insert(devices)
-      .values(insertDevice)
-      .returning();
-    return device;
-  }
-
-  async updateDevice(id: number, updateData: Partial<InsertDevice>): Promise<Device | undefined> {
-    const [device] = await db
-      .update(devices)
-      .set(updateData)
-      .where(eq(devices.id, id))
-      .returning();
-    return device || undefined;
-  }
-
-  async getDevices(): Promise<(Device & { store?: Store })[]> {
+  async getDevice(id: number): Promise<any | undefined> {
     const { Pool } = await import('pg');
     const pool = new Pool({
       connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
       ssl: false,
     });
     
-    const result = await pool.query(`
-      SELECT d.*, s.name as store_name, s.address as store_address
-      FROM devices d
-      LEFT JOIN stores s ON d.store_id = s.id
-      ORDER BY d.created_at DESC
-    `);
-    
-    await pool.end();
-    
-    return result.rows.map(row => ({
-      id: row.id,
-      name: row.name,
-      type: row.type,
-      deviceId: row.device_id,
-      storeId: row.store_id,
-      status: row.status,
-      ipAddress: row.ip_address,
-      lastSeen: row.last_seen,
-      firmwareVersion: row.firmware_version,
-      location: row.location,
-      biometria: row.biometria,
-      lastPing: row.last_ping,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-      store: row.store_name ? {
-        id: row.store_id,
-        name: row.store_name,
-        address: row.store_address
-      } : undefined,
-    }));
+    try {
+      const result = await pool.query('SELECT * FROM devices WHERE id = $1', [id]);
+      return result.rows[0] || undefined;
+    } catch (error) {
+      console.error('Erro ao buscar device por ID:', error);
+      return undefined;
+    } finally {
+      await pool.end();
+    }
   }
 
-  async getAllDevices(): Promise<Device[]> {
-    return await db.select().from(devices).orderBy(desc(devices.createdAt));
+  async getDeviceByDeviceId(deviceId: string): Promise<any | undefined> {
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+    
+    try {
+      const result = await pool.query(`
+        SELECT * FROM devices 
+        WHERE id = $1 OR device_serial = $1 OR serial = $1
+        LIMIT 1
+      `, [deviceId]);
+      
+      return result.rows[0] || undefined;
+    } catch (error) {
+      console.error('Erro ao buscar device por ID:', error);
+      return undefined;
+    } finally {
+      await pool.end();
+    }
+  }
+
+  async createDevice(deviceData: any): Promise<any> {
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+    
+    try {
+      const result = await pool.query(`
+        INSERT INTO devices (name, type, status, store_id, location, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+        RETURNING *
+      `, [
+        deviceData.name,
+        deviceData.type || 'facial',
+        deviceData.status || 'offline',
+        deviceData.storeId,
+        deviceData.location
+      ]);
+      
+      return result.rows[0];
+    } catch (error) {
+      console.error('Erro ao criar device:', error);
+      throw error;
+    } finally {
+      await pool.end();
+    }
+  }
+
+  async updateDevice(id: number, updateData: any): Promise<any | undefined> {
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+    
+    try {
+      const fields = [];
+      const values = [];
+      let paramCount = 1;
+      
+      if (updateData.name) {
+        fields.push(`name = $${paramCount++}`);
+        values.push(updateData.name);
+      }
+      if (updateData.type) {
+        fields.push(`type = $${paramCount++}`);
+        values.push(updateData.type);
+      }
+      if (updateData.status) {
+        fields.push(`status = $${paramCount++}`);
+        values.push(updateData.status);
+      }
+      if (updateData.storeId !== undefined) {
+        fields.push(`store_id = $${paramCount++}`);
+        values.push(updateData.storeId);
+      }
+      if (updateData.location) {
+        fields.push(`location = $${paramCount++}`);
+        values.push(updateData.location);
+      }
+      
+      fields.push(`updated_at = NOW()`);
+      values.push(id);
+      
+      const result = await pool.query(`
+        UPDATE devices 
+        SET ${fields.join(', ')} 
+        WHERE id = $${paramCount}
+        RETURNING *
+      `, values);
+      
+      return result.rows[0] || undefined;
+    } catch (error) {
+      console.error('Erro ao atualizar device:', error);
+      throw error;
+    } finally {
+      await pool.end();
+    }
+  }
+
+  async getDevices(): Promise<any[]> {
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+    
+    try {
+      const result = await pool.query(`
+        SELECT d.*, s.name as store_name, s.address as store_address
+        FROM devices d
+        LEFT JOIN stores s ON d.store_id = s.id
+        ORDER BY d.id DESC
+      `);
+      
+      return result.rows.map(row => ({
+        id: row.id,
+        name: row.name || row.device_name,
+        type: row.type || row.device_type,
+        deviceId: row.device_serial || row.serial || row.id.toString(),
+        storeId: row.store_id,
+        status: row.status || 'offline',
+        ipAddress: row.ip_address || row.ip,
+        lastSeen: row.last_seen || row.updated_at,
+        firmwareVersion: row.firmware_version || row.version,
+        location: row.location,
+        biometria: row.biometria,
+        lastPing: row.last_ping,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        store: row.store_name ? {
+          id: row.store_id,
+          name: row.store_name,
+          address: row.store_address
+        } : undefined,
+      }));
+      
+    } catch (error) {
+      console.error('Erro ao buscar devices:', error);
+      return [];
+    } finally {
+      await pool.end();
+    }
+  }
+
+  async getAllDevices(): Promise<any[]> {
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+    
+    try {
+      const result = await pool.query('SELECT * FROM devices ORDER BY id DESC');
+      return result.rows;
+    } catch (error) {
+      console.error('Erro ao buscar todos os devices:', error);
+      return [];
+    } finally {
+      await pool.end();
+    }
   }
 
   async deleteDevice(id: number): Promise<void> {
-    await db.delete(devices).where(eq(devices.id, id));
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+    
+    try {
+      await pool.query('DELETE FROM devices WHERE id = $1', [id]);
+    } catch (error) {
+      console.error('Erro ao deletar device:', error);
+      throw error;
+    } finally {
+      await pool.end();
+    }
   }
 
   // Store methods
@@ -771,32 +899,38 @@ export class DatabaseStorage implements IStorage {
       ssl: false,
     });
     
-    const result = await pool.query(`
-      SELECT a.*, d.name as device_name, d.location as device_location
-      FROM alerts a
-      LEFT JOIN devices d ON a.device_id = d.id
-      WHERE a.status = 'active'
-      ORDER BY a.created_at DESC
-    `);
-    
-    await pool.end();
-    
-    return result.rows.map(row => ({
-      id: row.id,
-      storeId: row.store_id,
-      deviceId: row.device_id,
-      title: row.title,
-      message: row.message,
-      type: row.type,
-      status: row.status,
-      createdAt: row.created_at,
-      resolvedAt: row.resolved_at,
-      device: row.device_name ? {
-        id: row.device_id,
-        name: row.device_name,
-        location: row.device_location
-      } : undefined,
-    }));
+    try {
+      const result = await pool.query(`
+        SELECT a.*, d.name as device_name, d.location as device_location
+        FROM alerts a
+        LEFT JOIN devices d ON a.device_id = d.id
+        WHERE a.status = 'active'
+        ORDER BY a.created_at DESC
+      `);
+      
+      return result.rows.map(row => ({
+        id: row.id,
+        storeId: row.store_id,
+        deviceId: row.device_id,
+        title: row.title,
+        message: row.message,
+        type: row.type,
+        status: row.status,
+        createdAt: row.created_at,
+        resolvedAt: row.resolved_at,
+        device: row.device_name ? {
+          id: row.device_id,
+          name: row.device_name,
+          location: row.device_location
+        } : undefined,
+      }));
+      
+    } catch (error) {
+      console.error('Erro ao buscar alertas:', error);
+      return [];
+    } finally {
+      await pool.end();
+    }
   }
 
   async resolveAlert(id: number): Promise<void> {
@@ -917,39 +1051,45 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async getAvailableDevices(): Promise<Device[]> {
+  async getAvailableDevices(): Promise<any[]> {
     const { Pool } = await import('pg');
     const pool = new Pool({
       connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
       ssl: false,
     });
     
-    const result = await pool.query(`
-      SELECT d.*
-      FROM devices d
-      LEFT JOIN stores s ON d.device_id = s.biometria
-      WHERE s.biometria IS NULL
-      ORDER BY d.created_at DESC
-    `);
-    
-    await pool.end();
-    
-    return result.rows.map(row => ({
-      id: row.id,
-      name: row.name,
-      type: row.type,
-      deviceId: row.device_id,
-      storeId: row.store_id,
-      status: row.status,
-      ipAddress: row.ip_address,
-      lastSeen: row.last_seen,
-      firmwareVersion: row.firmware_version,
-      location: row.location,
-      biometria: row.biometria,
-      lastPing: row.last_ping,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-    }));
+    try {
+      const result = await pool.query(`
+        SELECT d.*
+        FROM devices d
+        LEFT JOIN stores s ON d.id = s.biometria
+        WHERE s.biometria IS NULL
+        ORDER BY d.id DESC
+      `);
+      
+      return result.rows.map(row => ({
+        id: row.id,
+        name: row.name || `Device ${row.id}`,
+        type: row.type || 'facial',
+        deviceId: row.device_serial || row.serial || row.id.toString(),
+        storeId: row.store_id,
+        status: row.status || 'offline',
+        ipAddress: row.ip_address || row.ip,
+        lastSeen: row.last_seen || row.updated_at,
+        firmwareVersion: row.firmware_version || row.version,
+        location: row.location,
+        biometria: row.biometria,
+        lastPing: row.last_ping,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+      }));
+      
+    } catch (error) {
+      console.error('Erro ao buscar devices disponíveis:', error);
+      return [];
+    } finally {
+      await pool.end();
+    }
   }
 
   async getWaveChartData(): Promise<{ time: string; value: number }[]> {
