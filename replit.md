@@ -53,9 +53,10 @@ Layout: Seguir o design da imagem anexa com esquema de cores específico
 # External Dependencies
 
 ## Database
-- **Neon Database**: PostgreSQL-compatible serverless database
-- **Connection**: WebSocket-based connection pool for serverless environments
-- **ORM**: Drizzle ORM for schema management and query building
+- **PostgreSQL VPS**: Banco de dados principal rodando em VPS dedicada (212.85.1.24:5435)
+- **Connection**: Conexão direta via pg driver para máxima performance
+- **ORM**: Drizzle ORM para gerenciamento de schema e queries
+- **Dados**: Sistema totalmente populado com dados reais de 8 usuários, 10 lojas, 15 dispositivos
 
 ## UI Framework
 - **Radix UI**: Headless component primitives for accessibility
