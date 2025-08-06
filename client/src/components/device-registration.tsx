@@ -49,8 +49,7 @@ export function DeviceRegistration() {
   // Mutação para cadastrar dispositivo
   const registerMutation = useMutation({
     mutationFn: async (deviceData: any) => {
-      const response = await apiRequest('POST', '/api/devices', deviceData);
-      return response.json();
+      return apiRequest('/api/devices', 'POST', deviceData);
     },
     onSuccess: () => {
       toast({
@@ -73,8 +72,7 @@ export function DeviceRegistration() {
   // Mutação para remover dispositivo
   const deleteMutation = useMutation({
     mutationFn: async (deviceId: number) => {
-      const response = await apiRequest('DELETE', `/api/devices/${deviceId}`);
-      return response.json();
+      return apiRequest(`/api/devices/${deviceId}`, 'DELETE', {});
     },
     onSuccess: () => {
       toast({
