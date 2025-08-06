@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme";
 import { AuthProvider, useAuth } from "@/hooks/use-auth.tsx";
+import { useWebSocket } from "@/hooks/use-websocket";
 import { NavigationSidebar } from "@/components/navigation-sidebar";
 import { Dashboard } from "@/components/dashboard";
 import { UsersManagement } from "@/components/users-management";
@@ -138,15 +139,22 @@ function Router() {
   );
 }
 
+function WebSocketProvider({ children }: { children: React.ReactNode }) {
+  useWebSocket(); // Initialize WebSocket connection
+  return <>{children}</>;
+}
+
 function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="lavcontrol-theme">
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
+          <WebSocketProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+            </TooltipProvider>
+          </WebSocketProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>

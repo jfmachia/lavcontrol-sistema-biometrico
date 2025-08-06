@@ -1,10 +1,24 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from 'ws';
 import { storage } from "./storage";
 import { mqttService } from "./mqtt";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { loginSchema, registerSchema, insertDeviceSchema } from "@shared/schema";
+
+// WebSocket clients storage
+const wsClients = new Set<WebSocket>();
+
+// Broadcast real-time updates to all connected clients
+export function broadcastUpdate(type: string, data: any) {
+  const message = JSON.stringify({ type, data, timestamp: new Date().toISOString() });
+  wsClients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(message);
+    }
+  });
+}
 
 // JWT middleware
 function authenticateToken(req: any, res: any, next: any) {
@@ -450,5 +464,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // Setup WebSocket server for real-time updates
+  const wss = new WebSocketServer({ 
+    server: httpServer, 
+    path: '/ws' 
+  });
+
+  wss.on('connection', (ws: WebSocket) => {
+    console.log('New WebSocket client connected');
+    wsClients.add(ws);
+
+    // Send initial connection message
+    ws.send(JSON.stringify({ 
+      type: 'connected', 
+      message: 'Real-time updates enabled',
+      timestamp: new Date().toISOString()
+    }));
+
+    ws.on('close', () => {
+      console.log('WebSocket client disconnected');
+      wsClients.delete(ws);
+    });
+
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+      wsClients.delete(ws);
+    });
+  });
+
+  // API endpoint para simular entrada de usuário na loja
+  app.post("/api/simulate/user-entry", authenticateToken, async (req, res) => {
+    try {
+      const { storeId, userId } = req.body;
+      
+      // Verificar se loja e usuário existem
+      const store = await storage.getStoreById(storeId);
+      const user = await storage.getUserById(userId);
+      
+      if (!store || !user) {
+        return res.status(404).json({ message: "Loja ou usuário não encontrado" });
+      }
+
+      // Simular entrada criando um log de acesso
+      await storage.createAccessLog({
+        userId: userId,
+        deviceId: null, // Entrada simulada
+        action: "entry_simulated",
+        method: "simulation",
+        status: "success"
+      });
+
+      // Broadcast atualização em tempo real
+      const accessData = await storage.getWaveChartData();
+      broadcastUpdate('access-update', accessData);
+      
+      res.json({ 
+        message: `Entrada simulada para ${user.name} na ${store.nome_loja}`,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Erro ao simular entrada" });
+    }
+  });
+
+  // Simular entradas automáticas para demonstração (apenas em desenvolvimento)
+  if (process.env.NODE_ENV === 'development') {
+    let simulationCounter = 0;
+    setInterval(async () => {
+      try {
+        simulationCounter++;
+        // Simular entrada a cada 30 segundos com diferentes usuários/lojas
+        const stores = await storage.getStores();
+        const users = await storage.getUsers();
+        
+        if (stores.length > 0 && users.length > 0) {
+          const randomStore = stores[simulationCounter % stores.length];
+          const randomUser = users[simulationCounter % users.length];
+          
+          // Criar log de acesso simulado
+          await storage.createAccessLog({
+            userId: randomUser.id,
+            deviceId: null,
+            action: "entry_auto_simulated",
+            method: "auto_simulation",
+            status: "success"
+          });
+
+          // Broadcast atualização
+          const accessData = await storage.getWaveChartData();
+          broadcastUpdate('access-update', accessData);
+          
+          console.log(`🔄 Entrada simulada: ${randomUser.name} → ${randomStore.nome_loja}`);
+        }
+      } catch (error) {
+        console.error('Erro na simulação automática:', error);
+      }
+    }, 30000); // A cada 30 segundos
+  }
+
   return httpServer;
 }
