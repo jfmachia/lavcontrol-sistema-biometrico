@@ -10,9 +10,10 @@ interface AccessData {
 
 interface WaveChartProps {
   className?: string;
+  selectedStores?: string[];
 }
 
-export function WaveChart({ className }: WaveChartProps) {
+export function WaveChart({ className, selectedStores = [] }: WaveChartProps) {
   const [canvasRef, setCanvasRef] = useState<HTMLCanvasElement | null>(null);
   
   const { data: accessData, isLoading } = useQuery<AccessData[]>({
@@ -36,8 +37,13 @@ export function WaveChart({ className }: WaveChartProps) {
     // Limpar canvas
     ctx.clearRect(0, 0, width, height);
     
+    // Filtrar dados por lojas selecionadas
+    const filteredData = selectedStores.length > 0 
+      ? accessData.filter(item => selectedStores.includes(item.store_name))
+      : accessData;
+
     // Agrupar dados por loja
-    const storeGroups = accessData.reduce((acc, item) => {
+    const storeGroups = filteredData.reduce((acc, item) => {
       if (!acc[item.store_name]) {
         acc[item.store_name] = [];
       }
@@ -46,7 +52,7 @@ export function WaveChart({ className }: WaveChartProps) {
     }, {} as Record<string, AccessData[]>);
 
     const stores = Object.keys(storeGroups);
-    const maxAccess = Math.max(...accessData.map(d => d.access_count));
+    const maxAccess = Math.max(...filteredData.map(d => d.access_count), 1);
     
     // Cores para cada loja (tons do tema LavControl)
     const colors = [
@@ -182,7 +188,7 @@ export function WaveChart({ className }: WaveChartProps) {
     ctx.fillText('Acessos', 0, 0);
     ctx.restore();
 
-  }, [canvasRef, accessData]);
+  }, [canvasRef, accessData, selectedStores]);
 
   if (isLoading) {
     return (
@@ -200,14 +206,8 @@ export function WaveChart({ className }: WaveChartProps) {
   }
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle>Tráfego de Acessos por Loja (Últimas 24h)</CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Cada linha ondulada representa uma loja diferente
-        </p>
-      </CardHeader>
-      <CardContent>
+    <div className={className}>
+      <div>
         <div className="relative">
           <canvas
             ref={setCanvasRef}
@@ -220,7 +220,8 @@ export function WaveChart({ className }: WaveChartProps) {
           {/* Legenda */}
           <div className="mt-4 flex flex-wrap gap-4">
             {accessData && Object.keys(
-              accessData.reduce((acc, item) => {
+              accessData.filter(item => selectedStores.length === 0 || selectedStores.includes(item.store_name))
+                      .reduce((acc, item) => {
                 acc[item.store_name] = true;
                 return acc;
               }, {} as Record<string, boolean>)
@@ -238,7 +239,7 @@ export function WaveChart({ className }: WaveChartProps) {
             })}
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

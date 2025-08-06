@@ -1,5 +1,8 @@
+import React, { useState } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Store, 
   Users, 
@@ -8,7 +11,8 @@ import {
   AlertTriangle,
   TrendingUp,
   Eye,
-  Shield
+  Shield,
+  Settings2
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useAuth } from "@/hooks/use-auth";
@@ -35,6 +39,8 @@ interface TrafficData {
 
 export function Dashboard() {
   const { user } = useAuth();
+  const [selectedStores, setSelectedStores] = useState<string[]>([]);
+  const [showStoreFilter, setShowStoreFilter] = useState(false);
 
   const { data: stats } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
@@ -51,6 +57,44 @@ export function Dashboard() {
   const { data: facialUsers } = useQuery<any[]>({
     queryKey: ["/api/users/facial-recognized"],
   });
+
+  const { data: stores } = useQuery<any[]>({
+    queryKey: ["/api/stores"],
+  });
+
+  // Extrair nomes únicos das lojas dos dados do gráfico
+  const { data: waveData } = useQuery<any[]>({
+    queryKey: ["/api/dashboard/wave-chart"],
+  });
+
+  const uniqueStores = React.useMemo(() => {
+    if (!waveData) return [];
+    const storeNames = [...new Set(waveData.map(item => item.store_name))];
+    return storeNames.sort();
+  }, [waveData]);
+
+  // Inicializar com todas as lojas selecionadas
+  React.useEffect(() => {
+    if (uniqueStores.length > 0 && selectedStores.length === 0) {
+      setSelectedStores(uniqueStores);
+    }
+  }, [uniqueStores]);
+
+  const handleStoreToggle = (storeName: string, checked: boolean) => {
+    if (checked) {
+      setSelectedStores(prev => [...prev, storeName]);
+    } else {
+      setSelectedStores(prev => prev.filter(s => s !== storeName));
+    }
+  };
+
+  const handleSelectAll = () => {
+    setSelectedStores(uniqueStores);
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedStores([]);
+  };
 
   const statCards = user?.role === "master" ? [
     {
@@ -259,8 +303,70 @@ export function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* Gráfico em Ondas - Tráfego por Loja */}
-      <WaveChart className="col-span-full" />
+      {/* Wave Chart com Filtro de Lojas */}
+      <Card className="col-span-full bg-card border">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-foreground flex items-center gap-2">
+              <Activity className="w-5 h-5 text-primary" />
+              Tráfego em Tempo Real por Loja
+            </CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowStoreFilter(!showStoreFilter)}
+              className="flex items-center gap-2"
+            >
+              <Settings2 className="w-4 h-4" />
+              Filtrar Lojas ({selectedStores.length}/{uniqueStores.length})
+            </Button>
+          </div>
+          
+          {showStoreFilter && (
+            <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+              <div className="flex items-center gap-4 mb-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSelectAll}
+                  disabled={selectedStores.length === uniqueStores.length}
+                >
+                  Selecionar Todas
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDeselectAll}
+                  disabled={selectedStores.length === 0}
+                >
+                  Desmarcar Todas
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                {uniqueStores.map((storeName) => (
+                  <div key={storeName} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`store-${storeName}`}
+                      checked={selectedStores.includes(storeName)}
+                      onCheckedChange={(checked) => handleStoreToggle(storeName, !!checked)}
+                    />
+                    <label
+                      htmlFor={`store-${storeName}`}
+                      className="text-sm text-foreground cursor-pointer hover:text-primary transition-colors"
+                    >
+                      {storeName}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardHeader>
+        <CardContent>
+          <WaveChart selectedStores={selectedStores} />
+        </CardContent>
+      </Card>
     </div>
   );
 }
