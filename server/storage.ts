@@ -147,12 +147,49 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUser(id: string, updateData: Partial<InsertUser>): Promise<User | undefined> {
-    const [user] = await db
-      .update(users)
-      .set(updateData)
-      .where(eq(users.id, id))
-      .returning();
-    return user || undefined;
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+    
+    const fields = [];
+    const values = [];
+    let paramCount = 1;
+    
+    if (updateData.name) {
+      fields.push(`name = $${paramCount++}`);
+      values.push(updateData.name);
+    }
+    if (updateData.email) {
+      fields.push(`email = $${paramCount++}`);
+      values.push(updateData.email);
+    }
+    if (updateData.role) {
+      fields.push(`role = $${paramCount++}`);
+      values.push(updateData.role);
+    }
+    if (updateData.isActive !== undefined) {
+      fields.push(`is_active = $${paramCount++}`);
+      values.push(updateData.isActive);
+    }
+    if (updateData.alertLevel) {
+      fields.push(`alert_level = $${paramCount++}`);
+      values.push(updateData.alertLevel);
+    }
+    
+    fields.push(`updated_at = NOW()`);
+    values.push(id);
+    
+    const result = await pool.query(`
+      UPDATE users 
+      SET ${fields.join(', ')}
+      WHERE id = $${paramCount}
+      RETURNING *
+    `, values);
+    
+    await pool.end();
+    return result.rows[0] || undefined;
   }
 
   async getUsers(): Promise<User[]> {
@@ -374,15 +411,41 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getDevices(): Promise<(Device & { store?: Store })[]> {
-    const devicesData = await db
-      .select()
-      .from(devices)
-      .leftJoin(stores, eq(devices.storeId, stores.id))
-      .orderBy(desc(devices.createdAt));
-
-    return devicesData.map(row => ({
-      ...row.devices,
-      store: row.stores || undefined,
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+    
+    const result = await pool.query(`
+      SELECT d.*, s.name as store_name, s.address as store_address
+      FROM devices d
+      LEFT JOIN stores s ON d.store_id = s.id
+      ORDER BY d.created_at DESC
+    `);
+    
+    await pool.end();
+    
+    return result.rows.map(row => ({
+      id: row.id,
+      name: row.name,
+      type: row.type,
+      deviceId: row.device_id,
+      storeId: row.store_id,
+      status: row.status,
+      ipAddress: row.ip_address,
+      lastSeen: row.last_seen,
+      firmwareVersion: row.firmware_version,
+      location: row.location,
+      biometria: row.biometria,
+      lastPing: row.last_ping,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      store: row.store_name ? {
+        id: row.store_id,
+        name: row.store_name,
+        address: row.store_address
+      } : undefined,
     }));
   }
 
@@ -583,16 +646,37 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getActiveAlerts(): Promise<(Alert & { device?: Device })[]> {
-    const alertsData = await db
-      .select()
-      .from(alerts)
-      .leftJoin(devices, eq(alerts.deviceId, devices.id))
-      .where(eq(alerts.isResolved, false))
-      .orderBy(desc(alerts.createdAt));
-
-    return alertsData.map(row => ({
-      ...row.alerts,
-      device: row.devices || undefined,
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+    
+    const result = await pool.query(`
+      SELECT a.*, d.name as device_name, d.location as device_location
+      FROM alerts a
+      LEFT JOIN devices d ON a.device_id = d.id
+      WHERE a.status = 'active'
+      ORDER BY a.created_at DESC
+    `);
+    
+    await pool.end();
+    
+    return result.rows.map(row => ({
+      id: row.id,
+      storeId: row.store_id,
+      deviceId: row.device_id,
+      title: row.title,
+      message: row.message,
+      type: row.type,
+      status: row.status,
+      createdAt: row.created_at,
+      resolvedAt: row.resolved_at,
+      device: row.device_name ? {
+        id: row.device_id,
+        name: row.device_name,
+        location: row.device_location
+      } : undefined,
     }));
   }
 
@@ -715,22 +799,38 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAvailableDevices(): Promise<Device[]> {
-    // Get devices that are not linked to any store's biometry field
-    const linkedDeviceIds = await db
-      .selectDistinct({ deviceId: stores.biometria })
-      .from(stores)
-      .where(sql`${stores.biometria} IS NOT NULL`);
-
-    const linkedIds = linkedDeviceIds.map(row => row.deviceId).filter(Boolean);
-
-    if (linkedIds.length === 0) {
-      return await db.select().from(devices);
-    }
-
-    return await db
-      .select()
-      .from(devices)
-      .where(sql`${devices.deviceId} NOT IN (${linkedIds.map(id => `'${id}'`).join(', ')})`);
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+    
+    const result = await pool.query(`
+      SELECT d.*
+      FROM devices d
+      LEFT JOIN stores s ON d.device_id = s.biometria
+      WHERE s.biometria IS NULL
+      ORDER BY d.created_at DESC
+    `);
+    
+    await pool.end();
+    
+    return result.rows.map(row => ({
+      id: row.id,
+      name: row.name,
+      type: row.type,
+      deviceId: row.device_id,
+      storeId: row.store_id,
+      status: row.status,
+      ipAddress: row.ip_address,
+      lastSeen: row.last_seen,
+      firmwareVersion: row.firmware_version,
+      location: row.location,
+      biometria: row.biometria,
+      lastPing: row.last_ping,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }));
   }
 
   async getWaveChartData(): Promise<{ time: string; value: number }[]> {

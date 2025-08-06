@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from 'ws';
 import { storage } from "./storage";
+import { clientsStorage } from "./clients";
 import { mqttService } from "./mqtt";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
@@ -575,6 +576,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(logs);
     } catch (error: any) {
       res.status(500).json({ message: error.message || "Failed to fetch access logs" });
+    }
+  });
+
+  // Clients routes
+  app.get("/api/clients", authenticateToken, async (req, res) => {
+    try {
+      const clients = await clientsStorage.getAllClients();
+      res.json(clients);
+    } catch (error) {
+      console.error("Error fetching clients:", error);
+      res.status(500).json({ message: "Failed to fetch clients" });
+    }
+  });
+
+  app.post("/api/clients", authenticateToken, async (req, res) => {
+    try {
+      const client = await clientsStorage.createClient(req.body);
+      res.status(201).json(client);
+    } catch (error) {
+      console.error("Error creating client:", error);
+      res.status(500).json({ message: "Failed to create client" });
+    }
+  });
+
+  app.patch("/api/clients/:id", authenticateToken, async (req, res) => {
+    try {
+      const client = await clientsStorage.updateClient(parseInt(req.params.id), req.body);
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+      res.json(client);
+    } catch (error) {
+      console.error("Error updating client:", error);
+      res.status(500).json({ message: "Failed to update client" });
     }
   });
 
