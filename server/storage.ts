@@ -471,13 +471,98 @@ export class DatabaseStorage implements IStorage {
     return store;
   }
 
-  async updateStore(id: number, updateData: Partial<InsertStore>): Promise<Store | undefined> {
-    const [store] = await db
-      .update(stores)
-      .set(updateData)
-      .where(eq(stores.id, id))
-      .returning();
-    return store || undefined;
+  async updateStore(id: number, updateData: any): Promise<any | undefined> {
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+    
+    const fields = [];
+    const values = [];
+    let paramCount = 1;
+    
+    if (updateData.name) {
+      fields.push(`name = $${paramCount++}`);
+      values.push(updateData.name);
+    }
+    if (updateData.nomeLoja) {
+      fields.push(`nome_loja = $${paramCount++}`);
+      values.push(updateData.nomeLoja);
+    }
+    if (updateData.address) {
+      fields.push(`address = $${paramCount++}`);
+      values.push(updateData.address);
+    }
+    if (updateData.endereco) {
+      fields.push(`endereco = $${paramCount++}`);
+      values.push(updateData.endereco);
+    }
+    if (updateData.phone) {
+      fields.push(`phone = $${paramCount++}`);
+      values.push(updateData.phone);
+    }
+    if (updateData.manager) {
+      fields.push(`manager = $${paramCount++}`);
+      values.push(updateData.manager);
+    }
+    if (updateData.managerName) {
+      fields.push(`manager_name = $${paramCount++}`);
+      values.push(updateData.managerName);
+    }
+    if (updateData.horarioSegSex) {
+      fields.push(`horario_seg_sex = $${paramCount++}`);
+      values.push(updateData.horarioSegSex);
+    }
+    if (updateData.horarioSabado) {
+      fields.push(`horario_sabado = $${paramCount++}`);
+      values.push(updateData.horarioSabado);
+    }
+    if (updateData.horarioDom) {
+      fields.push(`horario_dom = $${paramCount++}`);
+      values.push(updateData.horarioDom);
+    }
+    if (updateData.whatsAtendimento) {
+      fields.push(`whats_atendimento = $${paramCount++}`);
+      values.push(updateData.whatsAtendimento);
+    }
+    if (updateData.valorLv || updateData.valor_lv) {
+      fields.push(`valor_lv = $${paramCount++}`);
+      values.push(updateData.valorLv || updateData.valor_lv);
+    }
+    if (updateData.valorS || updateData.valor_s) {
+      fields.push(`valor_s = $${paramCount++}`);
+      values.push(updateData.valorS || updateData.valor_s);
+    }
+    if (updateData.valorLv2 || updateData.valor_lv2) {
+      fields.push(`valor_lv2 = $${paramCount++}`);
+      values.push(updateData.valorLv2 || updateData.valor_lv2);
+    }
+    if (updateData.valorS2 || updateData.valor_s2) {
+      fields.push(`valor_s2 = $${paramCount++}`);
+      values.push(updateData.valorS2 || updateData.valor_s2);
+    }
+    if (updateData.biometria) {
+      fields.push(`biometria = $${paramCount++}`);
+      values.push(updateData.biometria);
+    }
+    if (updateData.isActive !== undefined) {
+      fields.push(`is_active = $${paramCount++}`);
+      values.push(updateData.isActive);
+    }
+    
+    fields.push(`updated_at = NOW()`);
+    values.push(id);
+    
+    const result = await pool.query(`
+      UPDATE stores 
+      SET ${fields.join(', ')}
+      WHERE id = $${paramCount}
+      RETURNING *
+    `, values);
+    
+    await pool.end();
+    return result.rows[0] || undefined;
   }
 
   async getStores(): Promise<any[]> {
