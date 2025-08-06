@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,6 +48,7 @@ interface StoreStatistics {
 
 export default function StoresView() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingStore, setEditingStore] = useState<StoreWithDevice | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   
@@ -92,6 +93,7 @@ export default function StoresView() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/stores"] });
       setIsDialogOpen(false);
+      setEditingStore(null);
       toast({
         title: "Loja criada",
         description: "A loja foi criada com sucesso.",
@@ -106,21 +108,81 @@ export default function StoresView() {
     },
   });
 
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      address: "",
-      phone: "",
-      manager: "",
-      biometry: "",
-      userId: user?.id || 1,
-      isActive: true,
+  const updateStoreMutation = useMutation({
+    mutationFn: ({ id, ...data }: FormData & { id: number }) =>
+      apiRequest(`/api/stores/${id}`, "PUT", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/stores"] });
+      setIsDialogOpen(false);
+      setEditingStore(null);
+      toast({
+        title: "Loja atualizada",
+        description: "Os dados da loja foram atualizados com sucesso.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Falha ao atualizar loja",
+        variant: "destructive",
+      });
     },
   });
 
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: editingStore?.name || "",
+      address: editingStore?.address || "",
+      phone: editingStore?.phone || "",
+      manager: editingStore?.manager || "",
+      biometry: editingStore?.biometria || "",
+      userId: user?.id || 1,
+      isActive: editingStore?.isActive ?? true,
+    },
+  });
+
+  // Reset form when editing store changes
+  React.useEffect(() => {
+    if (editingStore) {
+      form.reset({
+        name: editingStore.name || "",
+        address: editingStore.address || "",
+        phone: editingStore.phone || "",
+        manager: editingStore.manager || "",
+        biometry: editingStore.biometria || "",
+        userId: editingStore.userId || user?.id || 1,
+        isActive: editingStore.isActive ?? true,
+      });
+    } else {
+      form.reset({
+        name: "",
+        address: "",
+        phone: "",
+        manager: "",
+        biometry: "",
+        userId: user?.id || 1,
+        isActive: true,
+      });
+    }
+  }, [editingStore, form, user?.id]);
+
   const onSubmit = (data: FormData) => {
-    createStoreMutation.mutate(data);
+    if (editingStore) {
+      updateStoreMutation.mutate({ ...data, id: editingStore.id });
+    } else {
+      createStoreMutation.mutate(data);
+    }
+  };
+
+  const handleEditStore = (store: StoreWithDevice) => {
+    setEditingStore(store);
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setEditingStore(null);
   };
 
   const getStatusConfig = (status?: string) => {
@@ -155,10 +217,11 @@ export default function StoresView() {
     }
   };
 
-  // Role-based permission check
-  const canCreateStore = user?.role === "franqueado" || user?.role === "master";
-  const canLinkDevice = user?.role === "tecnico" || user?.role === "master";
-  const canViewAllStores = user?.role === "master";
+  // Role-based permission check - Atualizado conforme requisitos
+  const canCreateStore = user?.role === "franqueado" || user?.role === "admin";
+  const canLinkDevice = user?.role === "tecnico" || user?.role === "admin";
+  const canViewAllStores = user?.role === "admin";
+  const canEditStore = user?.role === "admin" || user?.role === "franqueado";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950 p-6">
@@ -355,17 +418,20 @@ export default function StoresView() {
                     <Button 
                       type="button" 
                       variant="outline" 
-                      onClick={() => setIsDialogOpen(false)}
+                      onClick={handleCloseDialog}
                       className="border-slate-600 text-gray-300 hover:bg-slate-800"
                     >
                       Cancelar
                     </Button>
                     <Button 
                       type="submit" 
-                      disabled={createStoreMutation.isPending}
+                      disabled={createStoreMutation.isPending || updateStoreMutation.isPending}
                       className="bg-blue-600 hover:bg-blue-700"
                     >
-                      {createStoreMutation.isPending ? "Criando..." : "Criar Loja"}
+                      {editingStore ? 
+                        (updateStoreMutation.isPending ? "Salvando..." : "Salvar Alterações") :
+                        (createStoreMutation.isPending ? "Criando..." : "Criar Loja")
+                      }
                     </Button>
                   </div>
                 </form>
@@ -414,11 +480,12 @@ export default function StoresView() {
             <CardTitle className="text-white">Lista Completa de Lojas</CardTitle>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="w-full">
+            <ScrollArea className="w-full h-[600px]">
               <Table>
                 <TableHeader>
                   <TableRow className="border-slate-700">
-                    <TableHead className="text-slate-300">ID</TableHead>
+                    <TableHead className="text-slate-300 min-w-[60px]">ID</TableHead>
+                    <TableHead className="text-slate-300 min-w-[100px]">Ações</TableHead>
                     <TableHead className="text-slate-300">Loja</TableHead>
                     <TableHead className="text-slate-300">Nome Loja</TableHead>
                     <TableHead className="text-slate-300">Nome IA</TableHead>
@@ -461,8 +528,21 @@ export default function StoresView() {
                 </TableHeader>
                 <TableBody>
                   {stores?.map((store: any) => (
-                    <TableRow key={store.id} className="border-slate-700">
+                    <TableRow key={store.id} className="border-slate-700 hover:bg-slate-800/30">
                       <TableCell className="text-white font-mono">{store.id}</TableCell>
+                      <TableCell>
+                        {canEditStore && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditStore(store)}
+                            className="border-blue-500 text-blue-400 hover:bg-blue-500/20 text-xs h-8 px-2"
+                          >
+                            <Settings className="h-3 w-3 mr-1" />
+                            Editar
+                          </Button>
+                        )}
+                      </TableCell>
                       <TableCell className="text-white">{store.loja || 'N/A'}</TableCell>
                       <TableCell className="text-white">{store.nome_loja || store.name || 'N/A'}</TableCell>
                       <TableCell className="text-white">{store.nome_ia || 'N/A'}</TableCell>

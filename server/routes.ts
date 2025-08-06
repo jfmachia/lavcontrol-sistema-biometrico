@@ -122,6 +122,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update store
+  app.put("/api/stores/:id", authenticateToken, async (req, res) => {
+    try {
+      const storeId = parseInt(req.params.id);
+      const updatedStore = await storage.updateStore(storeId, req.body);
+      res.json(updatedStore);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Failed to update store" });
+    }
+  });
+
   // Store statistics for dashboard
   app.get("/api/stores/statistics", authenticateToken, async (req, res) => {
     try {
