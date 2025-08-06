@@ -27,37 +27,54 @@ interface SimpleTrafficChartProps {
 export function SimpleTrafficChart({ className }: SimpleTrafficChartProps) {
   const [isRealTimeEnabled, setIsRealTimeEnabled] = useState(true);
 
+  // Buscar logs de acesso em tempo real
+  const { data: accessLogs = [], isLoading: logsLoading } = useQuery<any[]>({
+    queryKey: ['/api/access-logs'],
+    refetchInterval: isRealTimeEnabled ? 3000 : false,
+    refetchIntervalInBackground: true,
+  });
+
   const { data: accessData = [], isLoading } = useQuery<AccessData[]>({
     queryKey: ['/api/dashboard/wave-chart'],
     refetchInterval: isRealTimeEnabled ? 5000 : false,
     refetchIntervalInBackground: true,
   });
 
-  // Processar dados para gráfico de barras simples
+  // Processar dados dos logs em tempo real
   const chartData = React.useMemo(() => {
-    if (!accessData || accessData.length === 0) return [];
+    if (!accessLogs || accessLogs.length === 0) return [];
 
-    // Agrupar por loja e somar total de acessos
-    const storeGroups = accessData.reduce((acc, item) => {
-      if (!acc[item.store_name]) {
-        acc[item.store_name] = {
-          store: item.store_name.length > 15 ? item.store_name.substring(0, 15) + '...' : item.store_name,
-          fullName: item.store_name,
+    // Filtrar logs das últimas 24 horas
+    const now = new Date();
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    
+    const recentLogs = accessLogs.filter(log => {
+      const logDate = new Date(log.timestamp);
+      return logDate >= yesterday;
+    });
+
+    // Agrupar por loja e contar acessos
+    const storeGroups = recentLogs.reduce((acc, log) => {
+      const storeName = log.store_name || 'Sem Loja';
+      if (!acc[storeName]) {
+        acc[storeName] = {
+          store: storeName.length > 15 ? storeName.substring(0, 15) + '...' : storeName,
+          fullName: storeName,
           acessos: 0,
         };
       }
-      acc[item.store_name].acessos += item.access_count;
+      acc[storeName].acessos += 1;
       return acc;
     }, {} as Record<string, any>);
 
     return Object.values(storeGroups)
       .sort((a: any, b: any) => b.acessos - a.acessos)
       .slice(0, 8); // Mostrar apenas top 8 lojas
-  }, [accessData]);
+  }, [accessLogs]);
 
   const totalAccess = chartData.reduce((sum: number, item: any) => sum + item.acessos, 0);
 
-  if (isLoading) {
+  if (isLoading || logsLoading) {
     return (
       <Card className={`${className} bg-card border`}>
         <CardHeader>
@@ -101,7 +118,7 @@ export function SimpleTrafficChart({ className }: SimpleTrafficChartProps) {
         </div>
         
         <div className="text-sm text-muted-foreground">
-          Total: {totalAccess} acessos registrados
+          Total: {totalAccess} acessos (últimas 24h) • Logs reais: {accessLogs.length}
         </div>
       </CardHeader>
       
@@ -158,7 +175,7 @@ export function SimpleTrafficChart({ className }: SimpleTrafficChartProps) {
                   index === 2 ? 'bg-yellow-500' : 'bg-gray-500'
                 }`} />
                 <span className="text-sm font-medium text-foreground truncate">
-                  {item.store}
+                  {item?.store || 'N/A'}
                 </span>
               </div>
               <span className="text-sm font-bold text-primary">
@@ -169,7 +186,7 @@ export function SimpleTrafficChart({ className }: SimpleTrafficChartProps) {
         </div>
 
         <div className="mt-4 text-xs text-muted-foreground text-center p-2 bg-muted/30 rounded">
-          Dados atualizados automaticamente a cada 5 segundos
+          Dados dos logs reais • Atualização a cada 3 segundos • {accessLogs.length} entradas registradas
         </div>
       </CardContent>
     </Card>

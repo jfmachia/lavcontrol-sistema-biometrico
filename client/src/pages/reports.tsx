@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { WaveChart } from "@/components/wave-chart";
+import { ReportsTrafficChart } from "@/components/reports-traffic-chart";
 import { useQuery } from "@tanstack/react-query";
 import { BarChart3, TrendingUp, Users, Activity } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
@@ -94,7 +94,7 @@ export function Reports() {
         </TabsList>
 
         <TabsContent value="waves" className="space-y-4">
-          <WaveChart className="col-span-4" />
+          <ReportsTrafficChart className="col-span-full" />
         </TabsContent>
 
         <TabsContent value="timeline" className="space-y-4">
