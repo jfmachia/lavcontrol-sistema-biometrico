@@ -118,49 +118,43 @@ export const accessLogs = pgTable("access_logs", {
 
 export const alerts = pgTable("alerts", {
   id: serial("id").primaryKey(),
-  type: text("type").notNull(), // device_offline, multiple_denies, unauthorized_access
-  title: text("title").notNull(),
+  title: varchar("title").notNull(),
   message: text("message").notNull(),
+  type: varchar("type").notNull(),
+  status: varchar("status").default("active"),
+  storeId: integer("store_id"),
   deviceId: integer("device_id"),
-  isResolved: boolean("is_resolved").default(false).notNull(),
-  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  createdAt: timestamp("created_at").default(sql`now()`),
+  resolvedAt: timestamp("resolved_at"),
 });
 
 // ===== LAUNDRY FRANCHISE SYSTEM TABLES =====
 
 export const clients = pgTable("clients", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  email: text("email").unique(),
-  phone: text("phone"),
-  cpf: text("cpf").unique(),
-  birthDate: timestamp("birth_date"),
-  address: text("address"),
-  profileImage: text("profile_image"),
-  alertLevel: text("alert_level").default("normal").notNull(), // normal, amarelo, vip
-  isBlocked: boolean("is_blocked").default(false),
-  isActive: boolean("is_active").default(true).notNull(),
+  name: varchar("name").notNull(),
+  email: varchar("email"),
+  phone: varchar("phone"),
+  cpf: varchar("cpf"),
+  profileImageUrl: varchar("profile_image_url"),
+  status: varchar("status").default("active"), // active, alert, vip, blocked
   storeId: integer("store_id"),
-  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
-  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  createdAt: timestamp("created_at").default(sql`now()`),
+  updatedAt: timestamp("updated_at").default(sql`now()`),
 });
 
 export const clientEntries = pgTable("client_entries", {
   id: serial("id").primaryKey(),
   clientId: integer("client_id"),
   storeId: integer("store_id"),
-  deviceId: integer("device_id"),
-  entryType: text("entry_type").notNull(), // 'entry', 'exit', 'machine_use'
-  machineType: text("machine_type"), // 'lavadora', 'secadora', 'centrifuga'
-  machineNumber: text("machine_number"),
-  serviceType: text("service_type"), // 'lavagem', 'secagem', 'lavagem_e_secagem'
-  paymentMethod: text("payment_method"), // 'dinheiro', 'cartao', 'pix', 'credito_app'
-  amountPaid: text("amount_paid"), // Using text to handle decimal values
+  serviceType: varchar("service_type").notNull(),
+  machineNumber: integer("machine_number"),
   durationMinutes: integer("duration_minutes"),
-  status: text("status").default("active").notNull(), // 'active', 'completed', 'cancelled'
-  entryTime: timestamp("entry_time").default(sql`CURRENT_TIMESTAMP`).notNull(),
-  exitTime: timestamp("exit_time"),
-  notes: text("notes"),
+  cost: varchar("cost"), // usando varchar para compatibilidade com numeric
+  paymentMethod: varchar("payment_method"),
+  status: varchar("status").default("completed"),
+  startedAt: timestamp("started_at").default(sql`now()`),
+  completedAt: timestamp("completed_at"),
 });
 
 // ===== RELATIONS =====
@@ -177,6 +171,8 @@ export const storesRelations = relations(stores, ({ one, many }) => ({
   }),
   devices: many(devices),
   clients: many(clients),
+  accessLogs: many(accessLogs),
+  alerts: many(alerts),
 }));
 
 export const devicesRelations = relations(devices, ({ one, many }) => ({
@@ -205,6 +201,10 @@ export const accessLogsRelations = relations(accessLogs, ({ one }) => ({
 }));
 
 export const alertsRelations = relations(alerts, ({ one }) => ({
+  store: one(stores, {
+    fields: [alerts.storeId],
+    references: [stores.id],
+  }),
   device: one(devices, {
     fields: [alerts.deviceId],
     references: [devices.id],
@@ -228,10 +228,6 @@ export const clientEntriesRelations = relations(clientEntries, ({ one }) => ({
   store: one(stores, {
     fields: [clientEntries.storeId],
     references: [stores.id],
-  }),
-  device: one(devices, {
-    fields: [clientEntries.deviceId],
-    references: [devices.id],
   }),
 }));
 

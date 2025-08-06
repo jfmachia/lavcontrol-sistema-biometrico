@@ -492,6 +492,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get specific store by ID  
+  app.get("/api/stores/:id", async (req, res) => {
+    try {
+      const storeId = parseInt(req.params.id);
+      const store = await storage.getStoreById(storeId);
+      if (!store) {
+        return res.status(404).json({ message: "Loja não encontrada" });
+      }
+      res.json(store);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to fetch store" });
+    }
+  });
+
   // Stores routes autenticadas
   app.get("/api/stores/secure", authenticateToken, async (req, res) => {
     try {

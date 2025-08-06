@@ -504,6 +504,81 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async getStoreById(id: number): Promise<any> {
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+    
+    try {
+      const result = await pool.query(`
+        SELECT s.*, 
+               COALESCE(d.device_count, 0) as device_count,
+               COALESCE(d.devices_online, 0) as devices_online
+        FROM stores s 
+        LEFT JOIN (
+          SELECT store_id,
+                 COUNT(*) as device_count,
+                 COUNT(CASE WHEN status = 'online' THEN 1 END) as devices_online
+          FROM devices 
+          GROUP BY store_id
+        ) d ON s.id = d.store_id
+        WHERE s.id = $1
+      `, [id]);
+      
+      if (result.rows.length === 0) {
+        return null;
+      }
+      
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        name: row.name || row.nome_loja,
+        address: row.address || row.endereco,
+        phone: row.phone,
+        city: row.city || row.cidade,
+        state: row.state || row.estado,
+        zipCode: row.zip_code,
+        managerName: row.manager_name || row.manager,
+        openingHours: row.opening_hours,
+        isActive: row.is_active,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        deviceCount: parseInt(row.device_count) || 0,
+        devicesOnline: parseInt(row.devices_online) || 0,
+
+        // Campos específicos do VPS para configurações
+        nomeLoja: row.nome_loja,
+        endereco: row.endereco,
+        manager: row.manager,
+        senhaPorta: row.senha_porta,
+        senhaWifi: row.senha_wifi,
+        horarioSegSex: row.horario_seg_sex,
+        horarioSabado: row.horario_sabado,
+        horarioDom: row.horario_dom,
+        whatsAtendimento: row.whats_atendimento,
+        pontoReferencia: row.ponto_referencia,
+        valorLv: row.valor_lv,
+        valorS: row.valor_s,
+        valorLv2: row.valor_lv2,
+        valorS2: row.valor_s2,
+        estacionamento: row.estacionamento,
+        delivery: row.delivery,
+        cashBack: row.cash_back,
+        cupons: row.cupons,
+        promocao: row.promocao,
+        observacoes: row.observacoes,
+        biometria: row.biometria,
+      };
+    } catch (error) {
+      console.error('Erro ao buscar loja por ID:', error);
+      throw error;
+    } finally {
+      await pool.end();
+    }
+  }
+
   async getDevicesByStore(storeId: number): Promise<any[]> {
     const { Pool } = await import('pg');
     const pool = new Pool({

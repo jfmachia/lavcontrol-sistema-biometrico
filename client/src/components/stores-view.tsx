@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import StoreSettings from "./store-settings";
 
 export default function StoresView() {
   const { toast } = useToast();
