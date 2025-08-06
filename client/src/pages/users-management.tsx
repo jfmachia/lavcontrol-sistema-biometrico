@@ -43,6 +43,8 @@ export default function UsersManagement() {
     mutationFn: ({ id, data }: { id: number; data: any }) =>
       apiRequest(`/api/users/${id}`, "PATCH", data),
     onSuccess: () => {
+      // Forçar atualização completa dos dados
+      queryClient.removeQueries({ queryKey: ["/api/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       queryClient.refetchQueries({ queryKey: ["/api/users"] });
       setEditingUser(null);
@@ -50,6 +52,11 @@ export default function UsersManagement() {
         title: "Usuário atualizado",
         description: "As informações do usuário foram atualizadas com sucesso.",
       });
+      
+      // Forçar recarregamento da página após 1 segundo para garantir atualização
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     },
     onError: (error: any) => {
       toast({
