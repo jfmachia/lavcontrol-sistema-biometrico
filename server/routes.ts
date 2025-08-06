@@ -190,7 +190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/users", authenticateToken, async (req, res) => {
     try {
-      const { name, email, password } = req.body;
+      const { name, email, password, role, alertLevel, storeId } = req.body;
       
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(email);
@@ -206,17 +206,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name,
         email,
         password: hashedPassword,
+        role: role || 'cliente',
+        alertLevel: alertLevel || 'normal'
       });
 
       res.json({
         id: user.id,
         name: user.name,
         email: user.email,
+        role: user.role,
+        alertLevel: user.alertLevel,
         isActive: user.isActive,
         createdAt: user.createdAt,
       });
     } catch (error: any) {
       res.status(400).json({ message: error.message || "Failed to create user" });
+    }
+  });
+
+  app.patch("/api/users/:id", authenticateToken, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      const updatedUser = await storage.updateUser(userId, updateData);
+      res.json(updatedUser);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Failed to update user" });
     }
   });
 
@@ -230,13 +246,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Stores routes
+  app.get("/api/stores", authenticateToken, async (req, res) => {
+    try {
+      const stores = await storage.getStores();
+      res.json(stores);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to fetch stores" });
+    }
+  });
+
+  app.post("/api/stores", authenticateToken, async (req, res) => {
+    try {
+      const { name, address, phone, manager, biometry, isActive } = req.body;
+      const store = await storage.createStore({
+        name,
+        address,
+        phone,
+        manager,
+        biometry,
+        isActive: isActive !== false,
+        userId: (req as any).user.id
+      });
+      res.json(store);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Failed to create store" });
+    }
+  });
+
   app.post("/api/devices", authenticateToken, async (req, res) => {
     try {
-      const validatedData = insertDeviceSchema.parse(req.body);
-      const device = await storage.createDevice(validatedData);
+      const { name, deviceId, location, storeId, status } = req.body;
+      const device = await storage.createDevice({
+        name,
+        deviceId,
+        storeId,
+        status: status || 'offline'
+      });
       res.json(device);
     } catch (error: any) {
       res.status(400).json({ message: error.message || "Failed to create device" });
+    }
+  });
+
+  app.patch("/api/devices/:id", authenticateToken, async (req, res) => {
+    try {
+      const deviceId = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      const updatedDevice = await storage.updateDevice(deviceId, updateData);
+      res.json(updatedDevice);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Failed to update device" });
     }
   });
 

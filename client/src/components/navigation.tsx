@@ -8,7 +8,9 @@ import {
   AlertTriangle,
   Settings,
   LogOut,
-  Fingerprint
+  Fingerprint,
+  Plus,
+  UserPlus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
@@ -31,9 +33,21 @@ export function Navigation() {
       roles: ["master", "franqueado"]
     },
     {
+      label: "Cadastrar Loja",
+      href: "/store/register",
+      icon: Plus,
+      roles: ["master"]
+    },
+    {
       label: "Usuários",
       href: "/users",
       icon: Users,
+      roles: ["master", "franqueado"]
+    },
+    {
+      label: "Cadastrar Usuário",
+      href: "/user/register",
+      icon: UserPlus,
       roles: ["master", "franqueado"]
     },
     {

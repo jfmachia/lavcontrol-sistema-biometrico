@@ -98,6 +98,18 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
+      <Route path="/store/register">
+        <ProtectedRoute>
+          <StoresView />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/user/register">
+        <ProtectedRoute>
+          <UsersManagement />
+        </ProtectedRoute>
+      </Route>
+      
       <Route path="/access-control">
         <ProtectedRoute>
           <AccessControl />
