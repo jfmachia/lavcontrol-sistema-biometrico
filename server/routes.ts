@@ -303,6 +303,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Devices by store ID for editing modal
+  app.get("/api/devices/by-store/:storeId", async (req, res) => {
+    try {
+      const storeId = parseInt(req.params.storeId);
+      const devices = await storage.getDevicesByStore(storeId);
+      res.json(devices);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to fetch devices" });
+    }
+  });
+
   // Available devices for linking to stores
   app.get("/api/devices/available", authenticateToken, async (req, res) => {
     try {

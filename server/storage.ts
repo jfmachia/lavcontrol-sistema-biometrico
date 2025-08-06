@@ -504,6 +504,29 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async getDevicesByStore(storeId: number): Promise<any[]> {
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+    
+    try {
+      const result = await pool.query(`
+        SELECT * FROM devices 
+        WHERE store_id = $1 
+        ORDER BY created_at DESC
+      `, [storeId]);
+      
+      return result.rows;
+    } catch (error) {
+      console.error('Erro ao buscar dispositivos da loja:', error);
+      throw error;
+    } finally {
+      await pool.end();
+    }
+  }
+
   async getDevices(): Promise<any[]> {
     const { Pool } = await import('pg');
     const pool = new Pool({

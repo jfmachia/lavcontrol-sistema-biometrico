@@ -16,7 +16,11 @@ import {
   Plus,
   Edit2,
   Trash2,
-  Search
+  Search,
+  Smartphone,
+  Wifi,
+  WifiOff,
+  AlertTriangle
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -34,6 +38,13 @@ export default function StoresView() {
 
   const { data: storeStats } = useQuery<any>({
     queryKey: ["/api/stores/statistics"],
+  });
+
+  // Buscar dispositivos quando uma loja está sendo editada
+  const { data: storeDevices = [] } = useQuery<any[]>({
+    queryKey: ["/api/devices/by-store", editingStore?.id],
+    queryFn: () => apiRequest(`/api/devices/by-store/${editingStore?.id}`, 'GET'),
+    enabled: !!editingStore?.id,
   });
 
   const createStoreMutation = useMutation({
@@ -309,6 +320,62 @@ export default function StoresView() {
                               }
                               placeholder="Nome do gerente"
                             />
+                          </div>
+
+                          {/* Seção de Dispositivos Vinculados */}
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2 pt-4 border-t">
+                              <Smartphone className="w-4 h-4 text-primary" />
+                              <Label className="text-sm font-medium">Dispositivos Vinculados</Label>
+                            </div>
+                            
+                            {storeDevices.length === 0 ? (
+                              <div className="text-center py-6 bg-muted/20 rounded-lg">
+                                <Smartphone className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                                <p className="text-sm text-muted-foreground">
+                                  Nenhum dispositivo vinculado a esta loja
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="space-y-2 max-h-48 overflow-y-auto">
+                                {storeDevices.map((device: any) => (
+                                  <div 
+                                    key={device.id} 
+                                    className="flex items-center justify-between p-3 bg-muted/10 rounded-lg border"
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-8 h-8 bg-primary/20 rounded-lg flex items-center justify-center">
+                                        <Smartphone className="w-4 h-4 text-primary" />
+                                      </div>
+                                      <div>
+                                        <p className="font-medium text-sm">{device.name}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                          Tipo: {device.type || 'Biométrico'}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      {device.status === 'online' ? (
+                                        <div className="flex items-center gap-1 text-green-600">
+                                          <Wifi className="w-4 h-4" />
+                                          <span className="text-xs">Online</span>
+                                        </div>
+                                      ) : device.status === 'maintenance' ? (
+                                        <div className="flex items-center gap-1 text-yellow-600">
+                                          <AlertTriangle className="w-4 h-4" />
+                                          <span className="text-xs">Manutenção</span>
+                                        </div>
+                                      ) : (
+                                        <div className="flex items-center gap-1 text-red-600">
+                                          <WifiOff className="w-4 h-4" />
+                                          <span className="text-xs">Offline</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
 
                           <div className="flex justify-end space-x-2">
