@@ -342,6 +342,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Clients routes (clientes das lavanderias)
+  app.get("/api/clients", async (req, res) => {
+    try {
+      const clients = await storage.getClients();
+      res.json(clients);
+    } catch (error) {
+      console.error("Error fetching clients:", error);
+      res.status(500).json({ message: "Failed to fetch clients" });
+    }
+  });
+
+  app.get("/api/clients/store/:storeId", async (req, res) => {
+    try {
+      const { storeId } = req.params;
+      const clients = await storage.getClientsByStore(parseInt(storeId));
+      res.json(clients);
+    } catch (error) {
+      console.error("Error fetching clients by store:", error);
+      res.status(500).json({ message: "Failed to fetch clients" });
+    }
+  });
+
   // Users routes
   app.get("/api/users", authenticateToken, async (req, res) => {
     try {

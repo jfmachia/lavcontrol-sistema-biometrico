@@ -156,25 +156,78 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUsers(): Promise<User[]> {
-    return await db.select().from(users).orderBy(desc(users.createdAt));
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+    
+    const result = await pool.query(`
+      SELECT id, email, name, password, role, is_active, alert_level, 
+             failed_login_attempts, locked_until, reset_token, reset_token_expires, 
+             last_login, created_at, updated_at
+      FROM users 
+      ORDER BY created_at DESC
+    `);
+    
+    await pool.end();
+    return result.rows;
   }
 
-  async getFacialRecognizedUsers(): Promise<Pick<User, 'id' | 'name' | 'email' | 'isActive' | 'createdAt'>[]> {
-    // Buscar usuários únicos que tiveram acesso reconhecido por reconhecimento facial
-    const recognizedUsers = await db
-      .selectDistinct({
-        id: users.id,
-        name: users.name,
-        email: users.email,
-        isActive: users.isActive,
-        createdAt: users.createdAt,
-      })
-      .from(users)
-      .innerJoin(accessLogs, eq(users.id, accessLogs.userId))
-      .where(eq(accessLogs.method, "facial_recognition"))
-      .orderBy(desc(users.createdAt));
+  async getFacialRecognizedUsers(): Promise<any[]> {
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+    
+    const result = await pool.query(`
+      SELECT DISTINCT u.id, u.name, u.email, u.is_active as "isActive", u.created_at as "createdAt"
+      FROM users u
+      INNER JOIN access_logs al ON u.id::text = al.user_id::text
+      WHERE al.method = 'facial_recognition'
+      ORDER BY u.created_at DESC
+      LIMIT 10
+    `);
+    
+    await pool.end();
+    return result.rows;
+  }
 
-    return recognizedUsers;
+  // Client methods (clientes das lavanderias)
+  async getClients(): Promise<any[]> {
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+    
+    const result = await pool.query(`
+      SELECT c.*, s.nome_loja as store_name
+      FROM clients c
+      LEFT JOIN stores s ON c.store_id = s.id
+      ORDER BY c.created_at DESC
+    `);
+    
+    await pool.end();
+    return result.rows;
+  }
+
+  async getClientsByStore(storeId: number): Promise<any[]> {
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+    
+    const result = await pool.query(`
+      SELECT * FROM clients 
+      WHERE store_id = $1
+      ORDER BY created_at DESC
+    `, [storeId]);
+    
+    await pool.end();
+    return result.rows;
   }
 
   // ===== AUTHENTICATION METHODS =====
@@ -364,8 +417,13 @@ export class DatabaseStorage implements IStorage {
     return store || undefined;
   }
 
-  async getStores(): Promise<Store[]> {
-    const { pool } = await import('./db');
+  async getStores(): Promise<any[]> {
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+    
     const result = await pool.query(`
       SELECT id, name, address, phone, city, state, zip_code, manager_name, 
              opening_hours, is_active, created_at, updated_at,
@@ -380,6 +438,8 @@ export class DatabaseStorage implements IStorage {
       FROM stores 
       ORDER BY created_at DESC
     `);
+    
+    await pool.end();
     
     return result.rows.map((row: any) => ({
       id: row.id,
@@ -464,20 +524,30 @@ export class DatabaseStorage implements IStorage {
     return log;
   }
 
-  async getAccessLogs(limit = 50): Promise<(AccessLog & { user?: User; device?: Device })[]> {
-    const logs = await db
-      .select()
-      .from(accessLogs)
-      .leftJoin(users, eq(accessLogs.userId, users.id))
-      .leftJoin(devices, eq(accessLogs.deviceId, devices.id))
-      .orderBy(desc(accessLogs.timestamp))
-      .limit(limit);
-
-    return logs.map(row => ({
-      ...row.access_logs,
-      user: row.users || undefined,
-      device: row.devices || undefined,
-    }));
+  async getAccessLogs(limit = 50): Promise<any[]> {
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+    
+    const result = await pool.query(`
+      SELECT al.id, al.user_id, al.client_id, al.device_id, al.store_id,
+             al.access_type, al.method, al.success, al.details, al.created_at,
+             al.action, al.status, al.timestamp,
+             u.name as user_name, u.email as user_email,
+             c.name as client_name,
+             d.name as device_name
+      FROM access_logs al
+      LEFT JOIN users u ON al.user_id::text = u.id::text
+      LEFT JOIN clients c ON al.client_id = c.id
+      LEFT JOIN devices d ON al.device_id = d.id
+      ORDER BY al.created_at DESC
+      LIMIT $1
+    `, [limit]);
+    
+    await pool.end();
+    return result.rows;
   }
 
   async getAccessLogsByDevice(deviceId: number, limit = 50): Promise<AccessLog[]> {
@@ -651,34 +721,46 @@ export class DatabaseStorage implements IStorage {
       .where(sql`${devices.deviceId} NOT IN (${linkedIds.map(id => `'${id}'`).join(', ')})`);
   }
 
-  async getWaveChartData(): Promise<Array<{
-    time: string;
-    store_name: string; 
-    access_count: number;
-  }>> {
+  async getWaveChartData(): Promise<{ time: string; value: number }[]> {
     try {
-      // Usar raw SQL para evitar problemas de sintaxe
-      const result = await db.execute(sql`
-        SELECT 
-          DATE_TRUNC('hour', al.timestamp) as time,
-          s.nome_loja as store_name,
-          COUNT(*) as access_count
-        FROM access_logs al
-        LEFT JOIN devices d ON al.device_id = d.id
-        LEFT JOIN stores s ON d.store_id = s.id  
-        WHERE 
-          al.status = 'success' 
-          AND al.timestamp > NOW() - INTERVAL '24 hours'
-          AND s.nome_loja IS NOT NULL
-        GROUP BY DATE_TRUNC('hour', al.timestamp), s.nome_loja
-        ORDER BY DATE_TRUNC('hour', al.timestamp), s.nome_loja
-      `);
+      const { Pool } = await import('pg');
+      const pool = new Pool({
+        connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+        ssl: false,
+      });
+      
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      
+      const result = await pool.query(`
+        SELECT created_at as timestamp
+        FROM access_logs 
+        WHERE created_at >= $1 AND (status = 'success' OR success = true)
+        ORDER BY created_at
+      `, [twentyFourHoursAgo]);
+      
+      await pool.end();
+      
+      // Group by hour and count
+      const hourlyData = result.rows.reduce((acc: Record<string, number>, log: any) => {
+        if (!log.timestamp) return acc;
+        
+        const hour = new Date(log.timestamp).getHours();
+        const key = `${hour.toString().padStart(2, '0')}:00`;
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      }, {});
 
-      return result.rows.map((row: any) => ({
-        time: row.time,
-        store_name: row.store_name,
-        access_count: parseInt(row.access_count)
-      }));
+      // Fill in missing hours with 0
+      const chartData = [];
+      for (let i = 0; i < 24; i++) {
+        const key = `${i.toString().padStart(2, '0')}:00`;
+        chartData.push({
+          time: key,
+          value: hourlyData[key] || 0,
+        });
+      }
+
+      return chartData;
     } catch (error) {
       console.error('Error in getWaveChartData:', error);
       return [];

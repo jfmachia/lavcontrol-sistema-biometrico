@@ -14,6 +14,7 @@ import { BiometryManagement } from "@/components/biometry-management";
 import { DeviceRegistration } from "@/components/device-registration";
 import { Reports } from "@/pages/reports";
 import UsersManagementPage from "@/pages/users-management";
+import ClientsManagement from "@/pages/clients-management";
 import { Settings } from "@/pages/settings";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
@@ -102,6 +103,12 @@ function Router() {
       <Route path="/users-management">
         <ProtectedRoute>
           <UsersManagementPage />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/clients">
+        <ProtectedRoute>
+          <ClientsManagement />
         </ProtectedRoute>
       </Route>
       
