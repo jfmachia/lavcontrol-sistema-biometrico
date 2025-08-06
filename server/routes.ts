@@ -326,9 +326,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/users/:id", authenticateToken, async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
-      const updateData = req.body;
+      const { name, email, alertLevel, isBlocked, isActive } = req.body;
       
+      // Mapeamento de camelCase para o schema do banco
+      const updateData: any = {};
+      if (name !== undefined) updateData.name = name;
+      if (email !== undefined) updateData.email = email;
+      if (alertLevel !== undefined) updateData.alertLevel = alertLevel;
+      if (isBlocked !== undefined) updateData.isBlocked = isBlocked;
+      if (isActive !== undefined) updateData.isActive = isActive;
+      
+      console.log('Updating user', userId, 'with data:', updateData);
       const updatedUser = await storage.updateUser(userId, updateData);
+      console.log('Updated user result:', updatedUser);
       res.json(updatedUser);
     } catch (error: any) {
       console.error("Error updating user:", error);
