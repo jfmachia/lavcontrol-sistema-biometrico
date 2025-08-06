@@ -43,7 +43,7 @@ export class AuthService {
   }
 
   static async login(email: string, password: string): Promise<AuthResponse> {
-    const response = await apiRequest("POST", "/api/auth/login", { email, password });
+    const response = await apiRequest("/api/auth/login", "POST", { email, password });
     const data = await response.json();
     
     this.setToken(data.token);
@@ -53,7 +53,7 @@ export class AuthService {
   }
 
   static async register(name: string, email: string, password: string): Promise<AuthResponse> {
-    const response = await apiRequest("POST", "/api/auth/register", { name, email, password });
+    const response = await apiRequest("/api/auth/register", "POST", { name, email, password });
     const data = await response.json();
     
     this.setToken(data.token);
