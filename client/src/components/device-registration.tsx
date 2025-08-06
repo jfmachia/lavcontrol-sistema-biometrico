@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Smartphone, Wifi, WifiOff, Plus, Check, AlertTriangle, Trash2 } from 'lucide-react';
+import { Smartphone, Wifi, WifiOff, Plus, Check, AlertTriangle, Trash2, Edit } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 
 interface Device {
@@ -31,6 +32,8 @@ export function DeviceRegistration() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isRegistering, setIsRegistering] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingDevice, setEditingDevice] = useState<Device | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     deviceId: '',
@@ -73,6 +76,29 @@ export function DeviceRegistration() {
         variant: "destructive",
       });
     },
+  });
+
+  // Mutação para atualizar dispositivo
+  const updateDeviceMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      return apiRequest(`/api/devices/${id}`, 'PATCH', data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/devices'] });
+      setIsEditDialogOpen(false);
+      setEditingDevice(null);
+      toast({
+        title: "Dispositivo atualizado",
+        description: "As informações do dispositivo foram atualizadas com sucesso.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao atualizar",
+        description: error.message || "Não foi possível atualizar o dispositivo.",
+        variant: "destructive",
+      });
+    }
   });
 
   // Mutação para remover dispositivo
@@ -294,6 +320,18 @@ export function DeviceRegistration() {
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => {
+                          setEditingDevice(device);
+                          setIsEditDialogOpen(true);
+                        }}
+                        className="text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => deleteMutation.mutate(device.id)}
                         disabled={deleteMutation.isPending}
                         className="text-red-500 hover:text-red-700 hover:bg-red-50"
@@ -308,6 +346,89 @@ export function DeviceRegistration() {
           )}
         </CardContent>
       </Card>
+
+      {/* Modal de Edição */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Editar Dispositivo</DialogTitle>
+            <DialogDescription>
+              Altere as informações do dispositivo
+            </DialogDescription>
+          </DialogHeader>
+          {editingDevice && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-name" className="text-right">Nome</Label>
+                <Input
+                  id="edit-name"
+                  value={editingDevice.name}
+                  onChange={(e) => setEditingDevice({...editingDevice, name: e.target.value})}
+                  className="col-span-3"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-status" className="text-right">Status</Label>
+                <Select
+                  value={editingDevice.status}
+                  onValueChange={(value) => setEditingDevice({...editingDevice, status: value})}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="online">Online</SelectItem>
+                    <SelectItem value="offline">Offline</SelectItem>
+                    <SelectItem value="maintenance">Manutenção</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-store" className="text-right">Loja</Label>
+                <Select
+                  value={editingDevice.storeId?.toString() || ""}
+                  onValueChange={(value) => setEditingDevice({...editingDevice, storeId: parseInt(value)})}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {stores.map((store: any) => (
+                      <SelectItem key={store.id} value={store.id.toString()}>
+                        {store.nome_loja || store.name || store.loja || `Loja ${store.id}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={() => {
+                if (editingDevice) {
+                  updateDeviceMutation.mutate({
+                    id: editingDevice.id,
+                    data: {
+                      name: editingDevice.name,
+                      status: editingDevice.status,
+                      storeId: editingDevice.storeId
+                    }
+                  });
+                }
+              }}
+              disabled={updateDeviceMutation.isPending}
+            >
+              {updateDeviceMutation.isPending ? 'Salvando...' : 'Salvar'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

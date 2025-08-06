@@ -281,6 +281,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/devices/:id", async (req, res) => {
+    try {
+      const deviceId = parseInt(req.params.id);
+      const updatedDevice = await storage.updateDevice(deviceId, req.body);
+      res.json(updatedDevice);
+    } catch (error: any) {
+      console.error("Error updating device:", error);
+      res.status(500).json({ message: "Erro ao atualizar dispositivo" });
+    }
+  });
+
   app.delete("/api/devices/:id", async (req, res) => {
     try {
       const deviceId = parseInt(req.params.id);
