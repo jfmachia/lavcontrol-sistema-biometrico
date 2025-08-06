@@ -21,6 +21,12 @@ export interface IStorage {
   updateStore(id: number, store: Partial<InsertStore>): Promise<Store | undefined>;
   getStores(): Promise<Store[]>;
   getStoresByUser(userId: number): Promise<Store[]>;
+  getStoreStatistics(): Promise<{
+    totalStores: number;
+    onlineStores: number;
+    totalAccess: number;
+    activeDevices: number;
+  }>;
 
   // Devices
   getDevice(id: number): Promise<Device | undefined>;
@@ -28,6 +34,7 @@ export interface IStorage {
   createDevice(device: InsertDevice): Promise<Device>;
   updateDevice(id: number, device: Partial<InsertDevice>): Promise<Device | undefined>;
   getDevices(): Promise<(Device & { store?: Store })[]>;
+  getAvailableDevices(): Promise<Device[]>;
   updateDeviceStatus(deviceId: string, status: string, lastPing?: Date): Promise<void>;
   
   // Access Logs
@@ -315,6 +322,73 @@ export class DatabaseStorage implements IStorage {
       .orderBy(sql`DATE(${accessLogs.timestamp})`);
 
     return result;
+  }
+
+  async getStoreStatistics(): Promise<{
+    totalStores: number;
+    onlineStores: number;
+    totalAccess: number;
+    activeDevices: number;
+  }> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Total stores
+    const [totalStoresResult] = await db
+      .select({ count: count() })
+      .from(stores)
+      .where(eq(stores.isActive, true));
+
+    // Online stores (stores with online devices)
+    const [onlineStoresResult] = await db
+      .select({ count: count() })
+      .from(stores)
+      .leftJoin(devices, eq(stores.id, devices.storeId))
+      .where(and(
+        eq(stores.isActive, true),
+        eq(devices.status, "online")
+      ));
+
+    // Total access logs today
+    const [totalAccessResult] = await db
+      .select({ count: count() })
+      .from(accessLogs)
+      .where(and(
+        eq(accessLogs.status, "success"),
+        gte(accessLogs.timestamp, today)
+      ));
+
+    // Active devices
+    const [activeDevicesResult] = await db
+      .select({ count: count() })
+      .from(devices)
+      .where(eq(devices.status, "online"));
+
+    return {
+      totalStores: totalStoresResult.count,
+      onlineStores: onlineStoresResult.count,
+      totalAccess: totalAccessResult.count,
+      activeDevices: activeDevicesResult.count,
+    };
+  }
+
+  async getAvailableDevices(): Promise<Device[]> {
+    // Get devices that are not linked to any store's biometry field
+    const linkedDeviceIds = await db
+      .selectDistinct({ deviceId: stores.biometry })
+      .from(stores)
+      .where(sql`${stores.biometry} IS NOT NULL`);
+
+    const linkedIds = linkedDeviceIds.map(row => row.deviceId).filter(Boolean);
+
+    if (linkedIds.length === 0) {
+      return await db.select().from(devices);
+    }
+
+    return await db
+      .select()
+      .from(devices)
+      .where(sql`${devices.deviceId} NOT IN (${linkedIds.map(id => `'${id}'`).join(', ')})`);
   }
 }
 

@@ -9,6 +9,7 @@ export const users = pgTable("users", {
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
+  role: text("role").default("franqueado").notNull(), // master, franqueado, tecnico
   profileImage: text("profile_image"),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
@@ -18,6 +19,9 @@ export const stores = pgTable("stores", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   address: text("address"),
+  phone: text("phone"),
+  manager: text("manager"), // nome do responsável pela loja
+  biometry: text("biometry"), // ID do aparelho de biometria da loja
   userId: integer("user_id").notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
@@ -131,6 +135,7 @@ export const registerSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
   password: z.string().min(6),
+  role: z.enum(["master", "franqueado", "tecnico"]).default("franqueado"),
 });
 
 // Types

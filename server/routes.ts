@@ -47,7 +47,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate JWT
       const token = jwt.sign(
-        { id: user.id, email: user.email },
+        { id: user.id, email: user.email, role: user.role },
         process.env.JWT_SECRET || "fallback_secret",
         { expiresIn: "24h" }
       );
@@ -57,7 +57,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user: { 
           id: user.id, 
           name: user.name, 
-          email: user.email 
+          email: user.email,
+          role: user.role 
         } 
       });
     } catch (error: any) {
@@ -83,7 +84,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate JWT
       const token = jwt.sign(
-        { id: user.id, email: user.email },
+        { id: user.id, email: user.email, role: user.role },
         process.env.JWT_SECRET || "fallback_secret",
         { expiresIn: "24h" }
       );
@@ -93,7 +94,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user: { 
           id: user.id, 
           name: user.name, 
-          email: user.email 
+          email: user.email,
+          role: user.role 
         } 
       });
     } catch (error: any) {
@@ -117,6 +119,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(store);
     } catch (error: any) {
       res.status(500).json({ message: error.message || "Failed to create store" });
+    }
+  });
+
+  // Store statistics for dashboard
+  app.get("/api/stores/statistics", authenticateToken, async (req, res) => {
+    try {
+      const statistics = await storage.getStoreStatistics();
+      res.json(statistics);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to fetch store statistics" });
+    }
+  });
+
+  // Available devices for linking to stores
+  app.get("/api/devices/available", authenticateToken, async (req, res) => {
+    try {
+      const availableDevices = await storage.getAvailableDevices();
+      res.json(availableDevices);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to fetch available devices" });
     }
   });
 
