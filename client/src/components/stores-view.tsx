@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -18,7 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { insertStoreSchema, type Store, type Device, type User } from "@shared/schema";
 import { z } from "zod";
-import { Plus, Store as StoreIcon, Wifi, WifiOff, Users, Activity, MapPin, Phone, User as UserIcon, Fingerprint, Building2, Settings } from "lucide-react";
+import { Plus, Store as StoreIcon, Wifi, WifiOff, Users, Activity, MapPin, Phone, User as UserIcon, Fingerprint, Building2, Settings, CheckCircle2, XCircle, Clock, Calendar } from "lucide-react";
 
 const formSchema = insertStoreSchema.extend({
   name: z.string().min(1, "Nome da loja é obrigatório"),
@@ -415,106 +417,122 @@ export default function StoresView() {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {stores?.map((store) => {
-            const statusConfig = getStatusConfig(store.device?.status);
-            const StatusIcon = statusConfig.icon;
-            
-            return (
-              <Card key={store.id} className={`bg-gradient-to-br from-slate-900/70 to-blue-900/30 border-slate-700/50 backdrop-blur-sm hover:scale-105 transition-all duration-300 ${statusConfig.borderColor}`}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-white font-semibold mb-1">
-                        {store.name}
-                      </CardTitle>
-                      <div className="flex items-center gap-2 text-sm text-blue-300/70">
-                        <MapPin className="h-3 w-3" />
-                        <span className="truncate">{store.address}</span>
-                      </div>
-                    </div>
-                    <div className={`p-2 rounded-lg ${statusConfig.bgColor}`}>
-                      <StatusIcon className="h-4 w-4 text-current" />
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-blue-300/70">Status do Sistema</span>
-                    <Badge 
-                      variant={statusConfig.variant}
-                      className={`${
-                        statusConfig.variant === "default" ? "bg-green-500/20 text-green-400 border-green-400/30" :
-                        statusConfig.variant === "destructive" ? "bg-red-500/20 text-red-400 border-red-400/30" :
-                        "bg-gray-500/20 text-gray-400 border-gray-400/30"
-                      } border`}
-                    >
-                      <div className={`h-2 w-2 ${statusConfig.dotColor} rounded-full mr-1`}></div>
-                      {statusConfig.label}
-                    </Badge>
-                  </div>
-
-                  {/* Store Details */}
-                  <div className="space-y-3">
-                    {store.manager && (
-                      <div className="flex items-center gap-2">
-                        <UserIcon className="h-4 w-4 text-blue-400" />
-                        <div>
-                          <p className="text-xs text-blue-300/70">Responsável</p>
-                          <p className="text-sm text-white">{store.manager}</p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {store.phone && (
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-blue-400" />
-                        <div>
-                          <p className="text-xs text-blue-300/70">Telefone</p>
-                          <p className="text-sm text-white">{store.phone}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {store.biometry && (
-                      <div className="flex items-center gap-2">
-                        <Fingerprint className="h-4 w-4 text-orange-400" />
-                        <div>
-                          <p className="text-xs text-blue-300/70">Biometria</p>
-                          <p className="text-sm text-white font-mono">{store.biometry}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-700/50">
-                    <div className="text-center">
-                      <div className="flex items-center justify-center gap-1 mb-1">
-                        <Users className="h-3 w-3 text-blue-400" />
-                      </div>
-                      <p className="text-xs text-blue-300/70">Usuários Ativos</p>
-                      <p className="text-lg font-semibold text-white">{store.activeUsers || 0}</p>
-                    </div>
-                    <div className="text-center">
-                      <div className="flex items-center justify-center gap-1 mb-1">
-                        <Activity className="h-3 w-3 text-green-400" />
-                      </div>
-                      <p className="text-xs text-blue-300/70">Acessos Hoje</p>
-                      <p className="text-lg font-semibold text-white">{store.todayAccess || 0}</p>
-                    </div>
-                  </div>
-
-                  {store.device && (
-                    <div className="pt-2 border-t border-slate-700/50">
-                      <span className="text-xs text-blue-300/50 uppercase tracking-wide">ID do Dispositivo</span>
-                      <p className="text-sm text-white font-mono">{store.device.deviceId}</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+        <Card className="bg-slate-900/50 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white">Lista Completa de Lojas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="w-full">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-slate-700">
+                    <TableHead className="text-slate-300">ID</TableHead>
+                    <TableHead className="text-slate-300">Loja</TableHead>
+                    <TableHead className="text-slate-300">Nome Loja</TableHead>
+                    <TableHead className="text-slate-300">Nome IA</TableHead>
+                    <TableHead className="text-slate-300">NV Loja</TableHead>
+                    <TableHead className="text-slate-300">Endereço</TableHead>
+                    <TableHead className="text-slate-300">Senha Porta</TableHead>
+                    <TableHead className="text-slate-300">Senha WiFi</TableHead>
+                    <TableHead className="text-slate-300">Horário Seg-Sex</TableHead>
+                    <TableHead className="text-slate-300">Horário Sáb</TableHead>
+                    <TableHead className="text-slate-300">Horário Dom</TableHead>
+                    <TableHead className="text-slate-300">WhatsApp</TableHead>
+                    <TableHead className="text-slate-300">Ponto Referência</TableHead>
+                    <TableHead className="text-slate-300">Valor LV</TableHead>
+                    <TableHead className="text-slate-300">Valor S</TableHead>
+                    <TableHead className="text-slate-300">Cesto Grande</TableHead>
+                    <TableHead className="text-slate-300">Valor LV2</TableHead>
+                    <TableHead className="text-slate-300">Valor S2</TableHead>
+                    <TableHead className="text-slate-300">Estacionamento</TableHead>
+                    <TableHead className="text-slate-300">Delivery</TableHead>
+                    <TableHead className="text-slate-300">Deixou</TableHead>
+                    <TableHead className="text-slate-300">Assistente</TableHead>
+                    <TableHead className="text-slate-300">Cash Back</TableHead>
+                    <TableHead className="text-slate-300">Cupons</TableHead>
+                    <TableHead className="text-slate-300">Promoção</TableHead>
+                    <TableHead className="text-slate-300">Data</TableHead>
+                    <TableHead className="text-slate-300">Instância Loja</TableHead>
+                    <TableHead className="text-slate-300">LVs Número</TableHead>
+                    <TableHead className="text-slate-300">S2 Número</TableHead>
+                    <TableHead className="text-slate-300">Observações</TableHead>
+                    <TableHead className="text-slate-300">Cidade</TableHead>
+                    <TableHead className="text-slate-300">Estado</TableHead>
+                    <TableHead className="text-slate-300">Latitude</TableHead>
+                    <TableHead className="text-slate-300">Longitude</TableHead>
+                    <TableHead className="text-slate-300">Número</TableHead>
+                    <TableHead className="text-slate-300">Ordem</TableHead>
+                    <TableHead className="text-slate-300">Voz</TableHead>
+                    <TableHead className="text-slate-300">Msg Ini</TableHead>
+                    <TableHead className="text-slate-300">Biometria</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {stores?.map((store: any) => (
+                    <TableRow key={store.id} className="border-slate-700">
+                      <TableCell className="text-white font-mono">{store.id}</TableCell>
+                      <TableCell className="text-white">{store.loja || 'N/A'}</TableCell>
+                      <TableCell className="text-white">{store.nome_loja || store.name || 'N/A'}</TableCell>
+                      <TableCell className="text-white">{store.nome_ia || 'N/A'}</TableCell>
+                      <TableCell className="text-white">{store.nv_loja || 'N/A'}</TableCell>
+                      <TableCell className="text-white max-w-xs truncate">{store.endereco || store.address || 'N/A'}</TableCell>
+                      <TableCell className="text-white font-mono">{store.senha_porta || 'N/A'}</TableCell>
+                      <TableCell className="text-white font-mono">{store.senha_wifi || 'N/A'}</TableCell>
+                      <TableCell className="text-white">{store.horario_seg_sex || 'N/A'}</TableCell>
+                      <TableCell className="text-white">{store.horario_sab || 'N/A'}</TableCell>
+                      <TableCell className="text-white">{store.horario_dom || 'N/A'}</TableCell>
+                      <TableCell className="text-white">{store.whats_atendimento || 'N/A'}</TableCell>
+                      <TableCell className="text-white max-w-xs truncate">{store.ponto_referencia || 'N/A'}</TableCell>
+                      <TableCell className="text-green-400 font-mono">R$ {store.valor_lv || '0.00'}</TableCell>
+                      <TableCell className="text-green-400 font-mono">R$ {store.valor_s || '0.00'}</TableCell>
+                      <TableCell className="text-green-400 font-mono">R$ {store.cesto_grande || '0.00'}</TableCell>
+                      <TableCell className="text-green-400 font-mono">R$ {store.valor_lv2 || '0.00'}</TableCell>
+                      <TableCell className="text-green-400 font-mono">R$ {store.valor_s2 || '0.00'}</TableCell>
+                      <TableCell>
+                        {store.estacionamento ? 
+                          <CheckCircle2 className="h-4 w-4 text-green-400" /> : 
+                          <XCircle className="h-4 w-4 text-red-400" />
+                        }
+                      </TableCell>
+                      <TableCell>
+                        {store.delivery ? 
+                          <CheckCircle2 className="h-4 w-4 text-green-400" /> : 
+                          <XCircle className="h-4 w-4 text-red-400" />
+                        }
+                      </TableCell>
+                      <TableCell>
+                        {store.deixou ? 
+                          <CheckCircle2 className="h-4 w-4 text-green-400" /> : 
+                          <XCircle className="h-4 w-4 text-red-400" />
+                        }
+                      </TableCell>
+                      <TableCell className="text-white">{store.assistente || 'N/A'}</TableCell>
+                      <TableCell className="text-blue-400">{store.cash_back || 'N/A'}</TableCell>
+                      <TableCell className="text-yellow-400">{store.cupons || 'N/A'}</TableCell>
+                      <TableCell className="text-purple-400">{store.promocao || 'N/A'}</TableCell>
+                      <TableCell className="text-slate-400">
+                        {store.data ? new Date(store.data).toLocaleDateString('pt-BR') : 'N/A'}
+                      </TableCell>
+                      <TableCell className="text-white font-mono">{store.instancia_loja || 'N/A'}</TableCell>
+                      <TableCell className="text-white font-mono">{store.lvs_numero || 'N/A'}</TableCell>
+                      <TableCell className="text-white font-mono">{store.s2_numero || 'N/A'}</TableCell>
+                      <TableCell className="text-white max-w-xs truncate">{store.observacoes || 'N/A'}</TableCell>
+                      <TableCell className="text-white">{store.cidade || 'N/A'}</TableCell>
+                      <TableCell className="text-white">{store.estado || 'N/A'}</TableCell>
+                      <TableCell className="text-white font-mono text-xs">{store.latitude || 'N/A'}</TableCell>
+                      <TableCell className="text-white font-mono text-xs">{store.longitude || 'N/A'}</TableCell>
+                      <TableCell className="text-white">{store.numero || 'N/A'}</TableCell>
+                      <TableCell className="text-white">{store.ordem || 'N/A'}</TableCell>
+                      <TableCell className="text-white">{store.voz || 'N/A'}</TableCell>
+                      <TableCell className="text-white max-w-xs truncate">{store.msg_ini || 'N/A'}</TableCell>
+                      <TableCell className="text-blue-400">{store.biometria || 'N/A'}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
