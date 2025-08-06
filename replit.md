@@ -31,7 +31,8 @@ KPIs: Tráfego de usuários entrando nas lojas deve ser exibido corretamente nos
 - **Real-time Communication**: MQTT client for device command transmission
 
 ## Database Design
-- **Database**: PostgreSQL VPS exclusivamente (148.230.78.128:5432) - configuração fixa no código
+- **Database**: PostgreSQL VPS exclusivamente (148.230.78.128:5432) - IGNORA DATABASE_URL do Neon
+- **Configuração**: Conexões hardcoded no código para garantir uso exclusivo da VPS
 - **Schema Definition**: Estrutura completa do banco VPS com campos específicos das lavanderias
 - **Core Tables**:
   - `users`: Contas de usuário (donos/técnicos) com autenticação por email e sistema de bloqueio
@@ -40,8 +41,8 @@ KPIs: Tráfego de usuários entrando nas lojas deve ser exibido corretamente nos
   - `access_logs`: Logs de acesso com suporte para clientes e dispositivos
   - `clients`: Clientes das lavanderias (usuários finais) com níveis de classificação (active, alert, vip, blocked)
   - `alerts`: Notificações do sistema
-- **Conexão**: Pool direto ao PostgreSQL VPS com credenciais fixas no código
-- **Store Settings**: Sistema completo de configuração de lavanderias funcionando corretamente
+- **Conexão**: Todas as operações usam exclusivamente VPS PostgreSQL (148.230.78.128:5432)
+- **Store Settings**: Sistema completo de configuração de lavanderias funcionando na VPS
 - **Autenticação**: bcrypt para senhas, sistema de tentativas e bloqueio temporal
 
 ## Authentication & Authorization
