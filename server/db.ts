@@ -2,23 +2,29 @@ import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-// Configure connection for your VPS PostgreSQL
+// Configure connection for your VPS PostgreSQL (212.85.1.24:5435)
+// Force VPS connection instead of Replit's Neon database
 const connectionConfig = {
-  host: process.env.POSTGRES_HOST || '212.85.1.24',
-  port: parseInt(process.env.POSTGRES_PORT || '5435'),
-  database: process.env.POSTGRES_DB || 'postgres',  
-  user: process.env.POSTGRES_USER || 'postgres',
+  host: '212.85.1.24',
+  port: 5435,
+  database: 'postgres',  
+  user: 'postgres',
   password: process.env.POSTGRES_PASSWORD || '',
-  ssl: false, // Disable SSL for local VPS connection
+  ssl: false, // Disable SSL for VPS connection
+  connectTimeoutMS: 10000,
+  idleTimeoutMillis: 30000,
 };
 
-// Use DATABASE_URL if provided, otherwise use individual config
-let pool: Pool;
-if (process.env.DATABASE_URL) {
-  pool = new Pool({ connectionString: process.env.DATABASE_URL });
-} else {
-  pool = new Pool(connectionConfig);
-}
+console.log('🔌 Connecting to VPS PostgreSQL at 212.85.1.24:5435');
+const pool = new Pool(connectionConfig);
+
+// Test connection
+pool.connect().then(client => {
+  console.log('✅ Successfully connected to VPS PostgreSQL');
+  client.release();
+}).catch(err => {
+  console.error('❌ Failed to connect to VPS PostgreSQL:', err.message);
+});
 
 export const db = drizzle(pool, { schema });
 export { pool };
