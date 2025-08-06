@@ -791,11 +791,22 @@ export class DatabaseStorage implements IStorage {
       // Usar id se device_id não existir
       const deviceColumn = columns.includes('device_id') ? 'device_id' : 'id';
       
-      await pool.query(`
-        UPDATE devices 
-        SET status = $1, last_ping = $2, updated_at = NOW()
-        WHERE ${deviceColumn} = $3
-      `, [status, lastPing || new Date(), deviceId]);
+      // Verificar se last_ping existe na tabela
+      const hasPingColumn = columns.includes('last_ping');
+      
+      if (hasPingColumn) {
+        await pool.query(`
+          UPDATE devices 
+          SET status = $1, last_ping = $2, updated_at = NOW()
+          WHERE ${deviceColumn} = $3
+        `, [status, lastPing || new Date(), deviceId]);
+      } else {
+        await pool.query(`
+          UPDATE devices 
+          SET status = $1, updated_at = NOW()
+          WHERE ${deviceColumn} = $3
+        `, [status, deviceId]);
+      }
       
     } catch (error) {
       console.error('Error handling device status update:', error);
@@ -1062,8 +1073,7 @@ export class DatabaseStorage implements IStorage {
       const result = await pool.query(`
         SELECT d.*
         FROM devices d
-        LEFT JOIN stores s ON d.id = s.biometria
-        WHERE s.biometria IS NULL
+        WHERE d.store_id IS NULL
         ORDER BY d.id DESC
       `);
       

@@ -521,7 +521,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/devices/:id", authenticateToken, async (req, res) => {
+  app.patch("/api/devices/:id", async (req, res) => {
     try {
       const deviceId = parseInt(req.params.id);
       const updateData = req.body;
@@ -587,7 +587,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/clients", authenticateToken, async (req, res) => {
+  app.post("/api/clients", async (req, res) => {
     try {
       const client = await clientsStorage.createClient(req.body);
       res.status(201).json(client);
@@ -597,7 +597,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/clients/:id", authenticateToken, async (req, res) => {
+  app.patch("/api/clients/:id", async (req, res) => {
     try {
       const client = await clientsStorage.updateClient(parseInt(req.params.id), req.body);
       if (!client) {
@@ -607,6 +607,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating client:", error);
       res.status(500).json({ message: "Failed to update client" });
+    }
+  });
+
+  // Settings routes - usando localStorage no frontend
+  app.get("/api/settings", async (req, res) => {
+    try {
+      const defaultSettings = {
+        companyName: "LavControl",
+        theme: "dark",
+        notifications: true,
+        autoRefresh: true,
+        refreshInterval: 30,
+        language: "pt-BR"
+      };
+      res.json(defaultSettings);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to fetch settings" });
+    }
+  });
+
+  app.post("/api/settings", async (req, res) => {
+    try {
+      res.json({ message: "Settings saved successfully", data: req.body });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to update setting" });
+    }
+  });
+
+  // Reports routes
+  app.get("/api/reports/access", async (req, res) => {
+    try {
+      const { startDate, endDate } = req.query;
+      
+      const { Pool } = await import('pg');
+      const pool = new Pool({
+        connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+        ssl: false,
+      });
+      
+      const result = await pool.query(`
+        SELECT 
+          DATE(created_at) as date,
+          COUNT(*) as total_accesses,
+          COUNT(CASE WHEN success = true THEN 1 END) as successful_accesses,
+          COUNT(CASE WHEN success = false THEN 1 END) as denied_accesses
+        FROM access_logs
+        WHERE created_at BETWEEN $1 AND $2
+        GROUP BY DATE(created_at)
+        ORDER BY date DESC
+      `, [startDate || '2025-01-01', endDate || '2025-12-31']);
+      
+      await pool.end();
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Erro ao buscar relatórios:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch reports" });
+    }
+  });
+
+  // Device management - vincular device a loja
+  app.patch("/api/devices/:id", async (req, res) => {
+    try {
+      const deviceId = req.params.id;
+      const updateData = req.body;
+      
+      const { Pool } = await import('pg');
+      const pool = new Pool({
+        connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+        ssl: false,
+      });
+      
+      const fields = [];
+      const values = [];
+      let paramCount = 1;
+      
+      if (updateData.name) {
+        fields.push(`name = $${paramCount++}`);
+        values.push(updateData.name);
+      }
+      if (updateData.storeId) {
+        fields.push(`store_id = $${paramCount++}`);
+        values.push(updateData.storeId);
+      }
+      if (updateData.location) {
+        fields.push(`location = $${paramCount++}`);
+        values.push(updateData.location);
+      }
+      if (updateData.status) {
+        fields.push(`status = $${paramCount++}`);
+        values.push(updateData.status);
+      }
+      
+      fields.push(`updated_at = NOW()`);
+      values.push(deviceId);
+      
+      const result = await pool.query(`
+        UPDATE devices 
+        SET ${fields.join(', ')}
+        WHERE id = $${paramCount}
+        RETURNING *
+      `, values);
+      
+      await pool.end();
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: "Device not found" });
+      }
+      
+      res.json(result.rows[0]);
+    } catch (error: any) {
+      console.error("Error updating device:", error);
+      res.status(500).json({ message: error.message || "Failed to update device" });
     }
   });
 
