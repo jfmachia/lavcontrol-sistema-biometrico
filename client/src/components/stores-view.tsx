@@ -333,28 +333,20 @@ export default function StoresView() {
                           <FormLabel className="text-gray-200">
                             <div className="flex items-center gap-2">
                               <Fingerprint className="h-4 w-4" />
-                              ID do Dispositivo Biométrico
+                              Código do Aparelho Biométrico da Loja
                             </div>
                           </FormLabel>
                           <FormControl>
-                            <Select onValueChange={field.onChange} value={field.value || ""}>
-                              <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
-                                <SelectValue placeholder="Selecione um dispositivo disponível" />
-                              </SelectTrigger>
-                              <SelectContent className="bg-slate-800 border-slate-600">
-                                {availableDevices?.map((device) => (
-                                  <SelectItem key={device.id} value={device.deviceId}>
-                                    {device.name} ({device.deviceId})
-                                  </SelectItem>
-                                )) || (
-                                  <SelectItem value="" disabled>
-                                    Nenhum dispositivo disponível
-                                  </SelectItem>
-                                )}
-                              </SelectContent>
-                            </Select>
+                            <Input 
+                              {...field} 
+                              placeholder="Ex: BIO-001-SP, SCANNER-123, etc."
+                              className="bg-slate-800 border-slate-600 text-white placeholder:text-gray-400 font-mono"
+                            />
                           </FormControl>
                           <FormMessage />
+                          <p className="text-xs text-gray-400 mt-1">
+                            Digite o código identificador do aparelho biométrico instalado nesta loja
+                          </p>
                         </FormItem>
                       )}
                     />
