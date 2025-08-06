@@ -83,6 +83,7 @@ export const devices = pgTable("devices", {
 export const accessLogs = pgTable("access_logs", {
   id: serial("id").primaryKey(),
   userId: integer("user_id"),
+  clientId: integer("client_id"), // Para logs de clientes da lavanderia
   deviceId: integer("device_id"),
   action: text("action").notNull(), // access_granted, access_denied, device_command
   method: text("method"), // card, facial_recognition, manual
@@ -168,6 +169,10 @@ export const accessLogsRelations = relations(accessLogs, ({ one }) => ({
     fields: [accessLogs.userId],
     references: [users.id],
   }),
+  client: one(clients, {
+    fields: [accessLogs.clientId],
+    references: [clients.id],
+  }),
   device: one(devices, {
     fields: [accessLogs.deviceId],
     references: [devices.id],
@@ -187,6 +192,7 @@ export const clientsRelations = relations(clients, ({ one, many }) => ({
     references: [stores.id],
   }),
   entries: many(clientEntries),
+  accessLogs: many(accessLogs),
 }));
 
 export const clientEntriesRelations = relations(clientEntries, ({ one }) => ({
