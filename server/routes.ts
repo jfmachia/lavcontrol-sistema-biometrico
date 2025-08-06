@@ -494,7 +494,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // API endpoint para simular entrada de usuário na loja
-  app.post("/api/simulate/user-entry", authenticateToken, async (req, res) => {
+  app.post("/api/simulate/user-entry", async (req, res) => {
     try {
       const { storeId, userId } = req.body;
       

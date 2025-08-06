@@ -21,6 +21,7 @@ import {
   Cell
 } from 'recharts';
 import { TrendingUp, BarChart3, PieChartIcon, Activity, Calendar } from 'lucide-react';
+import { StoreSelector } from './store-selector';
 
 interface AccessLog {
   id: number;
@@ -41,6 +42,7 @@ interface ReportsTrafficChartProps {
 export function ReportsTrafficChart({ className }: ReportsTrafficChartProps) {
   const [chartType, setChartType] = useState<'bar' | 'line' | 'area' | 'pie'>('bar');
   const [timeRange, setTimeRange] = useState('today');
+  const [selectedStores, setSelectedStores] = useState<number[]>([]);
 
   // Buscar logs de acesso completos
   const { data: accessLogs = [], isLoading } = useQuery<AccessLog[]>({
@@ -54,6 +56,13 @@ export function ReportsTrafficChart({ className }: ReportsTrafficChartProps) {
 
     const now = new Date();
     let filteredLogs = accessLogs;
+
+    // Filtrar por lojas selecionadas
+    if (selectedStores.length > 0) {
+      filteredLogs = filteredLogs.filter(log => {
+        return log.store_id ? selectedStores.includes(log.store_id) : true;
+      });
+    }
 
     // Filtrar por período
     switch (timeRange) {
@@ -324,6 +333,15 @@ export function ReportsTrafficChart({ className }: ReportsTrafficChartProps) {
       </CardHeader>
       
       <CardContent>
+        {/* Seletor de Lojas */}
+        <div className="mb-6">
+          <StoreSelector
+            selectedStores={selectedStores}
+            onStoreChange={setSelectedStores}
+            multiSelect={true}
+          />
+        </div>
+
         <div className="h-96">
           <ResponsiveContainer width="100%" height="100%">
             {renderChart()}

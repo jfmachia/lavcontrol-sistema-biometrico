@@ -73,7 +73,7 @@ export function Dashboard() {
     const today = new Date().toDateString();
     const todayLogs = accessLogs.filter(log => {
       const logDate = new Date(log.timestamp).toDateString();
-      return logDate === today && log.action.includes('entry');
+      return logDate === today && (log.action.includes('entry') || log.action.includes('simulated'));
     });
     
     const uniqueUserIds = new Set(todayLogs.map(log => log.userId));
@@ -87,7 +87,7 @@ export function Dashboard() {
     const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
     const recentLogs = accessLogs.filter(log => {
       const logDate = new Date(log.timestamp);
-      return logDate >= twoHoursAgo && log.action.includes('entry');
+      return logDate >= twoHoursAgo && (log.action.includes('entry') || log.action.includes('simulated'));
     });
     
     const uniqueUserIds = new Set(recentLogs.map(log => log.userId));

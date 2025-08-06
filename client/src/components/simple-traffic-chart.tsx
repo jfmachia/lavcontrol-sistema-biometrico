@@ -13,6 +13,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { Activity, RefreshCw, TrendingUp } from 'lucide-react';
+import { StoreSelector } from './store-selector';
 
 interface AccessData {
   time: string;
@@ -26,6 +27,7 @@ interface SimpleTrafficChartProps {
 
 export function SimpleTrafficChart({ className }: SimpleTrafficChartProps) {
   const [isRealTimeEnabled, setIsRealTimeEnabled] = useState(true);
+  const [selectedStores, setSelectedStores] = useState<number[]>([]);
 
   // Buscar logs de acesso em tempo real
   const { data: accessLogs = [], isLoading: logsLoading } = useQuery<any[]>({
@@ -40,7 +42,7 @@ export function SimpleTrafficChart({ className }: SimpleTrafficChartProps) {
     refetchIntervalInBackground: true,
   });
 
-  // Processar dados dos logs em tempo real
+  // Processar dados dos logs em tempo real com filtro de lojas
   const chartData = React.useMemo(() => {
     if (!accessLogs || accessLogs.length === 0) return [];
 
@@ -48,10 +50,18 @@ export function SimpleTrafficChart({ className }: SimpleTrafficChartProps) {
     const now = new Date();
     const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     
-    const recentLogs = accessLogs.filter(log => {
+    let recentLogs = accessLogs.filter(log => {
       const logDate = new Date(log.timestamp);
       return logDate >= yesterday;
     });
+
+    // Filtrar por lojas selecionadas se houver
+    if (selectedStores.length > 0) {
+      recentLogs = recentLogs.filter(log => {
+        // Assumindo que temos store_id nos logs, senão usar nome da loja
+        return log.store_id ? selectedStores.includes(log.store_id) : true;
+      });
+    }
 
     // Agrupar por loja e contar acessos
     const storeGroups = recentLogs.reduce((acc, log) => {
@@ -70,7 +80,7 @@ export function SimpleTrafficChart({ className }: SimpleTrafficChartProps) {
     return Object.values(storeGroups)
       .sort((a: any, b: any) => b.acessos - a.acessos)
       .slice(0, 8); // Mostrar apenas top 8 lojas
-  }, [accessLogs]);
+  }, [accessLogs, selectedStores]);
 
   const totalAccess = chartData.reduce((sum: number, item: any) => sum + item.acessos, 0);
 
@@ -119,10 +129,20 @@ export function SimpleTrafficChart({ className }: SimpleTrafficChartProps) {
         
         <div className="text-sm text-muted-foreground">
           Total: {totalAccess} acessos (últimas 24h) • Logs reais: {accessLogs.length}
+          {selectedStores.length > 0 && ` • ${selectedStores.length} loja(s) filtrada(s)`}
         </div>
       </CardHeader>
       
       <CardContent>
+        {/* Seletor de Lojas */}
+        <div className="mb-6">
+          <StoreSelector
+            selectedStores={selectedStores}
+            onStoreChange={setSelectedStores}
+            multiSelect={true}
+          />
+        </div>
+
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart 

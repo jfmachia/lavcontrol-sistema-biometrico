@@ -25,8 +25,7 @@ export function RealTimeStatus({ className }: { className?: string }) {
   // Mutation para simular entrada de usuário
   const simulateEntryMutation = useMutation({
     mutationFn: async ({ storeId, userId }: { storeId: number; userId: number }) => {
-      const response = await apiRequest('/api/simulate/user-entry', 'POST', { storeId, userId });
-      return response;
+      return await apiRequest('/api/simulate/user-entry', 'POST', { storeId, userId });
     },
     onSuccess: (data: any) => {
       toast({
