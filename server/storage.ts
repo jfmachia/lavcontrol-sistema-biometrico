@@ -423,7 +423,9 @@ export class DatabaseStorage implements IStorage {
     });
     
     try {
-      // Inserir dispositivo completo com todos os campos necessários
+      console.log('Creating device with data:', deviceData);
+      
+      // Inserir dispositivo inicial
       const result = await pool.query(`
         INSERT INTO devices (name, type, status, store_id, created_at, updated_at)
         VALUES ($1, $2, $3, $4, NOW(), NOW())
@@ -435,22 +437,28 @@ export class DatabaseStorage implements IStorage {
         deviceData.storeId
       ]);
       
-      const deviceId = `DEV${String(result.rows[0].id).padStart(3, '0')}`;
-      const serialNumber = deviceData.serialNumber || `SN${String(result.rows[0].id).padStart(6, '0')}`;
-      const location = deviceData.location || 'Não especificado';
+      const newDeviceId = result.rows[0].id;
+      const autoDeviceId = `DEV${String(newDeviceId).padStart(3, '0')}`;
+      const autoSerialNumber = `SN${String(newDeviceId).padStart(6, '0')}`;
       
-      // Atualizar com device_id, serial_number e location
+      console.log('Device created with ID:', newDeviceId);
+      
+      // Atualizar com device_id e serial_number
       await pool.query(`
         UPDATE devices 
         SET device_id = $1, serial_number = $2, location = $3, updated_at = NOW()
         WHERE id = $4
-      `, [deviceId, serialNumber, location, result.rows[0].id]);
+      `, [autoDeviceId, autoSerialNumber, 'Não especificado', newDeviceId]);
+      
+      console.log('Device updated successfully');
       
       // Buscar o registro completo atualizado
       const finalResult = await pool.query(
         'SELECT * FROM devices WHERE id = $1',
-        [result.rows[0].id]
+        [newDeviceId]
       );
+      
+      console.log('Final device result:', finalResult.rows[0]);
       
       return finalResult.rows[0];
       
