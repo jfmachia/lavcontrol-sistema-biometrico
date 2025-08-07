@@ -1127,7 +1127,7 @@ export class DatabaseStorage implements IStorage {
     
     try {
       const result = await pool.query(`
-        SELECT a.*, d.name as device_name, d.location as device_location
+        SELECT a.*, d.name as device_name, d.ip_address as device_ip
         FROM alerts a
         LEFT JOIN devices d ON a.device_id = d.id
         WHERE a.status = 'active'
@@ -1360,6 +1360,125 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error in getWaveChartData:', error);
       return [];
+    }
+  }
+
+  // ===== CONFIG SISTEMA METHODS =====
+  async getConfigSistema(): Promise<any> {
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+    
+    try {
+      const result = await pool.query('SELECT * FROM config_sistema ORDER BY id DESC LIMIT 1');
+      return result.rows[0] || {
+        sistema_nome: 'LavControl',
+        tema: 'dark',
+        idioma: 'pt-BR',
+        notificacoes_email: true,
+        notificacoes_push: true,
+        backup_automatico: true,
+        manutencao: false
+      };
+    } finally {
+      await pool.end();
+    }
+  }
+
+  async updateConfigSistema(data: any): Promise<any> {
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+    
+    try {
+      // Check if config exists
+      const existingResult = await pool.query('SELECT id FROM config_sistema LIMIT 1');
+      
+      if (existingResult.rows.length > 0) {
+        // Update existing config
+        const result = await pool.query(`
+          UPDATE config_sistema 
+          SET sistema_nome = $1, tema = $2, idioma = $3, 
+              notificacoes_email = $4, notificacoes_push = $5, 
+              backup_automatico = $6, manutencao = $7, 
+              mqtt_broker = $8, mqtt_port = $9,
+              email_smtp_host = $10, email_smtp_port = $11, email_user = $12,
+              updated_at = NOW()
+          WHERE id = $13
+          RETURNING *
+        `, [
+          data.sistema_nome || 'LavControl',
+          data.tema || 'dark', 
+          data.idioma || 'pt-BR',
+          data.notificacoes_email !== undefined ? data.notificacoes_email : true,
+          data.notificacoes_push !== undefined ? data.notificacoes_push : true,
+          data.backup_automatico !== undefined ? data.backup_automatico : true,
+          data.manutencao !== undefined ? data.manutencao : false,
+          data.mqtt_broker,
+          data.mqtt_port || 1883,
+          data.email_smtp_host,
+          data.email_smtp_port || 587,
+          data.email_user,
+          existingResult.rows[0].id
+        ]);
+        return result.rows[0];
+      } else {
+        // Insert new config
+        const result = await pool.query(`
+          INSERT INTO config_sistema (
+            sistema_nome, tema, idioma, notificacoes_email, notificacoes_push, 
+            backup_automatico, manutencao, mqtt_broker, mqtt_port,
+            email_smtp_host, email_smtp_port, email_user
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          RETURNING *
+        `, [
+          data.sistema_nome || 'LavControl',
+          data.tema || 'dark',
+          data.idioma || 'pt-BR', 
+          data.notificacoes_email !== undefined ? data.notificacoes_email : true,
+          data.notificacoes_push !== undefined ? data.notificacoes_push : true,
+          data.backup_automatico !== undefined ? data.backup_automatico : true,
+          data.manutencao !== undefined ? data.manutencao : false,
+          data.mqtt_broker,
+          data.mqtt_port || 1883,
+          data.email_smtp_host,
+          data.email_smtp_port || 587,
+          data.email_user
+        ]);
+        return result.rows[0];
+      }
+    } finally {
+      await pool.end();
+    }
+  }
+
+  // ===== USER UPDATE METHODS =====
+  async updateUser(id: number, data: any): Promise<any> {
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+    
+    try {
+      const result = await pool.query(`
+        UPDATE users 
+        SET name = $1, email = $2, role = $3, alert_level = $4, updated_at = NOW()
+        WHERE id = $5
+        RETURNING id, name, email, role, alert_level, is_active, created_at, updated_at
+      `, [data.name, data.email, data.role, data.alert_level, id]);
+      
+      if (result.rows.length === 0) {
+        throw new Error('Usuário não encontrado');
+      }
+      
+      return result.rows[0];
+    } finally {
+      await pool.end();
     }
   }
 }

@@ -314,6 +314,31 @@ export type Client = typeof clients.$inferSelect;
 export type InsertClient = z.infer<typeof insertClientSchema>;
 export type ClientEntry = typeof clientEntries.$inferSelect;
 export type InsertClientEntry = z.infer<typeof insertClientEntrySchema>;
+
+// Config Sistema Schema
+export const configSistema = pgTable("config_sistema", {
+  id: serial("id").primaryKey(),
+  sistemaNome: varchar("sistema_nome").default("LavControl"),
+  tema: varchar("tema").default("dark"),
+  idioma: varchar("idioma").default("pt-BR"),
+  notificacoesEmail: boolean("notificacoes_email").default(true),
+  notificacoesPush: boolean("notificacoes_push").default(true),
+  backupAutomatico: boolean("backup_automatico").default(true),
+  manutencao: boolean("manutencao").default(false),
+  versaoSistema: varchar("versao_sistema"),
+  mqttBroker: varchar("mqtt_broker"),
+  mqttPort: integer("mqtt_port").default(1883),
+  emailSmtpHost: varchar("email_smtp_host"),
+  emailSmtpPort: integer("email_smtp_port").default(587),
+  emailUser: varchar("email_user"),
+  createdAt: timestamp("created_at").default(sql`NOW()`),
+  updatedAt: timestamp("updated_at").default(sql`NOW()`),
+});
+
+export const insertConfigSistemaSchema = createInsertSchema(configSistema);
+
+export type ConfigSistema = typeof configSistema.$inferSelect;
+export type InsertConfigSistema = z.infer<typeof insertConfigSistemaSchema>;
 export type LoginData = z.infer<typeof loginSchema>;
 export type RegisterData = z.infer<typeof registerSchema>;
 export type ForgotPasswordData = z.infer<typeof forgotPasswordSchema>;

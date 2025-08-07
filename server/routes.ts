@@ -902,5 +902,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
   */
 
+  // ===== CONFIG SISTEMA ROUTES =====
+  // Get system configuration
+  app.get("/api/config", async (req, res) => {
+    try {
+      const config = await storage.getConfigSistema();
+      res.json(config);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Erro ao buscar configurações" });
+    }
+  });
+
+  // Update system configuration
+  app.put("/api/config", async (req, res) => {
+    try {
+      const updatedConfig = await storage.updateConfigSistema(req.body);
+      res.json({ 
+        message: "Configurações atualizadas com sucesso",
+        data: updatedConfig
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Erro ao atualizar configurações" });
+    }
+  });
+
+  // ===== USER MANAGEMENT ROUTES =====
+  // Update user
+  app.put("/api/users/:id", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "ID de usuário inválido" });
+      }
+
+      const updatedUser = await storage.updateUser(userId, req.body);
+      res.json({ 
+        message: "Usuário atualizado com sucesso",
+        data: updatedUser
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Erro ao atualizar usuário" });
+    }
+  });
+
+  // Toggle user active status
+  app.patch("/api/users/:id/toggle-status", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "ID de usuário inválido" });
+      }
+
+      const { Pool } = await import('pg');
+      const pool = new Pool({
+        connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+        ssl: false,
+      });
+      
+      try {
+        const result = await pool.query(`
+          UPDATE users 
+          SET is_active = NOT is_active, updated_at = NOW()
+          WHERE id = $1
+          RETURNING id, name, email, role, alert_level, is_active, created_at, updated_at
+        `, [userId]);
+        
+        if (result.rows.length === 0) {
+          return res.status(404).json({ message: "Usuário não encontrado" });
+        }
+        
+        res.json({ 
+          message: "Status do usuário atualizado com sucesso",
+          data: result.rows[0]
+        });
+      } finally {
+        await pool.end();
+      }
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Erro ao atualizar status do usuário" });
+    }
+  });
+
   return httpServer;
 }

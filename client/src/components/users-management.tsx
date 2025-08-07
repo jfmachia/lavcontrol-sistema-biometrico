@@ -41,6 +41,17 @@ export function UsersManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  const editForm = useForm<UserFormData>({
+    resolver: zodResolver(userSchema.omit({ password: true })),
+    defaultValues: {
+      name: "",
+      email: "",
+      role: "franqueado",
+      alertLevel: "normal"
+    }
+  });
 
   const form = useForm<UserFormData>({
     resolver: zodResolver(userSchema),
@@ -68,19 +79,41 @@ export function UsersManagement() {
 
   const updateUserMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<UserFormData> }) =>
-      apiRequest(`/api/users/${id}`, "PATCH", data),
+      apiRequest(`/api/users/${id}`, "PUT", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       setSelectedUser(null);
+      setIsEditDialogOpen(false);
+      editForm.reset();
+    }
+  });
+
+  const toggleUserStatusMutation = useMutation({
+    mutationFn: (id: number) => apiRequest(`/api/users/${id}/toggle-status`, "PATCH"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
     }
   });
 
   const onSubmit = (data: UserFormData) => {
+    createUserMutation.mutate(data);
+  };
+
+  const onEditSubmit = (data: Partial<UserFormData>) => {
     if (selectedUser) {
       updateUserMutation.mutate({ id: selectedUser.id, data });
-    } else {
-      createUserMutation.mutate(data);
     }
+  };
+
+  const handleEditUser = (user: any) => {
+    setSelectedUser(user);
+    editForm.reset({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      alertLevel: user.alert_level || user.alertLevel
+    });
+    setIsEditDialogOpen(true);
   };
 
   const filteredUsers = users?.filter((user: any) =>
@@ -239,14 +272,114 @@ export function UsersManagement() {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full lavcontrol-button-primary">
-                    Criar Usuário
+                  <Button type="submit" className="w-full lavcontrol-button-primary" disabled={createUserMutation.isPending}>
+                    {createUserMutation.isPending ? "Criando..." : "Criar Usuário"}
                   </Button>
                 </form>
               </Form>
             </DialogContent>
           </Dialog>
         )}
+
+        {/* Edit User Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="lavcontrol-card">
+            <DialogHeader>
+              <DialogTitle className="text-white">Editar Usuário</DialogTitle>
+            </DialogHeader>
+            <Form {...editForm}>
+              <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+                <FormField
+                  control={editForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">Nome</FormLabel>
+                      <FormControl>
+                        <Input {...field} className="bg-slate-700 border-slate-600 text-white" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">Email</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="email" className="bg-slate-700 border-slate-600 text-white" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="role"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">Função</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                            <SelectValue placeholder="Selecione uma função" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-slate-700 border-slate-600">
+                          {currentUser?.role === "master" && (
+                            <SelectItem value="admin">Admin</SelectItem>
+                          )}
+                          <SelectItem value="franqueado">Franqueado</SelectItem>
+                          <SelectItem value="tecnico">Técnico</SelectItem>
+                          <SelectItem value="utilizador">Utilizador</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="alertLevel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">Nível de Alerta</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                            <SelectValue placeholder="Selecione o nível de alerta" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-slate-700 border-slate-600">
+                          <SelectItem value="normal">Normal</SelectItem>
+                          <SelectItem value="amarelo">Alerta Amarelo</SelectItem>
+                          <SelectItem value="vip">Cliente VIP</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex gap-2">
+                  <Button type="submit" className="flex-1 lavcontrol-button-primary" disabled={updateUserMutation.isPending}>
+                    {updateUserMutation.isPending ? "Salvando..." : "Salvar Alterações"}
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => toggleUserStatusMutation.mutate(selectedUser?.id)}
+                    className="flex-1"
+                    disabled={toggleUserStatusMutation.isPending}
+                  >
+                    {selectedUser?.is_active ? "Desativar" : "Ativar"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Search */}
@@ -299,7 +432,7 @@ export function UsersManagement() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setSelectedUser(user)}
+                      onClick={() => handleEditUser(user)}
                       className="text-slate-400 hover:text-white"
                     >
                       <Edit className="w-4 h-4" />
