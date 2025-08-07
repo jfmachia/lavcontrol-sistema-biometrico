@@ -114,7 +114,7 @@ function SystemHeader() {
   const logoUrl = (config as any)?.logo_url;
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center gap-3 py-4">
       {logoUrl ? (
         <img 
           src={logoUrl} 
@@ -144,7 +144,7 @@ export function NavigationSidebar({ className }: NavigationSidebarProps) {
   return (
     <div className={cn("flex h-full flex-col bg-muted/20", className)}>
       {/* Logo/Header */}
-      <div className="flex h-16 items-center border-b px-6">
+      <div className="flex h-20 items-center justify-center border-b px-6">
         <SystemHeader />
       </div>
 
@@ -164,7 +164,7 @@ export function NavigationSidebar({ className }: NavigationSidebarProps) {
       )}
 
       {/* Navigation Items */}
-      <nav className="flex-1 space-y-1 p-4">
+      <nav className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-muted space-y-1 p-4">
         {filteredItems.map((item) => {
           const isActive = location === item.href;
           
