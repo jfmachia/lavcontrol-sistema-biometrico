@@ -124,9 +124,14 @@ export function BiometryManagement() {
 
         <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="lavcontrol-button-primary">
+            <Button 
+              className="lavcontrol-button-primary" 
+              disabled={availableDevices?.length === 0}
+              title={availableDevices?.length === 0 ? "Todos os dispositivos já estão vinculados" : ""}
+            >
               <LinkIcon className="w-4 h-4 mr-2" />
               Vincular Dispositivo
+              {availableDevices?.length === 0 && " (Indisponível)"}
             </Button>
           </DialogTrigger>
           <DialogContent className="lavcontrol-card">
@@ -172,11 +177,17 @@ export function BiometryManagement() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="bg-slate-700 border-slate-600">
-                          {availableDevices?.map((device: any) => (
-                            <SelectItem key={device.id} value={device.deviceId}>
-                              {device.name} ({device.deviceId})
-                            </SelectItem>
-                          ))}
+                          {availableDevices?.length === 0 ? (
+                            <div className="p-2 text-slate-400 text-sm text-center">
+                              Todos os dispositivos já estão vinculados às lojas
+                            </div>
+                          ) : (
+                            availableDevices?.map((device: any) => (
+                              <SelectItem key={device.id} value={device.id.toString()}>
+                                {device.name} ({device.type})
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -331,14 +342,16 @@ export function BiometryManagement() {
                       <p className="text-sm text-slate-400 mb-3">Nenhum dispositivo vinculado</p>
                       <Button
                         size="sm"
+                        disabled={availableDevices?.length === 0}
                         onClick={() => {
                           form.setValue("storeId", store.id.toString());
                           setIsLinkDialogOpen(true);
                         }}
+                        title={availableDevices?.length === 0 ? "Todos os dispositivos já estão vinculados" : ""}
                         className="lavcontrol-button-primary"
                       >
                         <LinkIcon className="w-4 h-4 mr-2" />
-                        Vincular Dispositivo
+                        {availableDevices?.length === 0 ? "Todos Vinculados" : "Vincular Dispositivo"}
                       </Button>
                     </div>
                   )}
