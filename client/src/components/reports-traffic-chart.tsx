@@ -127,7 +127,7 @@ export function ReportsTrafficChart({ className }: ReportsTrafficChartProps) {
       const dailyData: Record<string, any> = {};
       
       filteredLogs.forEach(log => {
-        const date = new Date(log.timestamp).toISOString().split('T')[0];
+        const date = new Date(log.created_at).toISOString().split('T')[0];
         const storeName = log.store_name || 'Outros';
         
         if (!dailyData[date]) {
@@ -158,7 +158,7 @@ export function ReportsTrafficChart({ className }: ReportsTrafficChartProps) {
 
   const totalAccess = accessLogs.length;
   const todayAccess = accessLogs.filter(log => 
-    new Date(log.timestamp).toDateString() === new Date().toDateString()
+    new Date(log.created_at).toDateString() === new Date().toDateString()
   ).length;
 
   if (isLoading) {
