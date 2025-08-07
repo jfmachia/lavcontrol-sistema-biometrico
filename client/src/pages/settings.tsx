@@ -50,20 +50,20 @@ export function Settings() {
   useEffect(() => {
     if (config) {
       setSettings({
-        sistema_nome: config.sistema_nome || "LavControl",
-        logo_url: config.logo_url || "",
-        tema: config.tema || "dark",
-        idioma: config.idioma || "pt-BR",
-        notificacoes_email: config.notificacoes_email ?? true,
-        notificacoes_push: config.notificacoes_push ?? true,
-        backup_automatico: config.backup_automatico ?? true,
-        manutencao: config.manutencao ?? false,
-        mqtt_broker: config.mqtt_broker || "broker.emqx.io",
-        mqtt_port: config.mqtt_port || 1883,
-        mqtt_topic: config.mqtt_topic || "lavcontrol/devices",
-        email_smtp_host: config.email_smtp_host || "",
-        email_smtp_port: config.email_smtp_port || 587,
-        email_user: config.email_user || ""
+        sistema_nome: (config as any)?.sistema_nome || "LavControl",
+        logo_url: (config as any)?.logo_url || "",
+        tema: (config as any)?.tema || "dark",
+        idioma: (config as any)?.idioma || "pt-BR",
+        notificacoes_email: (config as any)?.notificacoes_email ?? true,
+        notificacoes_push: (config as any)?.notificacoes_push ?? true,
+        backup_automatico: (config as any)?.backup_automatico ?? true,
+        manutencao: (config as any)?.manutencao ?? false,
+        mqtt_broker: (config as any)?.mqtt_broker || "broker.emqx.io",
+        mqtt_port: (config as any)?.mqtt_port || 1883,
+        mqtt_topic: (config as any)?.mqtt_topic || "lavcontrol/devices",
+        email_smtp_host: (config as any)?.email_smtp_host || "",
+        email_smtp_port: (config as any)?.email_smtp_port || 587,
+        email_user: (config as any)?.email_user || ""
       });
     }
   }, [config]);

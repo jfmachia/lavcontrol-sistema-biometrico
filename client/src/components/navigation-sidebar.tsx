@@ -110,8 +110,8 @@ interface NavigationSidebarProps {
 // Componente para Header Dinâmico
 function SystemHeader() {
   const { data: config } = useQuery({ queryKey: ["/api/config"] });
-  const systemName = config?.sistema_nome || "LavControl";
-  const logoUrl = config?.logo_url;
+  const systemName = (config as any)?.sistema_nome || "LavControl";
+  const logoUrl = (config as any)?.logo_url;
 
   return (
     <div className="flex items-center gap-2">
