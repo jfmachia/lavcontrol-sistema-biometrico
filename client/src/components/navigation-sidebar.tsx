@@ -13,6 +13,7 @@ import {
   UserCheck
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
+import { useQuery } from '@tanstack/react-query';
 
 interface NavigationItem {
   name: string;
@@ -106,6 +107,31 @@ interface NavigationSidebarProps {
   className?: string;
 }
 
+// Componente para Header Dinâmico
+function SystemHeader() {
+  const { data: config } = useQuery({ queryKey: ["/api/config"] });
+  const systemName = config?.sistema_nome || "LavControl";
+  const logoUrl = config?.logo_url;
+
+  return (
+    <div className="flex items-center gap-2">
+      {logoUrl ? (
+        <img 
+          src={logoUrl} 
+          alt="Logo" 
+          className="h-8 w-8 object-contain rounded"
+          onError={(e) => {
+            e.currentTarget.style.display = 'none';
+            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+          }}
+        />
+      ) : null}
+      <Building className={cn("h-6 w-6 text-primary", logoUrl && "hidden")} />
+      <span className="text-xl font-bold">{systemName}</span>
+    </div>
+  );
+}
+
 export function NavigationSidebar({ className }: NavigationSidebarProps) {
   const [location] = useLocation();
   const { user } = useAuth();
@@ -119,10 +145,7 @@ export function NavigationSidebar({ className }: NavigationSidebarProps) {
     <div className={cn("flex h-full flex-col bg-muted/20", className)}>
       {/* Logo/Header */}
       <div className="flex h-16 items-center border-b px-6">
-        <div className="flex items-center gap-2">
-          <Building className="h-6 w-6 text-primary" />
-          <span className="text-xl font-bold">LavControl</span>
-        </div>
+        <SystemHeader />
       </div>
 
       {/* User Info */}

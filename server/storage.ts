@@ -1372,9 +1372,33 @@ export class DatabaseStorage implements IStorage {
     });
     
     try {
+      // Ensure table exists first
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS config_sistema (
+          id SERIAL PRIMARY KEY,
+          sistema_nome VARCHAR(100) DEFAULT 'LavControl',
+          logo_url VARCHAR(500) DEFAULT NULL,
+          tema VARCHAR(20) DEFAULT 'dark',
+          idioma VARCHAR(10) DEFAULT 'pt-BR',
+          notificacoes_email BOOLEAN DEFAULT true,
+          notificacoes_push BOOLEAN DEFAULT true,
+          backup_automatico BOOLEAN DEFAULT true,
+          manutencao BOOLEAN DEFAULT false,
+          mqtt_broker VARCHAR(255) DEFAULT 'broker.emqx.io',
+          mqtt_port INTEGER DEFAULT 1883,
+          mqtt_topic VARCHAR(255) DEFAULT 'lavcontrol/devices',
+          email_smtp_host VARCHAR(255) DEFAULT '',
+          email_smtp_port INTEGER DEFAULT 587,
+          email_user VARCHAR(255) DEFAULT '',
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW()
+        )
+      `);
+      
       const result = await pool.query('SELECT * FROM config_sistema ORDER BY id DESC LIMIT 1');
       return result.rows[0] || {
         sistema_nome: 'LavControl',
+        logo_url: null,
         tema: 'dark',
         idioma: 'pt-BR',
         notificacoes_email: true,
@@ -1403,16 +1427,17 @@ export class DatabaseStorage implements IStorage {
         // Update existing config
         const result = await pool.query(`
           UPDATE config_sistema 
-          SET sistema_nome = $1, tema = $2, idioma = $3, 
-              notificacoes_email = $4, notificacoes_push = $5, 
-              backup_automatico = $6, manutencao = $7, 
-              mqtt_broker = $8, mqtt_port = $9, mqtt_topic = $10,
-              email_smtp_host = $11, email_smtp_port = $12, email_user = $13,
+          SET sistema_nome = $1, logo_url = $2, tema = $3, idioma = $4, 
+              notificacoes_email = $5, notificacoes_push = $6, 
+              backup_automatico = $7, manutencao = $8, 
+              mqtt_broker = $9, mqtt_port = $10, mqtt_topic = $11,
+              email_smtp_host = $12, email_smtp_port = $13, email_user = $14,
               updated_at = NOW()
-          WHERE id = $14
+          WHERE id = $15
           RETURNING *
         `, [
           data.sistema_nome || 'LavControl',
+          data.logo_url || null,
           data.tema || 'dark', 
           data.idioma || 'pt-BR',
           data.notificacoes_email !== undefined ? data.notificacoes_email : true,
@@ -1432,13 +1457,14 @@ export class DatabaseStorage implements IStorage {
         // Insert new config
         const result = await pool.query(`
           INSERT INTO config_sistema (
-            sistema_nome, tema, idioma, notificacoes_email, notificacoes_push, 
+            sistema_nome, logo_url, tema, idioma, notificacoes_email, notificacoes_push, 
             backup_automatico, manutencao, mqtt_broker, mqtt_port, mqtt_topic,
             email_smtp_host, email_smtp_port, email_user
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
           RETURNING *
         `, [
           data.sistema_nome || 'LavControl',
+          data.logo_url || null,
           data.tema || 'dark',
           data.idioma || 'pt-BR', 
           data.notificacoes_email !== undefined ? data.notificacoes_email : true,

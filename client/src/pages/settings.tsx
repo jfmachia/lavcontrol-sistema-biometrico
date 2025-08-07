@@ -31,6 +31,7 @@ export function Settings() {
 
   const [settings, setSettings] = useState({
     sistema_nome: "LavControl",
+    logo_url: "",
     tema: "dark",
     idioma: "pt-BR",
     notificacoes_email: true,
@@ -50,6 +51,7 @@ export function Settings() {
     if (config) {
       setSettings({
         sistema_nome: config.sistema_nome || "LavControl",
+        logo_url: config.logo_url || "",
         tema: config.tema || "dark",
         idioma: config.idioma || "pt-BR",
         notificacoes_email: config.notificacoes_email ?? true,
@@ -159,6 +161,20 @@ export function Settings() {
                 onChange={(e) => handleInputChange('sistema_nome', e.target.value)}
                 className="bg-slate-700 border-slate-600 text-white"
               />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="logo_url" className="text-white">Logo da Empresa (URL)</Label>
+              <Input
+                id="logo_url"
+                value={settings.logo_url}
+                onChange={(e) => handleInputChange('logo_url', e.target.value)}
+                placeholder="https://exemplo.com/logo.png"
+                className="bg-slate-700 border-slate-600 text-white"
+              />
+              <p className="text-xs text-slate-400">
+                Insira o link/URL da imagem do logo que aparecerá acima do nome no menu.
+              </p>
             </div>
 
             <div className="space-y-2">
