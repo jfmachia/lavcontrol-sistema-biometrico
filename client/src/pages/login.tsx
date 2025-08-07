@@ -22,11 +22,6 @@ function LoginSystemHeader() {
     retry: false,
   });
   
-  // Debug para verificar se está carregando os dados
-  console.log("Login - Config data:", config);
-  console.log("Login - Loading:", isLoading);
-  console.log("Login - Error:", error);
-  
   const systemName = (config as any)?.sistema_nome || "LavControl";
   const logoUrl = (config as any)?.logo_url;
 
