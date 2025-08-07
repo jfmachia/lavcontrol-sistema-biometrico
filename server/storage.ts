@@ -1426,6 +1426,12 @@ export class DatabaseStorage implements IStorage {
     });
     
     try {
+      // Ensure logo_url column exists
+      await pool.query(`
+        ALTER TABLE config_sistema 
+        ADD COLUMN IF NOT EXISTS logo_url VARCHAR(500) DEFAULT NULL
+      `);
+      
       // Check if config exists
       const existingResult = await pool.query('SELECT id FROM config_sistema LIMIT 1');
       
