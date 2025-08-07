@@ -1,51 +1,53 @@
-# Build stage
+# Etapa de build
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Copia package.json e package-lock.json
 COPY package*.json ./
-RUN npm ci --only=production
 
-# Copy source code
+# ⛏️ Instala TODAS as dependências (dev + production) para o build
+RUN npm ci --include=dev
+
+# Copia todo o código fonte
 COPY . .
 
-# Build client
+# ⚙️ Build da aplicação (frontend + backend)
 RUN npm run build
 
-# Production stage
+# Etapa final (produção)
+
 FROM node:20-alpine AS production
+
+# Instala init leve
+RUN apk add --no-cache dumb-init
+
+# Cria usuário sem privilégios
+RUN addgroup -g 1001 -S nodejs && adduser -S lavcontrol -u 1001
 
 WORKDIR /app
 
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
+# Copia package.json para instalar apenas dependências de produção
+COPY --from=builder /app/package*.json ./
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S lavcontrol -u 1001
+# Instala apenas dependências de produção na imagem final
+RUN npm ci --only=production && npm cache clean --force
 
-# Copy built application
-COPY --from=builder --chown=lavcontrol:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=lavcontrol:nodejs /app/server ./server
-COPY --from=builder --chown=lavcontrol:nodejs /app/shared ./shared
-COPY --from=builder --chown=lavcontrol:nodejs /app/client/dist ./client/dist
-COPY --from=builder --chown=lavcontrol:nodejs /app/package*.json ./
+# Copia os arquivos buildados
+COPY --from=builder /app/dist ./dist
 
-# Set environment
-ENV NODE_ENV=production
-ENV PORT=5000
-
-# Expose port
+# Expõe a porta da aplicação
 EXPOSE 5000
 
-# Switch to non-root user
-USER lavcontrol
-
-# Health check
+# Configura health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:5000/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1))" || exit 1
 
-# Start application
+# Muda para usuário sem privilégios
+USER lavcontrol
+
+# Usa dumb-init para evitar problemas com sinais
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "server/index.js"]
+
+# Comando de inicialização
+CMD ["node", "dist/index.js"]
