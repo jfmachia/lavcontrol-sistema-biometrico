@@ -781,6 +781,11 @@ export class DatabaseStorage implements IStorage {
       fields.push(`biometria = $${paramCount++}`);
       values.push(updateData.biometria);
     }
+    // Suporte para o campo em inglês (usado pelo frontend)
+    if (updateData.biometry !== undefined) {
+      fields.push(`biometria = $${paramCount++}`);
+      values.push(updateData.biometry);
+    }
     if (updateData.estacionamento !== undefined) {
       fields.push(`estacionamento = $${paramCount++}`);
       values.push(updateData.estacionamento);
