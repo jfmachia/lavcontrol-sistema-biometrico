@@ -52,20 +52,35 @@ export function BiometryManagement() {
     queryFn: async () => {
       // Buscar ambos os dados
       const [devicesResponse, storesResponse] = await Promise.all([
-        fetch("/api/devices").then(r => r.json()),
-        fetch("/api/stores").then(r => r.json())
+        apiRequest("/api/devices", 'GET').then(r => r.json()),
+        apiRequest("/api/stores", 'GET').then(r => r.json())
       ]);
+      
+      console.log('🔍 Devices Response:', devicesResponse);
+      console.log('🏪 Stores Response:', storesResponse);
       
       // Dispositivos que estão vinculados (têm ID no campo biometria de alguma loja)
       const linkedDeviceIds = storesResponse
-        .filter((store: any) => store.biometria)
-        .map((store: any) => store.biometria.toString());
+        .filter((store: any) => store.biometria || store.biometry)
+        .map((store: any) => {
+          const deviceId = store.biometria || store.biometry;
+          console.log(`🔗 Loja ${store.name} tem dispositivo vinculado:`, deviceId);
+          return deviceId.toString();
+        });
+      
+      console.log('📋 Linked Device IDs:', linkedDeviceIds);
       
       // Retornar dispositivos que não estão vinculados
-      return devicesResponse.filter((device: any) => 
-        !linkedDeviceIds.includes(device.id.toString()) && 
-        !linkedDeviceIds.includes(device.deviceId)
-      );
+      const available = devicesResponse.filter((device: any) => {
+        const isLinked = linkedDeviceIds.includes(device.id.toString()) || 
+                        linkedDeviceIds.includes(device.deviceId) ||
+                        linkedDeviceIds.includes(device.name);
+        console.log(`📱 Device ${device.name} (ID: ${device.id}) is linked:`, isLinked);
+        return !isLinked;
+      });
+      
+      console.log('✅ Available devices:', available);
+      return available;
     }
   });
 
@@ -266,7 +281,7 @@ export function BiometryManagement() {
               <div>
                 <p className="text-sm text-slate-400 mb-1">Lojas com Biometria</p>
                 <p className="text-2xl font-bold text-white">
-                  {stores?.filter((store: any) => store.deviceCount > 0).length || 0}
+                  {stores?.filter((store: any) => store.biometria || store.biometry).length || 0}
                 </p>
               </div>
               <div className="bg-green-500/20 p-3 rounded-lg">
