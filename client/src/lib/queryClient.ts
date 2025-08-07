@@ -1,10 +1,28 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { N8N_CONFIG } from "./config";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
     throw new Error(`${res.status}: ${text}`);
   }
+}
+
+// Função para construir URL completa para n8n
+function buildN8nUrl(endpoint: string): string {
+  // Se já é uma URL completa, usar como está
+  if (endpoint.startsWith('http')) {
+    return endpoint;
+  }
+  
+  // Se começa com /api/, remover e usar endpoint diretamente
+  if (endpoint.startsWith('/api/')) {
+    const cleanEndpoint = endpoint.replace('/api/', '/');
+    return `${N8N_CONFIG.baseUrl}${cleanEndpoint}`;
+  }
+  
+  // Caso contrário, anexar ao baseUrl
+  return `${N8N_CONFIG.baseUrl}${endpoint}`;
 }
 
 export async function apiRequest(
@@ -21,11 +39,16 @@ export async function apiRequest(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const res = await fetch(url, {
+  // Construir URL para n8n
+  const n8nUrl = buildN8nUrl(url);
+  
+  console.log(`🔗 API Request: ${method} ${n8nUrl}`);
+
+  const res = await fetch(n8nUrl, {
     method,
     headers,
     body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
+    mode: 'cors', // Importante para CORS com n8n
   });
 
   await throwIfResNotOk(res);
@@ -45,9 +68,15 @@ export const getQueryFn: <T>(options: {
       headers["Authorization"] = `Bearer ${token}`;
     }
 
-    const res = await fetch(queryKey.join("/") as string, {
+    // Construir URL para n8n
+    const endpoint = queryKey.join("/") as string;
+    const n8nUrl = buildN8nUrl(endpoint);
+    
+    console.log(`🔍 Query: GET ${n8nUrl}`);
+
+    const res = await fetch(n8nUrl, {
       headers,
-      credentials: "include",
+      mode: 'cors', // Importante para CORS com n8n
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

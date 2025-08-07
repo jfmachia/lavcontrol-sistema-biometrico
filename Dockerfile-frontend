@@ -1,0 +1,24 @@
+# Dockerfile para Frontend LavControl (n8n backend)
+FROM nginx:alpine
+
+# Copiar arquivos estáticos do build
+COPY dist/ /usr/share/nginx/html/
+
+# Configurar nginx para SPA
+RUN echo 'server {' > /etc/nginx/conf.d/default.conf && \
+    echo '    listen 80;' >> /etc/nginx/conf.d/default.conf && \
+    echo '    server_name localhost;' >> /etc/nginx/conf.d/default.conf && \
+    echo '    root /usr/share/nginx/html;' >> /etc/nginx/conf.d/default.conf && \
+    echo '    index index.html;' >> /etc/nginx/conf.d/default.conf && \
+    echo '    location / {' >> /etc/nginx/conf.d/default.conf && \
+    echo '        try_files $uri $uri/ /index.html;' >> /etc/nginx/conf.d/default.conf && \
+    echo '    }' >> /etc/nginx/conf.d/default.conf && \
+    echo '    # CORS para n8n' >> /etc/nginx/conf.d/default.conf && \
+    echo '    add_header Access-Control-Allow-Origin *;' >> /etc/nginx/conf.d/default.conf && \
+    echo '    add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS";' >> /etc/nginx/conf.d/default.conf && \
+    echo '    add_header Access-Control-Allow-Headers "Content-Type, Authorization";' >> /etc/nginx/conf.d/default.conf && \
+    echo '}' >> /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

@@ -44,22 +44,32 @@ export class AuthService {
 
   static async login(email: string, password: string): Promise<AuthResponse> {
     const response = await apiRequest("/api/auth/login", "POST", { email, password });
-    const data = await response.json();
+    const result = await response.json();
     
-    this.setToken(data.token);
-    this.setUser(data.user);
+    // Adaptar resposta do n8n { success: true, data: { user: {...}, token: "..." } }
+    if (result.success && result.data) {
+      const { user, token } = result.data;
+      this.setToken(token);
+      this.setUser(user);
+      return { token, user };
+    }
     
-    return data;
+    throw new Error(result.error || 'Login failed');
   }
 
   static async register(name: string, email: string, password: string): Promise<AuthResponse> {
     const response = await apiRequest("/api/auth/register", "POST", { name, email, password });
-    const data = await response.json();
+    const result = await response.json();
     
-    this.setToken(data.token);
-    this.setUser(data.user);
+    // Adaptar resposta do n8n { success: true, data: { user: {...}, token: "..." } }
+    if (result.success && result.data) {
+      const { user, token } = result.data;
+      this.setToken(token);
+      this.setUser(user);
+      return { token, user };
+    }
     
-    return data;
+    throw new Error(result.error || 'Registration failed');
   }
 
   static logout(): void {
