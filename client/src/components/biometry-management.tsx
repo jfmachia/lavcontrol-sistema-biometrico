@@ -89,15 +89,25 @@ export function BiometryManagement() {
   });
 
   const linkDeviceMutation = useMutation({
-    mutationFn: ({ storeId, deviceId }: { storeId: number; deviceId: string }) =>
-      apiRequest(`/api/stores/${storeId}`, "PATCH", { biometry: deviceId }),
-    onSuccess: () => {
+    mutationFn: async ({ storeId, deviceId }: { storeId: number; deviceId: string }) => {
+      console.log('🔗 Vinculando dispositivo:', { storeId, deviceId });
+      const response = await apiRequest(`/api/stores/${storeId}`, "PATCH", { biometry: deviceId });
+      const result = await response.json();
+      console.log('✅ Resposta da vinculação:', result);
+      return result;
+    },
+    onSuccess: (data) => {
+      console.log('🎉 Vinculação bem-sucedida:', data);
       // Invalidar todas as queries relacionadas com keys que realmente existem
       queryClient.invalidateQueries({ queryKey: ["/api/stores"] });
       queryClient.invalidateQueries({ queryKey: ["/api/devices"] });
       queryClient.invalidateQueries({ queryKey: ["/api/devices", "/api/stores"] });
       setIsLinkDialogOpen(false);
       form.reset();
+      console.log('🔄 Cache invalidado e modal fechado');
+    },
+    onError: (error) => {
+      console.error('❌ Erro na vinculação:', error);
     }
   });
 
@@ -113,6 +123,7 @@ export function BiometryManagement() {
   });
 
   const onSubmit = (data: LinkDeviceFormData) => {
+    console.log('📝 Form submitted:', data);
     linkDeviceMutation.mutate({
       storeId: parseInt(data.storeId),
       deviceId: data.deviceId
