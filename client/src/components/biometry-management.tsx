@@ -92,8 +92,10 @@ export function BiometryManagement() {
     mutationFn: ({ storeId, deviceId }: { storeId: number; deviceId: string }) =>
       apiRequest(`/api/stores/${storeId}`, "PATCH", { biometry: deviceId }),
     onSuccess: () => {
+      // Invalidar todas as queries relacionadas com keys que realmente existem
       queryClient.invalidateQueries({ queryKey: ["/api/stores"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/devices/available"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/devices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/devices", "/api/stores"] });
       setIsLinkDialogOpen(false);
       form.reset();
     }
@@ -103,8 +105,10 @@ export function BiometryManagement() {
     mutationFn: (storeId: number) =>
       apiRequest(`/api/stores/${storeId}`, "PATCH", { biometry: null }),
     onSuccess: () => {
+      // Invalidar todas as queries relacionadas com keys que realmente existem
       queryClient.invalidateQueries({ queryKey: ["/api/stores"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/devices/available"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/devices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/devices", "/api/stores"] });
     }
   });
 
@@ -455,7 +459,7 @@ export function BiometryManagement() {
                   <Button
                     size="sm"
                     onClick={() => {
-                      form.setValue("deviceId", device.deviceId);
+                      form.setValue("deviceId", device.id.toString());
                       setIsLinkDialogOpen(true);
                     }}
                     className="w-full lavcontrol-button-primary"
