@@ -1239,10 +1239,10 @@ export class DatabaseStorage implements IStorage {
     // Get all stats in one query
     const result = await pool.query(`
       SELECT 
-        (SELECT COUNT(*) FROM users WHERE is_active = true) as total_users,
+        (SELECT COUNT(*) FROM clients WHERE status = 'active') as total_users,
         (SELECT COUNT(*) FROM devices WHERE status = 'online') as active_devices,
         (SELECT COUNT(*) FROM access_logs WHERE created_at >= $1 AND success = true) as today_access,
-        (SELECT COUNT(*) FROM alerts WHERE status = 'active') as active_alerts
+        (SELECT COUNT(*) FROM alerts WHERE status = 'ativo' OR status = 'pendente') as active_alerts
     `, [today]);
 
     await pool.end();

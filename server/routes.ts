@@ -347,7 +347,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Wave chart data - dados para gráfico em ondas por loja
-  app.get("/api/dashboard/wave-chart", authenticateToken, async (req, res) => {
+  app.get("/api/dashboard/wave-chart", async (req, res) => {
     try {
       const waveData = await storage.getWaveChartData();
       res.json(waveData);
