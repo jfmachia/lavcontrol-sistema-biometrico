@@ -713,6 +713,8 @@ export class DatabaseStorage implements IStorage {
     });
     
     console.log('🔧 Atualizando loja ID:', id, 'com dados:', JSON.stringify(updateData, null, 2));
+    console.log('🔍 Checando campo biometry:', updateData.biometry, 'tipo:', typeof updateData.biometry);
+    console.log('🔍 Checando biometry !== undefined:', updateData.biometry !== undefined);
     
     const fields = [];
     const values = [];
@@ -783,6 +785,7 @@ export class DatabaseStorage implements IStorage {
     }
     // Suporte para o campo em inglês (usado pelo frontend)
     if (updateData.biometry !== undefined) {
+      console.log('✅ Campo biometry reconhecido! Valor:', updateData.biometry);
       fields.push(`biometria = $${paramCount++}`);
       values.push(updateData.biometry);
     }
