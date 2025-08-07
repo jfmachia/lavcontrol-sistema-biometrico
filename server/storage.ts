@@ -98,7 +98,6 @@ export class DatabaseStorage implements IStorage {
         ssl: false,
       });
       
-      console.log(`🔧 Executando query com nova pool para: ${email}`);
       
       const result = await freshPool.query(
         'SELECT id, email, name, password, role, is_active, alert_level, failed_login_attempts, locked_until, reset_token, reset_token_expires, last_login, created_at, updated_at FROM users WHERE email = $1',
@@ -107,11 +106,8 @@ export class DatabaseStorage implements IStorage {
       
       await freshPool.end();
       
-      console.log(`📊 Resultado da query:`, result.rows);
-      console.log(`📊 Número de linhas retornadas:`, result.rows.length);
       
       if (result.rows.length === 0) {
-        console.log(`👤 Usuário retornado: nenhum`);
         return undefined;
       }
       
@@ -133,7 +129,6 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date(row.updated_at),
       };
       
-      console.log(`👤 Usuário retornado: ${user.name} (${user.email})`);
       return user;
     } catch (error) {
       return undefined;
@@ -272,36 +267,28 @@ export class DatabaseStorage implements IStorage {
   // ===== AUTHENTICATION METHODS =====
   
   async authenticateUser(email: string, password: string): Promise<User | null> {
-    console.log(`🔐 Tentativa de login para: ${email}`);
     
     const user = await this.getUserByEmail(email);
     if (!user) {
       return null;
     }
     
-    console.log(`👤 Usuário encontrado: ${user.name} (ID: ${user.id}, Tipo ID: ${typeof user.id})`);
-    console.log(`🔒 Status: active=${user.isActive}, locked=${user.lockedUntil}`);
     
     // Check if user is locked
     if (user.lockedUntil && user.lockedUntil > new Date()) {
-      console.log(`🔒 Usuário bloqueado até: ${user.lockedUntil}`);
       return null;
     }
     
     // Check if user is active
     if (!user.isActive) {
-      console.log(`⏸️ Usuário inativo: ${email}`);
       return null;
     }
     
     // Verify password
     if (!user.password) {
-      console.log(`🔑 Senha não definida para usuário: ${email}`);
       return null;
     }
     
-    console.log(`🔐 Verificando senha para: ${email}`);
-    console.log(`🔑 Hash no banco: ${user.password.substring(0, 20)}...`);
     
     const isValidPassword = await bcrypt.compare(password, user.password);
     
