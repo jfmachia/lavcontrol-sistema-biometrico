@@ -46,8 +46,10 @@ export function BiometryManagement() {
     queryKey: ["/api/stores"],
   });
 
+  // Dispositivos disponíveis são os que não têm store_id
   const { data: availableDevices, isLoading: devicesLoading } = useQuery<any[]>({
-    queryKey: ["/api/devices/available"],
+    queryKey: ["/api/devices"],
+    select: (data) => data?.filter((device: any) => !device.store_id) || []
   });
 
   const { data: allDevices } = useQuery<any[]>({
@@ -86,8 +88,13 @@ export function BiometryManagement() {
   };
 
   const getDeviceStatus = (deviceId: string) => {
-    const device = allDevices?.find((d: any) => d.deviceId === deviceId);
+    const device = allDevices?.find((d: any) => d.id === deviceId || d.deviceId === deviceId);
     return device?.status || "unknown";
+  };
+
+  // Função para buscar dispositivos de uma loja específica
+  const getStoreDevices = (storeId: number) => {
+    return allDevices?.filter((device: any) => device.store_id === storeId) || [];
   };
 
   const getStatusIcon = (status: string) => {
@@ -211,7 +218,7 @@ export function BiometryManagement() {
               <div>
                 <p className="text-sm text-slate-400 mb-1">Lojas com Biometria</p>
                 <p className="text-2xl font-bold text-white">
-                  {stores?.filter((store: any) => store.biometry).length || 0}
+                  {stores?.filter((store: any) => store.deviceCount > 0).length || 0}
                 </p>
               </div>
               <div className="bg-green-500/20 p-3 rounded-lg">
@@ -288,15 +295,25 @@ export function BiometryManagement() {
                     </Badge>
                   </div>
 
-                  {store.biometry ? (
+                  {getStoreDevices(store.id).length > 0 ? (
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-slate-400">Dispositivo Biométrico:</span>
-                        <Badge className={`border ${getStatusColor(getDeviceStatus(store.biometry))}`}>
-                          {getStatusIcon(getDeviceStatus(store.biometry))}
-                          <span className="ml-1">{store.biometry}</span>
-                        </Badge>
-                      </div>
+                      {getStoreDevices(store.id).map((device: any) => (
+                        <div key={device.id} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-slate-400">Dispositivo:</span>
+                            <Badge className={`border ${getStatusColor(device.status)}`}>
+                              {getStatusIcon(device.status)}
+                              <span className="ml-1">{device.name}</span>
+                            </Badge>
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-500">Tipo: {device.type}</span>
+                            {device.ip_address && (
+                              <span className="text-slate-500">IP: {device.ip_address}</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                       <Button
                         size="sm"
                         variant="outline"
