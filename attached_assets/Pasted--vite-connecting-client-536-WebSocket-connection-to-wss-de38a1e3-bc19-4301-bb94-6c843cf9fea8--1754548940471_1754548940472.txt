@@ -1,0 +1,48 @@
+[vite] connecting...
+client:536 WebSocket connection to 'wss://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/?token=3th5mFQDt1lb' failed: 
+setupWebSocket @ client:536
+(anônimo) @ client:531Entenda o erroAI
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=3th5mFQDt1lb' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+setupWebSocket @ client:536
+fallback @ client:509
+(anônimo) @ client:555Entenda o erroAI
+chunk-RPCDYKBN.js?v=96de4b7a:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+chunk-RPCDYKBN.js?v=96de4b7a:521 Warning: validateDOMNesting(...): <a> cannot appear as a descendant of <a>.
+    at a
+    at a
+    at https://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=96de4b7a:337:18
+    at nav
+    at div
+    at NavigationSidebar (https://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/src/components/navigation-sidebar.tsx:112:37)
+    at div
+    at ProtectedRoute (https://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/src/App.tsx?t=1754548853790&v=o-F-sgVrZAmQyvvc-Ud4I:41:27)
+    at Route (https://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=96de4b7a:323:16)
+    at Switch (https://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=96de4b7a:379:17)
+    at Router
+    at Provider (https://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-7SUNRGEF.js?v=96de4b7a:38:15)
+    at TooltipProvider (https://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=96de4b7a:59:5)
+    at WebSocketProvider (https://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/src/App.tsx?t=1754548853790&v=o-F-sgVrZAmQyvvc-Ud4I:298:30)
+    at AuthProvider (https://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/src/hooks/use-auth.tsx:21:32)
+    at QueryClientProvider (https://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=96de4b7a:2805:3)
+    at ThemeProvider (https://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/src/lib/theme.tsx:25:3)
+    at App
+printWarning @ chunk-RPCDYKBN.js?v=96de4b7a:521
+error @ chunk-RPCDYKBN.js?v=96de4b7a:505
+validateDOMNesting @ chunk-RPCDYKBN.js?v=96de4b7a:8256
+createInstance @ chunk-RPCDYKBN.js?v=96de4b7a:8328
+completeWork @ chunk-RPCDYKBN.js?v=96de4b7a:16290
+completeUnitOfWork @ chunk-RPCDYKBN.js?v=96de4b7a:19224
+performUnitOfWork @ chunk-RPCDYKBN.js?v=96de4b7a:19206
+workLoopSync @ chunk-RPCDYKBN.js?v=96de4b7a:19137
+renderRootSync @ chunk-RPCDYKBN.js?v=96de4b7a:19116
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=96de4b7a:18678
+workLoop @ chunk-RPCDYKBN.js?v=96de4b7a:197
+flushWork @ chunk-RPCDYKBN.js?v=96de4b7a:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=96de4b7a:384Entenda o erroAI
+use-websocket.ts:19 WebSocket connected for real-time updates
+use-websocket.ts:29 Real-time updates enabled: Real-time updates enabled
+use-websocket.ts:19 WebSocket connected for real-time updates
+use-websocket.ts:29 Real-time updates enabled: Real-time updates enabled
