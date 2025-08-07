@@ -91,16 +91,26 @@ const formatDateTime = (dateString: string) => {
 };
 
 export default function Logs() {
-  const { data: logs, isLoading } = useQuery({
+  const { data: logs, isLoading, error } = useQuery({
     queryKey: ["/api/access-logs"],
     queryFn: async () => {
-      const response = await fetch("/api/access-logs", {
-        headers: AuthService.getAuthHeaders(),
-      });
-      if (!response.ok) throw new Error("Failed to fetch access logs");
-      return response.json() as Promise<AccessLog[]>;
+      try {
+        console.log('🔍 Fazendo requisição para /api/access-logs...');
+        const response = await fetch("/api/access-logs");
+        console.log('📊 Status da resposta:', response.status);
+        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const data = await response.json();
+        console.log('✅ Dados recebidos:', data.length, 'logs');
+        return data as AccessLog[];
+      } catch (err) {
+        console.error('❌ Erro na requisição:', err);
+        throw err;
+      }
     },
   });
+  
+  // Debug logs
+  console.log('🔍 Estado da query:', { isLoading, error: error?.message, logs: logs?.length });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950 p-6">
