@@ -107,7 +107,12 @@ export default function StoresView() {
   const deleteStoreMutation = useMutation({
     mutationFn: async (id: number) => {
       const response = await apiRequest(`/api/stores/${id}`, "DELETE");
-      return await response.json();
+      if (response.ok) {
+        // Se a resposta está OK, tenta fazer parse do JSON se houver conteúdo
+        const text = await response.text();
+        return text ? JSON.parse(text) : { success: true };
+      }
+      throw new Error(`Erro ${response.status}: ${response.statusText}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/stores"] });
