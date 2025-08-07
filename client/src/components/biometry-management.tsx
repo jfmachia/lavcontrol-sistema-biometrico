@@ -95,13 +95,23 @@ export function BiometryManagement() {
   // Função para buscar dispositivos de uma loja específica
   const getStoreDevices = (storeId: number) => {
     const store = stores?.find((s: any) => s.id === storeId);
-    if (!store || !store.biometria) return [];
+    console.log('🔍 Store data:', store); // Debug log
     
-    const linkedDevice = allDevices?.find((device: any) => 
-      device.id.toString() === store.biometria.toString() || 
-      device.deviceId === store.biometria
-    );
+    // Verificar ambos os campos possíveis (português e inglês)
+    const biometryField = store?.biometria || store?.biometry;
+    console.log('🔍 Biometry field:', biometryField); // Debug log
     
+    if (!store || !biometryField || biometryField === null) return [];
+    
+    const linkedDevice = allDevices?.find((device: any) => {
+      const match = device.id.toString() === biometryField.toString() || 
+                   device.deviceId === biometryField ||
+                   device.device_id === biometryField;
+      console.log('🔍 Checking device:', device.id, device.deviceId, 'against:', biometryField, 'match:', match);
+      return match;
+    });
+    
+    console.log('🔍 Found linked device:', linkedDevice);
     return linkedDevice ? [linkedDevice] : [];
   };
 
