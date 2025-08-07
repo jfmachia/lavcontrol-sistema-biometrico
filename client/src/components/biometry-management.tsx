@@ -94,7 +94,15 @@ export function BiometryManagement() {
 
   // Função para buscar dispositivos de uma loja específica
   const getStoreDevices = (storeId: number) => {
-    return allDevices?.filter((device: any) => device.store_id === storeId) || [];
+    const store = stores?.find((s: any) => s.id === storeId);
+    if (!store || !store.biometria) return [];
+    
+    const linkedDevice = allDevices?.find((device: any) => 
+      device.id.toString() === store.biometria.toString() || 
+      device.deviceId === store.biometria
+    );
+    
+    return linkedDevice ? [linkedDevice] : [];
   };
 
   const getStatusIcon = (status: string) => {
