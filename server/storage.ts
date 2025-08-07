@@ -86,7 +86,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    console.log(`🔍 Buscando usuário por email: ${email}`);
     try {
       // Criar nova pool de conexões para forçar dados atuais
       const { Pool } = await import('pg');
@@ -137,7 +136,6 @@ export class DatabaseStorage implements IStorage {
       console.log(`👤 Usuário retornado: ${user.name} (${user.email})`);
       return user;
     } catch (error) {
-      console.log(`❌ Erro na query getUserByEmail:`, error);
       return undefined;
     }
   }
@@ -278,7 +276,6 @@ export class DatabaseStorage implements IStorage {
     
     const user = await this.getUserByEmail(email);
     if (!user) {
-      console.log(`❌ Usuário não encontrado: ${email}`);
       return null;
     }
     
@@ -307,7 +304,6 @@ export class DatabaseStorage implements IStorage {
     console.log(`🔑 Hash no banco: ${user.password.substring(0, 20)}...`);
     
     const isValidPassword = await bcrypt.compare(password, user.password);
-    console.log(`✅ Senha válida: ${isValidPassword}`);
     
     if (!isValidPassword) {
       await this.increaseFailedAttempts(email);
@@ -318,7 +314,6 @@ export class DatabaseStorage implements IStorage {
     await this.resetFailedAttempts(email);
     await this.updateLastLogin(user.id);
     
-    console.log(`✅ Login bem-sucedido para: ${email}`);
     return user;
   }
 
@@ -834,7 +829,6 @@ export class DatabaseStorage implements IStorage {
     }
 
     if (fields.length === 0) {
-      console.log('❌ Nenhum campo para atualizar');
       await pool.end();
       return null;
     }
@@ -850,14 +844,11 @@ export class DatabaseStorage implements IStorage {
       RETURNING *
     `;
     
-    console.log('📝 Query SQL:', query);
-    console.log('📝 Valores:', values);
     
     try {
       const result = await pool.query(query, values);
       
       if (result.rows.length === 0) {
-        console.log('❌ Loja não encontrada para ID:', id);
         await pool.end();
         return null;
       }
@@ -890,7 +881,6 @@ export class DatabaseStorage implements IStorage {
         updatedAt: row.updated_at
       };
       
-      console.log('✅ Loja atualizada com sucesso:', updatedStore.id);
       await pool.end();
       return updatedStore;
       

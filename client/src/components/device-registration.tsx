@@ -54,9 +54,6 @@ export function DeviceRegistration() {
   });
 
   // Debug das lojas
-  console.log('Stores data:', stores);
-  console.log('Stores loading:', storesLoading);
-  console.log('Stores error:', storesError);
 
   // Mutação para cadastrar dispositivo
   const registerMutation = useMutation({

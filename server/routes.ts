@@ -183,6 +183,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Verify current password
+      if (!user.password) {
+        return res.status(400).json({ message: "Senha não definida para este usuário" });
+      }
       const isCurrentPasswordValid = await bcrypt.compare(validatedData.currentPassword, user.password);
       if (!isCurrentPasswordValid) {
         return res.status(400).json({ message: "Senha atual incorreta" });
@@ -857,7 +860,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       broadcastUpdate('access-update', accessData);
       
       res.json({ 
-        message: `Entrada simulada para ${user.name} na ${store.nome_loja}`,
+        message: `Entrada simulada para ${user.name} na ${store.name}`,
         timestamp: new Date().toISOString()
       });
     } catch (error: any) {
