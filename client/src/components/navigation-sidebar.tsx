@@ -168,7 +168,7 @@ export function NavigationSidebar({ className }: NavigationSidebarProps) {
   );
 
   return (
-    <div className={cn("flex h-full flex-col bg-muted/20 overflow-hidden", className)}>
+    <div className={cn("flex h-screen flex-col bg-muted/20 overflow-hidden", className)}>
       {/* Logo/Header */}
       <div className="flex min-h-20 items-center justify-center border-b px-6 py-2">
         <SystemHeader />
@@ -190,7 +190,10 @@ export function NavigationSidebar({ className }: NavigationSidebarProps) {
       )}
 
       {/* Navigation Items */}
-      <nav className="flex-1 min-h-0 overflow-y-auto space-y-1 p-4" style={{scrollbarWidth: 'thin', scrollbarColor: '#4a5568 transparent'}}>
+      <nav className="flex-1 min-h-0 overflow-y-auto space-y-1 p-4 scrollbar-thin scrollbar-track-slate-800 scrollbar-thumb-slate-600 hover:scrollbar-thumb-slate-500" style={{
+        scrollbarWidth: 'thin',
+        scrollbarColor: '#64748b #1e293b'
+      }}>
         {filteredItems.map((item) => {
           const isActive = location === item.href;
           
