@@ -1378,6 +1378,11 @@ export class DatabaseStorage implements IStorage {
           id SERIAL PRIMARY KEY,
           sistema_nome VARCHAR(100) DEFAULT 'LavControl',
           logo_url VARCHAR(500) DEFAULT NULL,
+          logo_margin_top INTEGER DEFAULT 25,
+          logo_margin_bottom INTEGER DEFAULT 8,
+          logo_size INTEGER DEFAULT 48,
+          text_margin_top INTEGER DEFAULT 0,
+          text_margin_bottom INTEGER DEFAULT 16,
           tema VARCHAR(20) DEFAULT 'dark',
           idioma VARCHAR(10) DEFAULT 'pt-BR',
           notificacoes_email BOOLEAN DEFAULT true,
@@ -1395,16 +1400,26 @@ export class DatabaseStorage implements IStorage {
         )
       `);
       
-      // Add logo_url column if it doesn't exist
+      // Add layout columns if they don't exist
       await pool.query(`
         ALTER TABLE config_sistema 
-        ADD COLUMN IF NOT EXISTS logo_url VARCHAR(500) DEFAULT NULL
+        ADD COLUMN IF NOT EXISTS logo_url VARCHAR(500) DEFAULT NULL,
+        ADD COLUMN IF NOT EXISTS logo_margin_top INTEGER DEFAULT 25,
+        ADD COLUMN IF NOT EXISTS logo_margin_bottom INTEGER DEFAULT 8,
+        ADD COLUMN IF NOT EXISTS logo_size INTEGER DEFAULT 48,
+        ADD COLUMN IF NOT EXISTS text_margin_top INTEGER DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS text_margin_bottom INTEGER DEFAULT 16
       `);
       
       const result = await pool.query('SELECT * FROM config_sistema ORDER BY id DESC LIMIT 1');
       return result.rows[0] || {
         sistema_nome: 'LavControl',
         logo_url: null,
+        logo_margin_top: 25,
+        logo_margin_bottom: 8,
+        logo_size: 48,
+        text_margin_top: 0,
+        text_margin_bottom: 16,
         tema: 'dark',
         idioma: 'pt-BR',
         notificacoes_email: true,
@@ -1431,6 +1446,12 @@ export class DatabaseStorage implements IStorage {
         CREATE TABLE IF NOT EXISTS config_sistema (
           id SERIAL PRIMARY KEY,
           sistema_nome VARCHAR(100) DEFAULT 'LavControl',
+          logo_url VARCHAR(500) DEFAULT NULL,
+          logo_margin_top INTEGER DEFAULT 25,
+          logo_margin_bottom INTEGER DEFAULT 8,
+          logo_size INTEGER DEFAULT 48,
+          text_margin_top INTEGER DEFAULT 0,
+          text_margin_bottom INTEGER DEFAULT 16,
           tema VARCHAR(20) DEFAULT 'dark',
           idioma VARCHAR(10) DEFAULT 'pt-BR',
           notificacoes_email BOOLEAN DEFAULT true,
@@ -1448,14 +1469,19 @@ export class DatabaseStorage implements IStorage {
         )
       `);
       
-      // Then ensure logo_url column exists
+      // Then ensure all layout columns exist
       try {
         await pool.query(`
           ALTER TABLE config_sistema 
-          ADD COLUMN logo_url VARCHAR(500) DEFAULT NULL
+          ADD COLUMN IF NOT EXISTS logo_url VARCHAR(500) DEFAULT NULL,
+          ADD COLUMN IF NOT EXISTS logo_margin_top INTEGER DEFAULT 25,
+          ADD COLUMN IF NOT EXISTS logo_margin_bottom INTEGER DEFAULT 8,
+          ADD COLUMN IF NOT EXISTS logo_size INTEGER DEFAULT 48,
+          ADD COLUMN IF NOT EXISTS text_margin_top INTEGER DEFAULT 0,
+          ADD COLUMN IF NOT EXISTS text_margin_bottom INTEGER DEFAULT 16
         `);
       } catch (error) {
-        // Column might already exist, ignore error
+        // Columns might already exist, ignore error
       }
       
       // Check if config exists
@@ -1466,17 +1492,24 @@ export class DatabaseStorage implements IStorage {
         try {
           const result = await pool.query(`
             UPDATE config_sistema 
-            SET sistema_nome = $1, logo_url = $2, tema = $3, idioma = $4, 
-                notificacoes_email = $5, notificacoes_push = $6, 
-                backup_automatico = $7, manutencao = $8, 
-                mqtt_broker = $9, mqtt_port = $10, mqtt_topic = $11,
-                email_smtp_host = $12, email_smtp_port = $13, email_user = $14,
+            SET sistema_nome = $1, logo_url = $2, logo_margin_top = $3, logo_margin_bottom = $4,
+                logo_size = $5, text_margin_top = $6, text_margin_bottom = $7,
+                tema = $8, idioma = $9, 
+                notificacoes_email = $10, notificacoes_push = $11, 
+                backup_automatico = $12, manutencao = $13, 
+                mqtt_broker = $14, mqtt_port = $15, mqtt_topic = $16,
+                email_smtp_host = $17, email_smtp_port = $18, email_user = $19,
                 updated_at = NOW()
-            WHERE id = $15
+            WHERE id = $20
             RETURNING *
           `, [
             data.sistema_nome || 'LavControl',
             data.logo_url || null,
+            data.logo_margin_top !== undefined ? data.logo_margin_top : 25,
+            data.logo_margin_bottom !== undefined ? data.logo_margin_bottom : 8,
+            data.logo_size !== undefined ? data.logo_size : 48,
+            data.text_margin_top !== undefined ? data.text_margin_top : 0,
+            data.text_margin_bottom !== undefined ? data.text_margin_bottom : 16,
             data.tema || 'dark', 
             data.idioma || 'pt-BR',
             data.notificacoes_email !== undefined ? data.notificacoes_email : true,
@@ -1493,7 +1526,7 @@ export class DatabaseStorage implements IStorage {
           ]);
           return result.rows[0];
         } catch (error) {
-          // If logo_url doesn't exist, update without it
+          // Fallback update without new columns if they don't exist
           const result = await pool.query(`
             UPDATE config_sistema 
             SET sistema_nome = $1, tema = $2, idioma = $3, 
@@ -1527,14 +1560,20 @@ export class DatabaseStorage implements IStorage {
         try {
           const result = await pool.query(`
             INSERT INTO config_sistema (
-              sistema_nome, logo_url, tema, idioma, notificacoes_email, notificacoes_push, 
+              sistema_nome, logo_url, logo_margin_top, logo_margin_bottom, logo_size,
+              text_margin_top, text_margin_bottom, tema, idioma, notificacoes_email, notificacoes_push, 
               backup_automatico, manutencao, mqtt_broker, mqtt_port, mqtt_topic,
               email_smtp_host, email_smtp_port, email_user
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
             RETURNING *
           `, [
             data.sistema_nome || 'LavControl',
             data.logo_url || null,
+            data.logo_margin_top !== undefined ? data.logo_margin_top : 25,
+            data.logo_margin_bottom !== undefined ? data.logo_margin_bottom : 8,
+            data.logo_size !== undefined ? data.logo_size : 48,
+            data.text_margin_top !== undefined ? data.text_margin_top : 0,
+            data.text_margin_bottom !== undefined ? data.text_margin_bottom : 16,
             data.tema || 'dark',
             data.idioma || 'pt-BR', 
             data.notificacoes_email !== undefined ? data.notificacoes_email : true,
@@ -1550,7 +1589,7 @@ export class DatabaseStorage implements IStorage {
           ]);
           return result.rows[0];
         } catch (insertError) {
-          // If insert with logo_url fails, try without it
+          // Fallback insert without new columns if they don't exist
           const result = await pool.query(`
             INSERT INTO config_sistema (
               sistema_nome, tema, idioma, notificacoes_email, notificacoes_push, 

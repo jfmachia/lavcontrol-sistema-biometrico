@@ -112,22 +112,48 @@ function SystemHeader() {
   const { data: config } = useQuery({ queryKey: ["/api/config"] });
   const systemName = (config as any)?.sistema_nome || "LavControl";
   const logoUrl = (config as any)?.logo_url;
+  const logoMarginTop = (config as any)?.logo_margin_top || 25;
+  const logoMarginBottom = (config as any)?.logo_margin_bottom || 8;
+  const logoSize = (config as any)?.logo_size || 48;
+  const textMarginTop = (config as any)?.text_margin_top || 0;
+  const textMarginBottom = (config as any)?.text_margin_bottom || 16;
 
   return (
-    <div className="flex flex-col items-center gap-3 pt-[25px] pb-4">
+    <div className="flex flex-col items-center">
       {logoUrl ? (
         <img 
           src={logoUrl} 
           alt="Logo" 
-          className="h-12 w-12 object-contain rounded"
+          className="object-contain rounded"
+          style={{
+            height: `${logoSize}px`,
+            width: `${logoSize}px`,
+            marginTop: `${logoMarginTop}px`,
+            marginBottom: `${logoMarginBottom}px`
+          }}
           onError={(e) => {
             e.currentTarget.style.display = 'none';
             e.currentTarget.nextElementSibling?.classList.remove('hidden');
           }}
         />
-      ) : null}
-      <Building className={cn("h-6 w-6 text-primary", logoUrl && "hidden")} />
-      <span className="text-lg font-bold text-center">{systemName}</span>
+      ) : (
+        <Building 
+          className="h-6 w-6 text-primary" 
+          style={{
+            marginTop: `${logoMarginTop}px`,
+            marginBottom: `${logoMarginBottom}px`
+          }}
+        />
+      )}
+      <span 
+        className="text-lg font-bold text-center"
+        style={{
+          marginTop: `${textMarginTop}px`,
+          marginBottom: `${textMarginBottom}px`
+        }}
+      >
+        {systemName}
+      </span>
     </div>
   );
 }

@@ -32,6 +32,11 @@ export function Settings() {
   const [settings, setSettings] = useState({
     sistema_nome: "LavControl",
     logo_url: "",
+    logo_margin_top: 25,
+    logo_margin_bottom: 8,
+    logo_size: 48,
+    text_margin_top: 0,
+    text_margin_bottom: 16,
     tema: "dark",
     idioma: "pt-BR",
     notificacoes_email: true,
@@ -52,6 +57,11 @@ export function Settings() {
       setSettings({
         sistema_nome: (config as any)?.sistema_nome || "LavControl",
         logo_url: (config as any)?.logo_url || "",
+        logo_margin_top: (config as any)?.logo_margin_top || 25,
+        logo_margin_bottom: (config as any)?.logo_margin_bottom || 8,
+        logo_size: (config as any)?.logo_size || 48,
+        text_margin_top: (config as any)?.text_margin_top || 0,
+        text_margin_bottom: (config as any)?.text_margin_bottom || 16,
         tema: (config as any)?.tema || "dark",
         idioma: (config as any)?.idioma || "pt-BR",
         notificacoes_email: (config as any)?.notificacoes_email ?? true,
@@ -175,6 +185,69 @@ export function Settings() {
               <p className="text-xs text-slate-400">
                 Insira o link/URL da imagem do logo que aparecerá acima do nome no menu.
               </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="logo_size" className="text-white">Tamanho do Logo (px)</Label>
+              <Input
+                id="logo_size"
+                type="number"
+                value={settings.logo_size}
+                onChange={(e) => handleInputChange('logo_size', parseInt(e.target.value) || 48)}
+                placeholder="48"
+                className="bg-slate-700 border-slate-600 text-white"
+              />
+              <p className="text-xs text-slate-400">
+                Tamanho do logo em pixels (altura e largura).
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="logo_margin_top" className="text-white">Margem Superior do Logo (px)</Label>
+              <Input
+                id="logo_margin_top"
+                type="number"
+                value={settings.logo_margin_top}
+                onChange={(e) => handleInputChange('logo_margin_top', parseInt(e.target.value) || 25)}
+                placeholder="25"
+                className="bg-slate-700 border-slate-600 text-white"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="logo_margin_bottom" className="text-white">Margem Inferior do Logo (px)</Label>
+              <Input
+                id="logo_margin_bottom"
+                type="number"
+                value={settings.logo_margin_bottom}
+                onChange={(e) => handleInputChange('logo_margin_bottom', parseInt(e.target.value) || 8)}
+                placeholder="8"
+                className="bg-slate-700 border-slate-600 text-white"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="text_margin_top" className="text-white">Margem Superior do Nome (px)</Label>
+              <Input
+                id="text_margin_top"
+                type="number"
+                value={settings.text_margin_top}
+                onChange={(e) => handleInputChange('text_margin_top', parseInt(e.target.value) || 0)}
+                placeholder="0"
+                className="bg-slate-700 border-slate-600 text-white"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="text_margin_bottom" className="text-white">Margem Inferior do Nome (px)</Label>
+              <Input
+                id="text_margin_bottom"
+                type="number"
+                value={settings.text_margin_bottom}
+                onChange={(e) => handleInputChange('text_margin_bottom', parseInt(e.target.value) || 16)}
+                placeholder="16"
+                className="bg-slate-700 border-slate-600 text-white"
+              />
             </div>
 
             <div className="space-y-2">
