@@ -39,6 +39,7 @@ export function Settings() {
     manutencao: false,
     mqtt_broker: "broker.emqx.io",
     mqtt_port: 1883,
+    mqtt_topic: "lavcontrol/devices",
     email_smtp_host: "",
     email_smtp_port: 587,
     email_user: ""
@@ -57,6 +58,7 @@ export function Settings() {
         manutencao: config.manutencao ?? false,
         mqtt_broker: config.mqtt_broker || "broker.emqx.io",
         mqtt_port: config.mqtt_port || 1883,
+        mqtt_topic: config.mqtt_topic || "lavcontrol/devices",
         email_smtp_host: config.email_smtp_host || "",
         email_smtp_port: config.email_smtp_port || 587,
         email_user: config.email_user || ""
@@ -237,8 +239,8 @@ export function Settings() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="md:col-span-2 space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
               <Label htmlFor="mqtt_broker" className="text-white">Broker MQTT</Label>
               <Input
                 id="mqtt_broker"
@@ -258,6 +260,18 @@ export function Settings() {
                 onChange={(e) => handleInputChange('mqtt_port', parseInt(e.target.value) || 1883)}
                 className="bg-slate-700 border-slate-600 text-white"
               />
+            </div>
+
+            <div className="md:col-span-2 space-y-2">
+              <Label htmlFor="mqtt_topic" className="text-white">Tópico MQTT</Label>
+              <Input
+                id="mqtt_topic"
+                value={settings.mqtt_topic}
+                onChange={(e) => handleInputChange('mqtt_topic', e.target.value)}
+                className="bg-slate-700 border-slate-600 text-white"
+                placeholder="lavcontrol/devices"
+              />
+              <p className="text-sm text-slate-400">Tópico que o sistema irá escutar para comandos dos dispositivos</p>
             </div>
           </div>
         </CardContent>

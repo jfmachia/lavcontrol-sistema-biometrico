@@ -1380,7 +1380,8 @@ export class DatabaseStorage implements IStorage {
         notificacoes_email: true,
         notificacoes_push: true,
         backup_automatico: true,
-        manutencao: false
+        manutencao: false,
+        mqtt_topic: 'lavcontrol/devices'
       };
     } finally {
       await pool.end();
@@ -1405,10 +1406,10 @@ export class DatabaseStorage implements IStorage {
           SET sistema_nome = $1, tema = $2, idioma = $3, 
               notificacoes_email = $4, notificacoes_push = $5, 
               backup_automatico = $6, manutencao = $7, 
-              mqtt_broker = $8, mqtt_port = $9,
-              email_smtp_host = $10, email_smtp_port = $11, email_user = $12,
+              mqtt_broker = $8, mqtt_port = $9, mqtt_topic = $10,
+              email_smtp_host = $11, email_smtp_port = $12, email_user = $13,
               updated_at = NOW()
-          WHERE id = $13
+          WHERE id = $14
           RETURNING *
         `, [
           data.sistema_nome || 'LavControl',
@@ -1420,6 +1421,7 @@ export class DatabaseStorage implements IStorage {
           data.manutencao !== undefined ? data.manutencao : false,
           data.mqtt_broker,
           data.mqtt_port || 1883,
+          data.mqtt_topic || 'lavcontrol/devices',
           data.email_smtp_host,
           data.email_smtp_port || 587,
           data.email_user,
@@ -1431,9 +1433,9 @@ export class DatabaseStorage implements IStorage {
         const result = await pool.query(`
           INSERT INTO config_sistema (
             sistema_nome, tema, idioma, notificacoes_email, notificacoes_push, 
-            backup_automatico, manutencao, mqtt_broker, mqtt_port,
+            backup_automatico, manutencao, mqtt_broker, mqtt_port, mqtt_topic,
             email_smtp_host, email_smtp_port, email_user
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
           RETURNING *
         `, [
           data.sistema_nome || 'LavControl',
@@ -1445,6 +1447,7 @@ export class DatabaseStorage implements IStorage {
           data.manutencao !== undefined ? data.manutencao : false,
           data.mqtt_broker,
           data.mqtt_port || 1883,
+          data.mqtt_topic || 'lavcontrol/devices',
           data.email_smtp_host,
           data.email_smtp_port || 587,
           data.email_user

@@ -328,6 +328,7 @@ export const configSistema = pgTable("config_sistema", {
   versaoSistema: varchar("versao_sistema"),
   mqttBroker: varchar("mqtt_broker"),
   mqttPort: integer("mqtt_port").default(1883),
+  mqttTopic: varchar("mqtt_topic").default("lavcontrol/devices"),
   emailSmtpHost: varchar("email_smtp_host"),
   emailSmtpPort: integer("email_smtp_port").default(587),
   emailUser: varchar("email_user"),
