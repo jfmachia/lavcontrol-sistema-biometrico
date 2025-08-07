@@ -425,42 +425,34 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log('Creating device with data:', deviceData);
       
-      // Inserir dispositivo inicial
+      // Primeiro, pegar o próximo ID disponível
+      const nextIdResult = await pool.query('SELECT COALESCE(MAX(id), 0) + 1 as next_id FROM devices');
+      const nextId = nextIdResult.rows[0].next_id;
+      
+      const autoDeviceId = `DEV${String(nextId).padStart(3, '0')}`;
+      const autoSerialNumber = `SN${String(nextId).padStart(6, '0')}`;
+      
+      console.log('Will create device with ID:', nextId, 'DeviceID:', autoDeviceId);
+      
+      // Inserir dispositivo completo com todos os campos de uma vez
       const result = await pool.query(`
-        INSERT INTO devices (name, type, status, store_id, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, NOW(), NOW())
-        RETURNING id
+        INSERT INTO devices (
+          name, type, status, store_id, device_id, serial_number, location, created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+        RETURNING *
       `, [
         deviceData.name,
         deviceData.type || 'facial',
         deviceData.status || 'offline',
-        deviceData.storeId
+        deviceData.storeId,
+        autoDeviceId,
+        autoSerialNumber,
+        'Não especificado'
       ]);
       
-      const newDeviceId = result.rows[0].id;
-      const autoDeviceId = `DEV${String(newDeviceId).padStart(3, '0')}`;
-      const autoSerialNumber = `SN${String(newDeviceId).padStart(6, '0')}`;
+      console.log('Device created successfully:', result.rows[0]);
       
-      console.log('Device created with ID:', newDeviceId);
-      
-      // Atualizar com device_id e serial_number
-      await pool.query(`
-        UPDATE devices 
-        SET device_id = $1, serial_number = $2, location = $3, updated_at = NOW()
-        WHERE id = $4
-      `, [autoDeviceId, autoSerialNumber, 'Não especificado', newDeviceId]);
-      
-      console.log('Device updated successfully');
-      
-      // Buscar o registro completo atualizado
-      const finalResult = await pool.query(
-        'SELECT * FROM devices WHERE id = $1',
-        [newDeviceId]
-      );
-      
-      console.log('Final device result:', finalResult.rows[0]);
-      
-      return finalResult.rows[0];
+      return result.rows[0];
       
     } catch (error) {
       console.error('Erro ao criar device:', error);
