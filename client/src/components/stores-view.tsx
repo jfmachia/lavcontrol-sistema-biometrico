@@ -32,6 +32,12 @@ export default function StoresView() {
   const [searchTerm, setSearchTerm] = useState("");
   const [editingStore, setEditingStore] = useState<any>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newStore, setNewStore] = useState({
+    storeCode: "",
+    name: "",
+    address: "",
+    phone: ""
+  });
 
   const { data: stores = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/stores"],
@@ -52,10 +58,15 @@ export default function StoresView() {
   });
 
   const createStoreMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("/api/stores", "POST", data),
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("/api/stores", "POST", data);
+      return await response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/stores"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stores/statistics"] });
       setIsCreateDialogOpen(false);
+      setNewStore({ storeCode: "", name: "", address: "", phone: "" });
       toast({
         title: "Loja cadastrada",
         description: "A loja foi cadastrada com sucesso!",
@@ -128,26 +139,72 @@ export default function StoresView() {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>Código da Loja</Label>
-                <Input placeholder="LV001" />
+                <Label htmlFor="store-code">Código da Loja</Label>
+                <Input 
+                  id="store-code"
+                  placeholder="LV001" 
+                  value={newStore.storeCode}
+                  onChange={(e) => setNewStore({...newStore, storeCode: e.target.value})}
+                />
               </div>
               <div>
-                <Label>Nome da Loja</Label>
-                <Input placeholder="Shopping Center ABC" />
+                <Label htmlFor="store-name">Nome da Loja</Label>
+                <Input 
+                  id="store-name"
+                  placeholder="Shopping Center ABC" 
+                  value={newStore.name}
+                  onChange={(e) => setNewStore({...newStore, name: e.target.value})}
+                />
               </div>
               <div>
-                <Label>Endereço</Label>
-                <Input placeholder="Rua das Flores, 123" />
+                <Label htmlFor="store-address">Endereço</Label>
+                <Input 
+                  id="store-address"
+                  placeholder="Rua das Flores, 123" 
+                  value={newStore.address}
+                  onChange={(e) => setNewStore({...newStore, address: e.target.value})}
+                />
               </div>
               <div>
-                <Label>Telefone</Label>
-                <Input placeholder="(11) 99999-9999" />
+                <Label htmlFor="store-phone">Telefone</Label>
+                <Input 
+                  id="store-phone"
+                  placeholder="(11) 99999-9999" 
+                  value={newStore.phone}
+                  onChange={(e) => setNewStore({...newStore, phone: e.target.value})}
+                />
               </div>
               <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsCreateDialogOpen(false);
+                    setNewStore({ storeCode: "", name: "", address: "", phone: "" });
+                  }}
+                >
                   Cancelar
                 </Button>
-                <Button>Salvar</Button>
+                <Button 
+                  onClick={() => {
+                    if (!newStore.name.trim()) {
+                      toast({
+                        title: "Campo obrigatório",
+                        description: "O nome da loja é obrigatório.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    createStoreMutation.mutate({
+                      name: newStore.name,
+                      address: newStore.address,
+                      phone: newStore.phone,
+                      storeCode: newStore.storeCode
+                    });
+                  }}
+                  disabled={createStoreMutation.isPending}
+                >
+                  {createStoreMutation.isPending ? "Salvando..." : "Salvar"}
+                </Button>
               </div>
             </div>
           </DialogContent>

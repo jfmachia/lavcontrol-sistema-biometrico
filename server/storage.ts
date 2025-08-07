@@ -674,12 +674,49 @@ export class DatabaseStorage implements IStorage {
     return store || undefined;
   }
 
-  async createStore(insertStore: InsertStore): Promise<Store> {
-    const [store] = await db
-      .insert(stores)
-      .values(insertStore)
-      .returning();
-    return store;
+  async createStore(storeData: any): Promise<any> {
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      host: '148.230.78.128',
+      port: 5432,
+      user: 'postgres',
+      password: '929d54bc0ff22387163f04cfb3b3d0fa',
+      database: 'postgres',
+      ssl: false,
+    });
+    
+    try {
+      const result = await pool.query(`
+        INSERT INTO stores (name, address, phone, manager_name, is_active, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, true, NOW(), NOW())
+        RETURNING *
+      `, [
+        storeData.name,
+        storeData.address || null,
+        storeData.phone || null,
+        storeData.managerName || null
+      ]);
+      
+      const store = result.rows[0];
+      console.log("Loja criada com sucesso:", store);
+      
+      // Retornar no formato esperado pelo frontend
+      return {
+        id: store.id,
+        name: store.name,
+        address: store.address,
+        phone: store.phone,
+        managerName: store.manager_name,
+        isActive: store.is_active,
+        createdAt: store.created_at,
+        updatedAt: store.updated_at
+      };
+    } catch (error) {
+      console.error('Erro ao criar loja:', error);
+      throw new Error('Falha ao cadastrar a loja');
+    } finally {
+      await pool.end();
+    }
   }
 
   async updateStore(id: number, updateData: any): Promise<any | undefined> {
