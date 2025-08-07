@@ -8,20 +8,34 @@ import { CheckCircle, XCircle, Clock, User } from "lucide-react";
 interface AccessLog {
   id: number;
   userId: number;
+  clientId: number;
   deviceId: number;
+  storeId: number;
   action: string;
   method: string;
   status: string;
   timestamp: string;
+  details?: string;
   user?: {
     id: number;
     name: string;
+    profileImage?: string;
+  };
+  client?: {
+    id: number;
+    name: string;
+    status: string;
+    email?: string;
     profileImage?: string;
   };
   device?: {
     id: number;
     name: string;
     deviceId: string;
+  };
+  store?: {
+    id: number;
+    name: string;
   };
 }
 
@@ -49,10 +63,14 @@ const getStatusBadge = (status: string) => {
 
 const getMethodBadge = (method: string) => {
   switch (method) {
-    case "facial_recognition":
+    case "facial":
       return <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-400/30">Reconhecimento Facial</Badge>;
+    case "biometric":
+      return <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-400/30">Biometria</Badge>;
     case "card":
       return <Badge variant="outline" className="bg-purple-500/20 text-purple-400 border-purple-400/30">Cartão</Badge>;
+    case "pin":
+      return <Badge variant="outline" className="bg-orange-500/20 text-orange-400 border-orange-400/30">PIN</Badge>;
     case "manual":
       return <Badge variant="outline" className="bg-gray-500/20 text-gray-400 border-gray-400/30">Manual</Badge>;
     default:
@@ -138,11 +156,11 @@ export default function Logs() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <div className="flex items-center">
-                        {log.user?.profileImage ? (
+                        {log.client?.profileImage ? (
                           <Avatar className="h-12 w-12">
                             <AvatarImage 
-                              src={log.user.profileImage} 
-                              alt={log.user.name}
+                              src={log.client.profileImage} 
+                              alt={log.client.name}
                               className="object-cover"
                             />
                             <AvatarFallback>
@@ -160,14 +178,17 @@ export default function Logs() {
                         <div className="flex items-center space-x-2">
                           {getStatusIcon(log.status)}
                           <h3 className="text-sm font-semibold text-white">
-                            {log.user?.name || "Usuário não identificado"}
+                            {log.client?.name || (log.details ? log.details.split(' - ')[0] : "Usuário não identificado")}
                           </h3>
                         </div>
                         <p className="text-sm text-blue-200/70 mt-1">
-                          {log.action === "open" ? "Tentativa de abertura" : log.action} em{" "}
+                          {log.action === "entry" ? "Entrada" : log.action === "exit" ? "Saída" : log.action === "denied" ? "Acesso negado" : log.action} em{" "}
                           <span className="font-medium text-blue-100">
                             {log.device?.name || "Dispositivo desconhecido"}
                           </span>
+                          {log.store?.name && (
+                            <span className="text-blue-300/60"> - {log.store.name}</span>
+                          )}
                         </p>
                         <p className="text-xs text-blue-300/60 mt-1">
                           {formatDateTime(log.timestamp)}

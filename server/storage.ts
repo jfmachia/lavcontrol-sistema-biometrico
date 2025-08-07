@@ -1046,43 +1046,72 @@ export class DatabaseStorage implements IStorage {
     });
     
     try {
-      // Primeiro vamos descobrir qual tabela usar
-      const tablesResult = await pool.query(`
-        SELECT table_name FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name IN ('access_logs', 'client_entries', 'entries')
-      `);
-      
-      if (tablesResult.rows.length === 0) {
-        return [];
-      }
-      
-      const tableName = tablesResult.rows[0].table_name;
-      
-      // Agora vamos descobrir as colunas da tabela
-      const columnsResult = await pool.query(`
-        SELECT column_name FROM information_schema.columns 
-        WHERE table_name = $1 
-        ORDER BY ordinal_position
-      `, [tableName]);
-      
-      const columns = columnsResult.rows.map(r => r.column_name);
-      
-      // Query básica adaptativa
-      let query = `SELECT * FROM ${tableName} ORDER BY `;
-      
-      if (columns.includes('created_at')) {
-        query += 'created_at DESC';
-      } else if (columns.includes('timestamp')) {
-        query += 'timestamp DESC';
-      } else {
-        query += 'id DESC';
-      }
-      
-      query += ' LIMIT $1';
+      // Query com JOINs para buscar dados completos
+      const query = `
+        SELECT 
+          al.id,
+          al.user_id,
+          al.client_id,
+          al.device_id,
+          al.store_id,
+          al.access_type as action,
+          al.method,
+          al.success,
+          al.success::text as status,
+          al.details,
+          al.created_at as timestamp,
+          c.name as client_name,
+          c.status as client_status,
+          c.email as client_email,
+          d.name as device_name,
+          d.device_id as device_device_id,
+          s.name as store_name
+        FROM access_logs al
+        LEFT JOIN clients c ON al.client_id = c.id
+        LEFT JOIN devices d ON al.device_id = d.id
+        LEFT JOIN stores s ON al.store_id = s.id
+        ORDER BY al.created_at DESC
+        LIMIT $1
+      `;
       
       const result = await pool.query(query, [limit]);
-      return result.rows;
+      
+      // Transformar os dados para o formato esperado pelo frontend
+      const logs = result.rows.map(row => ({
+        id: row.id,
+        userId: row.user_id,
+        clientId: row.client_id,
+        deviceId: row.device_id,
+        storeId: row.store_id,
+        action: row.action,
+        method: row.method,
+        status: row.success ? 'success' : 'failed',
+        timestamp: row.timestamp,
+        details: row.details,
+        user: row.client_name ? {
+          id: row.client_id,
+          name: row.client_name,
+          email: row.client_email,
+          profileImage: null
+        } : null,
+        client: row.client_name ? {
+          id: row.client_id,
+          name: row.client_name,
+          status: row.client_status,
+          email: row.client_email
+        } : null,
+        device: row.device_name ? {
+          id: row.device_id,
+          name: row.device_name,
+          deviceId: row.device_device_id
+        } : null,
+        store: row.store_name ? {
+          id: row.store_id,
+          name: row.store_name
+        } : null
+      }));
+      
+      return logs;
       
     } catch (error) {
       console.error('Erro ao buscar logs de acesso:', error);
