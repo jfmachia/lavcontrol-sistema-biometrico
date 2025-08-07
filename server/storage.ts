@@ -425,29 +425,23 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log('Creating device with data:', deviceData);
       
-      // Primeiro, pegar o próximo ID disponível
-      const nextIdResult = await pool.query('SELECT COALESCE(MAX(id), 0) + 1 as next_id FROM devices');
-      const nextId = nextIdResult.rows[0].next_id;
+      const autoSerialNumber = `SN${Date.now().toString().slice(-6)}`;
       
-      const autoDeviceId = `DEV${String(nextId).padStart(3, '0')}`;
-      const autoSerialNumber = `SN${String(nextId).padStart(6, '0')}`;
+      console.log('Will create device with serial:', autoSerialNumber);
       
-      console.log('Will create device with ID:', nextId, 'DeviceID:', autoDeviceId);
-      
-      // Inserir dispositivo completo com todos os campos de uma vez
+      // Inserir dispositivo usando estrutura REAL da VPS
       const result = await pool.query(`
         INSERT INTO devices (
-          name, type, status, store_id, device_id, serial_number, location, created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+          name, type, status, store_id, serial_number, location
+        ) VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING *
       `, [
         deviceData.name,
         deviceData.type || 'facial',
         deviceData.status || 'offline',
         deviceData.storeId,
-        autoDeviceId,
         autoSerialNumber,
-        'Não especificado'
+        [deviceData.location || 'Não especificado']  // Array para location
       ]);
       
       console.log('Device created successfully:', result.rows[0]);
