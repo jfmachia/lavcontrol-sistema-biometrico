@@ -687,14 +687,19 @@ export class DatabaseStorage implements IStorage {
     
     try {
       const result = await pool.query(`
-        INSERT INTO stores (name, address, phone, manager_name, is_active, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, true, NOW(), NOW())
+        INSERT INTO stores (
+          name, address, phone, city, state, manager_name, 
+          is_active, estacionamento, delivery, created_at, updated_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, true, false, false, NOW(), NOW())
         RETURNING *
       `, [
         storeData.name,
-        storeData.address || null,
-        storeData.phone || null,
-        storeData.managerName || null
+        storeData.address || 'Endereço não informado',
+        storeData.phone || 'Telefone não informado',
+        'Cidade não informada', // city é obrigatório
+        'Estado não informado', // state pode ser obrigatório também
+        storeData.managerName || 'Gerente não informado'
       ]);
       
       const store = result.rows[0];
