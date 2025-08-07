@@ -16,7 +16,6 @@ export function useWebSocket() {
         wsRef.current = ws;
 
         ws.onopen = () => {
-          console.log('WebSocket connected for real-time updates');
           setIsConnected(true);
         };
 
@@ -26,7 +25,6 @@ export function useWebSocket() {
             
             switch (message.type) {
               case 'connected':
-                console.log('Real-time updates enabled:', message.message);
                 break;
                 
               case 'access-update':
@@ -34,7 +32,6 @@ export function useWebSocket() {
                 queryClient.invalidateQueries({ queryKey: ['/api/dashboard/wave-chart'] });
                 queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
                 queryClient.invalidateQueries({ queryKey: ['/api/access-logs'] });
-                console.log('Access data updated via WebSocket');
                 break;
                 
               case 'device-update':
@@ -44,15 +41,12 @@ export function useWebSocket() {
                 break;
                 
               default:
-                console.log('Received WebSocket message:', message);
             }
           } catch (error) {
-            console.error('Error parsing WebSocket message:', error);
           }
         };
 
         ws.onclose = () => {
-          console.log('WebSocket disconnected');
           setIsConnected(false);
           
           // Attempt to reconnect after 5 seconds
@@ -60,12 +54,10 @@ export function useWebSocket() {
         };
 
         ws.onerror = (error) => {
-          console.error('WebSocket error:', error);
           setIsConnected(false);
         };
 
       } catch (error) {
-        console.error('Failed to connect WebSocket:', error);
         setTimeout(connectWebSocket, 5000);
       }
     };

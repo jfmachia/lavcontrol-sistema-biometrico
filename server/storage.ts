@@ -707,7 +707,6 @@ export class DatabaseStorage implements IStorage {
       ssl: false,
     });
     
-    console.log('🔧 Atualizando loja ID:', id, 'com dados:', JSON.stringify(updateData, null, 2));
     
     const fields = [];
     const values = [];
