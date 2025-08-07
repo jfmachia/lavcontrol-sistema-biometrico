@@ -12,7 +12,21 @@ import { useQuery } from "@tanstack/react-query";
 
 // Componente para Header do Sistema no Login
 function LoginSystemHeader() {
-  const { data: config } = useQuery({ queryKey: ["/api/config"] });
+  const { data: config, isLoading, error } = useQuery({ 
+    queryKey: ["/api/config"],
+    queryFn: async () => {
+      const response = await fetch("/api/config");
+      if (!response.ok) throw new Error("Failed to fetch config");
+      return response.json();
+    },
+    retry: false,
+  });
+  
+  // Debug para verificar se está carregando os dados
+  console.log("Login - Config data:", config);
+  console.log("Login - Loading:", isLoading);
+  console.log("Login - Error:", error);
+  
   const systemName = (config as any)?.sistema_nome || "LavControl";
   const logoUrl = (config as any)?.logo_url;
 
