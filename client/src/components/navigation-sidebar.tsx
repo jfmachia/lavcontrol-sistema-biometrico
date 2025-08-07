@@ -119,7 +119,10 @@ function SystemHeader() {
   const textMarginBottom = (config as any)?.text_margin_bottom || 16;
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center w-full" style={{
+      paddingTop: `${logoMarginTop}px`,
+      paddingBottom: `${textMarginBottom}px`
+    }}>
       {logoUrl ? (
         <img 
           src={logoUrl} 
@@ -128,7 +131,6 @@ function SystemHeader() {
           style={{
             height: `${logoSize}px`,
             width: `${logoSize}px`,
-            marginTop: `${logoMarginTop}px`,
             marginBottom: `${logoMarginBottom}px`
           }}
           onError={(e) => {
@@ -140,7 +142,6 @@ function SystemHeader() {
         <Building 
           className="h-6 w-6 text-primary" 
           style={{
-            marginTop: `${logoMarginTop}px`,
             marginBottom: `${logoMarginBottom}px`
           }}
         />
@@ -148,8 +149,7 @@ function SystemHeader() {
       <span 
         className="text-lg font-bold text-center"
         style={{
-          marginTop: `${textMarginTop}px`,
-          marginBottom: `${textMarginBottom}px`
+          marginTop: `${textMarginTop}px`
         }}
       >
         {systemName}
@@ -170,7 +170,7 @@ export function NavigationSidebar({ className }: NavigationSidebarProps) {
   return (
     <div className={cn("flex h-full flex-col bg-muted/20 overflow-hidden", className)}>
       {/* Logo/Header */}
-      <div className="flex h-20 items-center justify-center border-b px-6">
+      <div className="flex min-h-20 items-center justify-center border-b px-6 py-2">
         <SystemHeader />
       </div>
 
