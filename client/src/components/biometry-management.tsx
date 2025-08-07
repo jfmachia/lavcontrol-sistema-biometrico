@@ -46,10 +46,27 @@ export function BiometryManagement() {
     queryKey: ["/api/stores"],
   });
 
-  // Dispositivos disponíveis são os que não têm store_id
+  // Dispositivos disponíveis são os que não estão vinculados a nenhuma loja
   const { data: availableDevices, isLoading: devicesLoading } = useQuery<any[]>({
-    queryKey: ["/api/devices"],
-    select: (data) => data?.filter((device: any) => !device.store_id) || []
+    queryKey: ["/api/devices", "/api/stores"],
+    queryFn: async () => {
+      // Buscar ambos os dados
+      const [devicesResponse, storesResponse] = await Promise.all([
+        fetch("/api/devices").then(r => r.json()),
+        fetch("/api/stores").then(r => r.json())
+      ]);
+      
+      // Dispositivos que estão vinculados (têm ID no campo biometria de alguma loja)
+      const linkedDeviceIds = storesResponse
+        .filter((store: any) => store.biometria)
+        .map((store: any) => store.biometria.toString());
+      
+      // Retornar dispositivos que não estão vinculados
+      return devicesResponse.filter((device: any) => 
+        !linkedDeviceIds.includes(device.id.toString()) && 
+        !linkedDeviceIds.includes(device.deviceId)
+      );
+    }
   });
 
   const { data: allDevices } = useQuery<any[]>({
