@@ -418,11 +418,16 @@ export class DatabaseStorage implements IStorage {
       ssl: false,
     });
     
+    const client = await pool.connect();
+    
     try {
-      const result = await pool.query(`
+      await client.query('BEGIN');
+      
+      // Inserir dispositivo inicial
+      const result = await client.query(`
         INSERT INTO devices (name, type, status, store_id, location, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-        RETURNING *
+        RETURNING id
       `, [
         deviceData.name,
         deviceData.type || 'facial',
@@ -431,26 +436,32 @@ export class DatabaseStorage implements IStorage {
         deviceData.location || 'Não especificado'
       ]);
       
-      // Atualizar device_id e serial_number automaticamente baseado no ID
       const deviceId = `DEV${String(result.rows[0].id).padStart(3, '0')}`;
       const serialNumber = deviceData.serialNumber || `SN${String(result.rows[0].id).padStart(6, '0')}`;
       
-      await pool.query(
-        'UPDATE devices SET device_id = $1, serial_number = $2 WHERE id = $3',
-        [deviceId, serialNumber, result.rows[0].id]
-      );
+      // Atualizar com device_id e serial_number
+      await client.query(`
+        UPDATE devices 
+        SET device_id = $1, serial_number = $2, updated_at = NOW()
+        WHERE id = $3
+      `, [deviceId, serialNumber, result.rows[0].id]);
       
-      // Retornar o registro atualizado
-      const updatedResult = await pool.query(
+      await client.query('COMMIT');
+      
+      // Buscar o registro completo atualizado
+      const finalResult = await client.query(
         'SELECT * FROM devices WHERE id = $1',
         [result.rows[0].id]
       );
       
-      return updatedResult.rows[0];
+      return finalResult.rows[0];
+      
     } catch (error) {
+      await client.query('ROLLBACK');
       console.error('Erro ao criar device:', error);
       throw error;
     } finally {
+      client.release();
       await pool.end();
     }
   }
