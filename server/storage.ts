@@ -1064,7 +1064,7 @@ export class DatabaseStorage implements IStorage {
           c.status as client_status,
           c.email as client_email,
           d.name as device_name,
-          d.device_id as device_device_id,
+          d.ip_address as device_ip,
           s.name as store_name
         FROM access_logs al
         LEFT JOIN clients c ON al.client_id = c.id
@@ -1103,7 +1103,7 @@ export class DatabaseStorage implements IStorage {
         device: row.device_name ? {
           id: row.device_id,
           name: row.device_name,
-          deviceId: row.device_device_id
+          deviceId: row.device_ip || `device-${row.device_id}`
         } : null,
         store: row.store_name ? {
           id: row.store_id,
