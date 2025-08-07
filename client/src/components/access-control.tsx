@@ -269,7 +269,7 @@ export function AccessControl() {
                           </span>
                           <span className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />
-                            {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })}
+                            {log.created_at && !isNaN(new Date(log.created_at).getTime()) ? format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss", { locale: ptBR }) : 'Data inválida'}
                           </span>
                         </div>
                         {log.details && (

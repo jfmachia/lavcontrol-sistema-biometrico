@@ -1,0 +1,260 @@
+[vite] connecting...
+client:536 WebSocket connection to 'wss://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/?token=Qi7vY5YLs5tY' failed: 
+setupWebSocket @ client:536
+(anônimo) @ client:531Entenda o erroAI
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=Qi7vY5YLs5tY' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+setupWebSocket @ client:536
+fallback @ client:509
+(anônimo) @ client:555Entenda o erroAI
+chunk-RPCDYKBN.js?v=ee91efbf:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+use-websocket.ts:19 WebSocket connected for real-time updates
+use-websocket.ts:29 Real-time updates enabled: Real-time updates enabled
+date-fns.js?v=ee91efbf:1760 Uncaught RangeError: Invalid time value
+    at format (date-fns.js?v=ee91efbf:1760:11)
+    at access-control.tsx:272:30
+    at Array.map (<anonymous>)
+    at AccessControl (access-control.tsx:242:30)
+    at renderWithHooks (chunk-RPCDYKBN.js?v=ee91efbf:11548:26)
+    at updateFunctionComponent (chunk-RPCDYKBN.js?v=ee91efbf:14582:28)
+    at beginWork (chunk-RPCDYKBN.js?v=ee91efbf:15924:22)
+    at HTMLUnknownElement.callCallback2 (chunk-RPCDYKBN.js?v=ee91efbf:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-RPCDYKBN.js?v=ee91efbf:3699:24)
+    at invokeGuardedCallback (chunk-RPCDYKBN.js?v=ee91efbf:3733:39)
+format @ date-fns.js?v=ee91efbf:1760
+(anônimo) @ access-control.tsx:272
+AccessControl @ access-control.tsx:242
+renderWithHooks @ chunk-RPCDYKBN.js?v=ee91efbf:11548
+updateFunctionComponent @ chunk-RPCDYKBN.js?v=ee91efbf:14582
+beginWork @ chunk-RPCDYKBN.js?v=ee91efbf:15924
+callCallback2 @ chunk-RPCDYKBN.js?v=ee91efbf:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=ee91efbf:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=ee91efbf:3733
+beginWork$1 @ chunk-RPCDYKBN.js?v=ee91efbf:19765
+performUnitOfWork @ chunk-RPCDYKBN.js?v=ee91efbf:19198
+workLoopSync @ chunk-RPCDYKBN.js?v=ee91efbf:19137
+renderRootSync @ chunk-RPCDYKBN.js?v=ee91efbf:19116
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=ee91efbf:18874
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=ee91efbf:9119
+(anônimo) @ chunk-RPCDYKBN.js?v=ee91efbf:18627
+setTimeout
+scheduleFn @ @tanstack_react-query.js?v=ee91efbf:555
+flush @ @tanstack_react-query.js?v=ee91efbf:569
+batch @ @tanstack_react-query.js?v=ee91efbf:587
+dispatch_fn @ @tanstack_react-query.js?v=ee91efbf:996
+setData @ @tanstack_react-query.js?v=ee91efbf:696
+onSuccess @ @tanstack_react-query.js?v=ee91efbf:897
+resolve @ @tanstack_react-query.js?v=ee91efbf:456
+Promise.then
+run @ @tanstack_react-query.js?v=ee91efbf:498
+start @ @tanstack_react-query.js?v=ee91efbf:536
+fetch @ @tanstack_react-query.js?v=ee91efbf:926
+executeFetch_fn @ @tanstack_react-query.js?v=ee91efbf:2211
+onSubscribe @ @tanstack_react-query.js?v=ee91efbf:1898
+subscribe @ @tanstack_react-query.js?v=ee91efbf:24
+(anônimo) @ @tanstack_react-query.js?v=ee91efbf:3022
+subscribeToStore @ chunk-RPCDYKBN.js?v=ee91efbf:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=ee91efbf:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=ee91efbf:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=ee91efbf:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=ee91efbf:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=ee91efbf:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=ee91efbf:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=ee91efbf:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=ee91efbf:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=ee91efbf:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=ee91efbf:19432
+commitRoot @ chunk-RPCDYKBN.js?v=ee91efbf:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=ee91efbf:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=ee91efbf:18718
+workLoop @ chunk-RPCDYKBN.js?v=ee91efbf:197
+flushWork @ chunk-RPCDYKBN.js?v=ee91efbf:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=ee91efbf:384Entenda o erroAI
+date-fns.js?v=ee91efbf:1760 Uncaught RangeError: Invalid time value
+    at format (date-fns.js?v=ee91efbf:1760:11)
+    at access-control.tsx:272:30
+    at Array.map (<anonymous>)
+    at AccessControl (access-control.tsx:242:30)
+    at renderWithHooks (chunk-RPCDYKBN.js?v=ee91efbf:11548:26)
+    at updateFunctionComponent (chunk-RPCDYKBN.js?v=ee91efbf:14582:28)
+    at beginWork (chunk-RPCDYKBN.js?v=ee91efbf:15924:22)
+    at HTMLUnknownElement.callCallback2 (chunk-RPCDYKBN.js?v=ee91efbf:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-RPCDYKBN.js?v=ee91efbf:3699:24)
+    at invokeGuardedCallback (chunk-RPCDYKBN.js?v=ee91efbf:3733:39)
+format @ date-fns.js?v=ee91efbf:1760
+(anônimo) @ access-control.tsx:272
+AccessControl @ access-control.tsx:242
+renderWithHooks @ chunk-RPCDYKBN.js?v=ee91efbf:11548
+updateFunctionComponent @ chunk-RPCDYKBN.js?v=ee91efbf:14582
+beginWork @ chunk-RPCDYKBN.js?v=ee91efbf:15924
+callCallback2 @ chunk-RPCDYKBN.js?v=ee91efbf:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=ee91efbf:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=ee91efbf:3733
+beginWork$1 @ chunk-RPCDYKBN.js?v=ee91efbf:19765
+performUnitOfWork @ chunk-RPCDYKBN.js?v=ee91efbf:19198
+workLoopSync @ chunk-RPCDYKBN.js?v=ee91efbf:19137
+renderRootSync @ chunk-RPCDYKBN.js?v=ee91efbf:19116
+recoverFromConcurrentError @ chunk-RPCDYKBN.js?v=ee91efbf:18736
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=ee91efbf:18879
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=ee91efbf:9119
+(anônimo) @ chunk-RPCDYKBN.js?v=ee91efbf:18627
+setTimeout
+scheduleFn @ @tanstack_react-query.js?v=ee91efbf:555
+flush @ @tanstack_react-query.js?v=ee91efbf:569
+batch @ @tanstack_react-query.js?v=ee91efbf:587
+dispatch_fn @ @tanstack_react-query.js?v=ee91efbf:996
+setData @ @tanstack_react-query.js?v=ee91efbf:696
+onSuccess @ @tanstack_react-query.js?v=ee91efbf:897
+resolve @ @tanstack_react-query.js?v=ee91efbf:456
+Promise.then
+run @ @tanstack_react-query.js?v=ee91efbf:498
+start @ @tanstack_react-query.js?v=ee91efbf:536
+fetch @ @tanstack_react-query.js?v=ee91efbf:926
+executeFetch_fn @ @tanstack_react-query.js?v=ee91efbf:2211
+onSubscribe @ @tanstack_react-query.js?v=ee91efbf:1898
+subscribe @ @tanstack_react-query.js?v=ee91efbf:24
+(anônimo) @ @tanstack_react-query.js?v=ee91efbf:3022
+subscribeToStore @ chunk-RPCDYKBN.js?v=ee91efbf:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=ee91efbf:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=ee91efbf:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=ee91efbf:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=ee91efbf:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=ee91efbf:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=ee91efbf:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=ee91efbf:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=ee91efbf:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=ee91efbf:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=ee91efbf:19432
+commitRoot @ chunk-RPCDYKBN.js?v=ee91efbf:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=ee91efbf:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=ee91efbf:18718
+workLoop @ chunk-RPCDYKBN.js?v=ee91efbf:197
+flushWork @ chunk-RPCDYKBN.js?v=ee91efbf:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=ee91efbf:384Entenda o erroAI
+chunk-RPCDYKBN.js?v=ee91efbf:14032 The above error occurred in the <AccessControl> component:
+
+    at AccessControl (https://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/src/components/access-control.tsx:44:20)
+    at main
+    at div
+    at ProtectedRoute (https://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/src/App.tsx?v=xKhZHWSC488r2dQ8PMhVu:42:27)
+    at Route (https://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=ee91efbf:323:16)
+    at Switch (https://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=ee91efbf:379:17)
+    at Router
+    at Provider (https://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-5AJU3CG7.js?v=ee91efbf:38:15)
+    at TooltipProvider (https://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=ee91efbf:61:5)
+    at WebSocketProvider (https://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/src/App.tsx?v=xKhZHWSC488r2dQ8PMhVu:312:30)
+    at AuthProvider (https://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/src/hooks/use-auth.tsx:21:32)
+    at QueryClientProvider (https://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=ee91efbf:2805:3)
+    at ThemeProvider (https://de38a1e3-bc19-4301-bb94-6c843cf9fea8-00-16gyqui39xh30.picard.replit.dev/src/lib/theme.tsx:25:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ chunk-RPCDYKBN.js?v=ee91efbf:14032
+update.callback @ chunk-RPCDYKBN.js?v=ee91efbf:14052
+callCallback @ chunk-RPCDYKBN.js?v=ee91efbf:11248
+commitUpdateQueue @ chunk-RPCDYKBN.js?v=ee91efbf:11265
+commitLayoutEffectOnFiber @ chunk-RPCDYKBN.js?v=ee91efbf:17093
+commitLayoutMountEffects_complete @ chunk-RPCDYKBN.js?v=ee91efbf:17980
+commitLayoutEffects_begin @ chunk-RPCDYKBN.js?v=ee91efbf:17969
+commitLayoutEffects @ chunk-RPCDYKBN.js?v=ee91efbf:17920
+commitRootImpl @ chunk-RPCDYKBN.js?v=ee91efbf:19353
+commitRoot @ chunk-RPCDYKBN.js?v=ee91efbf:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=ee91efbf:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=ee91efbf:9119
+(anônimo) @ chunk-RPCDYKBN.js?v=ee91efbf:18627
+setTimeout
+scheduleFn @ @tanstack_react-query.js?v=ee91efbf:555
+flush @ @tanstack_react-query.js?v=ee91efbf:569
+batch @ @tanstack_react-query.js?v=ee91efbf:587
+dispatch_fn @ @tanstack_react-query.js?v=ee91efbf:996
+setData @ @tanstack_react-query.js?v=ee91efbf:696
+onSuccess @ @tanstack_react-query.js?v=ee91efbf:897
+resolve @ @tanstack_react-query.js?v=ee91efbf:456
+Promise.then
+run @ @tanstack_react-query.js?v=ee91efbf:498
+start @ @tanstack_react-query.js?v=ee91efbf:536
+fetch @ @tanstack_react-query.js?v=ee91efbf:926
+executeFetch_fn @ @tanstack_react-query.js?v=ee91efbf:2211
+onSubscribe @ @tanstack_react-query.js?v=ee91efbf:1898
+subscribe @ @tanstack_react-query.js?v=ee91efbf:24
+(anônimo) @ @tanstack_react-query.js?v=ee91efbf:3022
+subscribeToStore @ chunk-RPCDYKBN.js?v=ee91efbf:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=ee91efbf:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=ee91efbf:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=ee91efbf:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=ee91efbf:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=ee91efbf:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=ee91efbf:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=ee91efbf:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=ee91efbf:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=ee91efbf:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=ee91efbf:19432
+commitRoot @ chunk-RPCDYKBN.js?v=ee91efbf:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=ee91efbf:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=ee91efbf:18718
+workLoop @ chunk-RPCDYKBN.js?v=ee91efbf:197
+flushWork @ chunk-RPCDYKBN.js?v=ee91efbf:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=ee91efbf:384Entenda o erroAI
+chunk-RPCDYKBN.js?v=ee91efbf:9129 Uncaught RangeError: Invalid time value
+    at format (date-fns.js?v=ee91efbf:1760:11)
+    at access-control.tsx:272:30
+    at Array.map (<anonymous>)
+    at AccessControl (access-control.tsx:242:30)
+    at renderWithHooks (chunk-RPCDYKBN.js?v=ee91efbf:11548:26)
+    at updateFunctionComponent (chunk-RPCDYKBN.js?v=ee91efbf:14582:28)
+    at beginWork (chunk-RPCDYKBN.js?v=ee91efbf:15924:22)
+    at beginWork$1 (chunk-RPCDYKBN.js?v=ee91efbf:19753:22)
+    at performUnitOfWork (chunk-RPCDYKBN.js?v=ee91efbf:19198:20)
+    at workLoopSync (chunk-RPCDYKBN.js?v=ee91efbf:19137:13)
+format @ date-fns.js?v=ee91efbf:1760
+(anônimo) @ access-control.tsx:272
+AccessControl @ access-control.tsx:242
+renderWithHooks @ chunk-RPCDYKBN.js?v=ee91efbf:11548
+updateFunctionComponent @ chunk-RPCDYKBN.js?v=ee91efbf:14582
+beginWork @ chunk-RPCDYKBN.js?v=ee91efbf:15924
+beginWork$1 @ chunk-RPCDYKBN.js?v=ee91efbf:19753
+performUnitOfWork @ chunk-RPCDYKBN.js?v=ee91efbf:19198
+workLoopSync @ chunk-RPCDYKBN.js?v=ee91efbf:19137
+renderRootSync @ chunk-RPCDYKBN.js?v=ee91efbf:19116
+recoverFromConcurrentError @ chunk-RPCDYKBN.js?v=ee91efbf:18736
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=ee91efbf:18879
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=ee91efbf:9119
+(anônimo) @ chunk-RPCDYKBN.js?v=ee91efbf:18627
+setTimeout
+scheduleFn @ @tanstack_react-query.js?v=ee91efbf:555
+flush @ @tanstack_react-query.js?v=ee91efbf:569
+batch @ @tanstack_react-query.js?v=ee91efbf:587
+dispatch_fn @ @tanstack_react-query.js?v=ee91efbf:996
+setData @ @tanstack_react-query.js?v=ee91efbf:696
+onSuccess @ @tanstack_react-query.js?v=ee91efbf:897
+resolve @ @tanstack_react-query.js?v=ee91efbf:456
+Promise.then
+run @ @tanstack_react-query.js?v=ee91efbf:498
+start @ @tanstack_react-query.js?v=ee91efbf:536
+fetch @ @tanstack_react-query.js?v=ee91efbf:926
+executeFetch_fn @ @tanstack_react-query.js?v=ee91efbf:2211
+onSubscribe @ @tanstack_react-query.js?v=ee91efbf:1898
+subscribe @ @tanstack_react-query.js?v=ee91efbf:24
+(anônimo) @ @tanstack_react-query.js?v=ee91efbf:3022
+subscribeToStore @ chunk-RPCDYKBN.js?v=ee91efbf:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=ee91efbf:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=ee91efbf:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=ee91efbf:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=ee91efbf:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=ee91efbf:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=ee91efbf:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=ee91efbf:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=ee91efbf:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=ee91efbf:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=ee91efbf:19432
+commitRoot @ chunk-RPCDYKBN.js?v=ee91efbf:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=ee91efbf:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=ee91efbf:18718
+workLoop @ chunk-RPCDYKBN.js?v=ee91efbf:197
+flushWork @ chunk-RPCDYKBN.js?v=ee91efbf:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=ee91efbf:384Entenda o erroAI
+chunk-RPCDYKBN.js?v=ee91efbf:18625 [Violation] 'setTimeout' handler took 52ms
+use-websocket.ts:55 WebSocket disconnected
