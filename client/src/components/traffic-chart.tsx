@@ -13,9 +13,7 @@ export default function TrafficChart() {
   const { data: trafficData, isLoading } = useQuery({
     queryKey: ["/api/dashboard/traffic-chart"],
     queryFn: async () => {
-      const response = await fetch("/api/dashboard/traffic-chart", {
-        headers: AuthService.getAuthHeaders(),
-      });
+      const response = await fetch("/api/dashboard/traffic-chart");
       if (!response.ok) throw new Error("Failed to fetch traffic chart");
       return response.json() as Promise<TrafficData[]>;
     },
@@ -31,7 +29,10 @@ export default function TrafficChart() {
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
       
-      const existingData = trafficData?.find(item => item.date === dateStr);
+      const existingData = trafficData?.find(item => {
+        const itemDate = new Date(item.date).toISOString().split('T')[0];
+        return itemDate === dateStr;
+      });
       
       result.push({
         date: dateStr,

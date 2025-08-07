@@ -25,17 +25,19 @@ import { StoreSelector } from './store-selector';
 
 interface AccessLog {
   id: number;
-  user_id: string;
-  client_id: number;
-  device_id: number | null;
-  store_id: number;
-  access_type: string;
+  userId?: number;
+  clientId: number;
+  deviceId: number;
+  storeId: number;
+  action: string;
   method: string;
-  success: boolean;
+  status: string;
+  timestamp: string;
   details?: string;
-  created_at: string;
-  user_name?: string;
-  store_name?: string;
+  store?: {
+    id: number;
+    name: string;
+  };
 }
 
 interface ReportsTrafficChartProps {
@@ -50,6 +52,11 @@ export function ReportsTrafficChart({ className }: ReportsTrafficChartProps) {
   // Buscar logs de acesso completos
   const { data: accessLogs = [], isLoading } = useQuery<AccessLog[]>({
     queryKey: ['/api/access-logs'],
+    queryFn: async () => {
+      const response = await fetch('/api/access-logs');
+      if (!response.ok) throw new Error('Failed to fetch access logs');
+      return response.json();
+    },
     refetchInterval: 10000, // Atualiza a cada 10 segundos
   });
 
@@ -63,7 +70,7 @@ export function ReportsTrafficChart({ className }: ReportsTrafficChartProps) {
     // Filtrar por lojas selecionadas
     if (selectedStores.length > 0) {
       filteredLogs = filteredLogs.filter(log => {
-        return log.store_id ? selectedStores.includes(log.store_id) : true;
+        return log.storeId ? selectedStores.includes(log.storeId) : true;
       });
     }
 
@@ -71,24 +78,24 @@ export function ReportsTrafficChart({ className }: ReportsTrafficChartProps) {
     switch (timeRange) {
       case 'today':
         filteredLogs = accessLogs.filter(log => {
-          const logDate = new Date(log.created_at);
+          const logDate = new Date(log.timestamp);
           return logDate.toDateString() === now.toDateString();
         });
         break;
       case 'week':
         const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        filteredLogs = accessLogs.filter(log => new Date(log.created_at) >= weekAgo);
+        filteredLogs = accessLogs.filter(log => new Date(log.timestamp) >= weekAgo);
         break;
       case 'month':
         const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        filteredLogs = accessLogs.filter(log => new Date(log.created_at) >= monthAgo);
+        filteredLogs = accessLogs.filter(log => new Date(log.timestamp) >= monthAgo);
         break;
     }
 
     if (chartType === 'pie') {
       // Dados por loja para gráfico de pizza
       const storeGroups = filteredLogs.reduce((acc, log) => {
-        const storeName = log.store_name || 'Sem Loja';
+        const storeName = log.store?.name || 'Sem Loja';
         acc[storeName] = (acc[storeName] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
@@ -104,12 +111,12 @@ export function ReportsTrafficChart({ className }: ReportsTrafficChartProps) {
       const hourlyData = Array.from({ length: 24 }, (_, hour) => {
         const hourStr = `${hour.toString().padStart(2, '0')}:00`;
         const hourLogs = filteredLogs.filter(log => {
-          const logHour = new Date(log.created_at).getHours();
+          const logHour = new Date(log.timestamp).getHours();
           return logHour === hour;
         });
 
         const storeGroups = hourLogs.reduce((acc, log) => {
-          const storeName = log.store_name || 'Outros';
+          const storeName = log.store?.name || 'Outros';
           acc[storeName] = (acc[storeName] || 0) + 1;
           return acc;
         }, {} as Record<string, number>);
@@ -127,8 +134,8 @@ export function ReportsTrafficChart({ className }: ReportsTrafficChartProps) {
       const dailyData: Record<string, any> = {};
       
       filteredLogs.forEach(log => {
-        const date = new Date(log.created_at).toISOString().split('T')[0];
-        const storeName = log.store_name || 'Outros';
+        const date = new Date(log.timestamp).toISOString().split('T')[0];
+        const storeName = log.store?.name || 'Outros';
         
         if (!dailyData[date]) {
           dailyData[date] = { date, total: 0 };
@@ -147,7 +154,7 @@ export function ReportsTrafficChart({ className }: ReportsTrafficChartProps) {
   // Obter lojas únicas para cores
   const uniqueStores = React.useMemo(() => {
     if (!accessLogs) return [];
-    const storeNames = accessLogs.map(log => log.store_name).filter(Boolean);
+    const storeNames = accessLogs.map(log => log.store?.name).filter(Boolean);
     return Array.from(new Set(storeNames)) as string[];
   }, [accessLogs]);
 
@@ -158,7 +165,7 @@ export function ReportsTrafficChart({ className }: ReportsTrafficChartProps) {
 
   const totalAccess = accessLogs.length;
   const todayAccess = accessLogs.filter(log => 
-    new Date(log.created_at).toDateString() === new Date().toDateString()
+    new Date(log.timestamp).toDateString() === new Date().toDateString()
   ).length;
 
   if (isLoading) {
@@ -354,7 +361,7 @@ export function ReportsTrafficChart({ className }: ReportsTrafficChartProps) {
         {/* Resumo por lojas */}
         <div className="mt-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
           {uniqueStores.slice(0, 10).map((storeName, index) => {
-            const storeAccess = accessLogs.filter(log => log.store_name === storeName).length;
+            const storeAccess = accessLogs.filter(log => log.store?.name === storeName).length;
             return (
               <div
                 key={storeName}
