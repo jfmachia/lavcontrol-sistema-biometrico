@@ -36,6 +36,16 @@ export default function ClientsManagement() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newClient, setNewClient] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    cpf: "",
+    profile_image_url: "",
+    status: "active",
+    store_id: null as number | null
+  });
 
   const { data: clients = [], isLoading, error } = useQuery<Client[]>({
     queryKey: ["/api/clients"],
@@ -43,6 +53,34 @@ export default function ClientsManagement() {
 
   const { data: stores = [] } = useQuery<any[]>({
     queryKey: ["/api/stores"],
+  });
+
+  const createClientMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("/api/clients", "POST", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+      setIsAddDialogOpen(false);
+      setNewClient({
+        name: "",
+        email: "",
+        phone: "",
+        cpf: "",
+        profile_image_url: "",
+        status: "active",
+        store_id: null
+      });
+      toast({
+        title: "Cliente cadastrado",
+        description: "O cliente foi cadastrado com sucesso!",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao cadastrar",
+        description: error.message || "Não foi possível cadastrar o cliente.",
+        variant: "destructive",
+      });
+    }
   });
 
   const updateClientMutation = useMutation({
@@ -117,10 +155,14 @@ export default function ClientsManagement() {
             Gerencie os clientes que frequentam suas lavanderias
           </p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="h-4 w-4 mr-2" />
-          Adicionar Cliente
-        </Button>
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar Cliente
+            </Button>
+          </DialogTrigger>
+        </Dialog>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -480,6 +522,184 @@ export default function ClientsManagement() {
               disabled={updateClientMutation.isPending}
             >
               {updateClientMutation.isPending ? "Salvando..." : "Salvar"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Adicionar Cliente */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Adicionar Novo Cliente</DialogTitle>
+            <DialogDescription>
+              Cadastre um novo cliente da lavanderia
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {/* Seção de Imagem */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label className="text-right">Foto</Label>
+              <div className="col-span-3 space-y-2">
+                {newClient.profile_image_url ? (
+                  <div className="flex items-center space-x-2">
+                    <img
+                      className="h-12 w-12 rounded-full"
+                      src={newClient.profile_image_url}
+                      alt="Preview"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setNewClient({...newClient, profile_image_url: ""})}
+                    >
+                      Remover
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Input
+                      placeholder="URL da imagem"
+                      value={newClient.profile_image_url}
+                      onChange={(e) => setNewClient({...newClient, profile_image_url: e.target.value})}
+                    />
+                    <p className="text-xs text-muted-foreground">Cole a URL da foto do cliente</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Nome */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="new-name" className="text-right">Nome *</Label>
+              <Input
+                id="new-name"
+                value={newClient.name}
+                onChange={(e) => setNewClient({...newClient, name: e.target.value})}
+                className="col-span-3"
+                placeholder="Nome completo"
+              />
+            </div>
+            
+            {/* Email */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="new-email" className="text-right">Email</Label>
+              <Input
+                id="new-email"
+                type="email"
+                value={newClient.email}
+                onChange={(e) => setNewClient({...newClient, email: e.target.value})}
+                className="col-span-3"
+                placeholder="email@exemplo.com"
+              />
+            </div>
+            
+            {/* Telefone */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="new-phone" className="text-right">Telefone</Label>
+              <Input
+                id="new-phone"
+                value={newClient.phone}
+                onChange={(e) => setNewClient({...newClient, phone: e.target.value})}
+                className="col-span-3"
+                placeholder="(11) 99999-9999"
+              />
+            </div>
+            
+            {/* CPF */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="new-cpf" className="text-right">CPF</Label>
+              <Input
+                id="new-cpf"
+                value={newClient.cpf}
+                onChange={(e) => setNewClient({...newClient, cpf: e.target.value})}
+                className="col-span-3"
+                placeholder="000.000.000-00"
+              />
+            </div>
+            
+            {/* Status */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="new-status" className="text-right">Status</Label>
+              <Select
+                value={newClient.status}
+                onValueChange={(value) => setNewClient({...newClient, status: value})}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Ativo</SelectItem>
+                  <SelectItem value="alert">Alerta (Amarelo)</SelectItem>
+                  <SelectItem value="vip">VIP</SelectItem>
+                  <SelectItem value="blocked">Bloqueado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Loja */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="new-store" className="text-right">Loja</Label>
+              <Select
+                value={newClient.store_id?.toString() || ""}
+                onValueChange={(value) => setNewClient({...newClient, store_id: parseInt(value)})}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Selecione uma loja" />
+                </SelectTrigger>
+                <SelectContent>
+                  {stores.map((store: any) => (
+                    <SelectItem key={store.id} value={store.id.toString()}>
+                      {store.nome_loja || store.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsAddDialogOpen(false);
+                setNewClient({
+                  name: "",
+                  email: "",
+                  phone: "",
+                  cpf: "",
+                  profile_image_url: "",
+                  status: "active",
+                  store_id: null
+                });
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                if (!newClient.name.trim()) {
+                  toast({
+                    title: "Campo obrigatório",
+                    description: "O nome do cliente é obrigatório.",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                
+                createClientMutation.mutate({
+                  name: newClient.name,
+                  email: newClient.email || null,
+                  phone: newClient.phone || null,
+                  cpf: newClient.cpf || null,
+                  profileImageUrl: newClient.profile_image_url || null,
+                  status: newClient.status,
+                  storeId: newClient.store_id
+                });
+              }}
+              disabled={createClientMutation.isPending}
+            >
+              {createClientMutation.isPending ? "Salvando..." : "Cadastrar"}
             </Button>
           </div>
         </DialogContent>

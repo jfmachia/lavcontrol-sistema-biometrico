@@ -24,11 +24,12 @@ export class ClientsStorage {
         email: row.email,
         phone: row.phone,
         cpf: row.cpf,
-        profileImageUrl: row.profile_image_url,
+        profile_image_url: row.profile_image_url, // Para compatibilidade com o front
         status: row.status,
-        storeId: row.store_id,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
+        store_id: row.store_id, // Para compatibilidade com o front
+        store_name: row.store_name, // Para compatibilidade com o front
+        created_at: row.created_at, // Para compatibilidade com o front
+        updated_at: row.updated_at, // Para compatibilidade com o front
         store: row.store_name ? {
           id: row.store_id,
           name: row.store_name,
@@ -126,6 +127,10 @@ export class ClientsStorage {
       if (clientData.storeId) {
         fields.push(`store_id = $${paramCount++}`);
         values.push(clientData.storeId);
+      }
+      if (clientData.profileImageUrl !== undefined) {
+        fields.push(`profile_image_url = $${paramCount++}`);
+        values.push(clientData.profileImageUrl);
       }
       
       fields.push(`updated_at = NOW()`);

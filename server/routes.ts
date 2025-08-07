@@ -356,27 +356,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Clients routes (clientes das lavanderias)
-  app.get("/api/clients", async (req, res) => {
-    try {
-      const clients = await storage.getClients();
-      res.json(clients);
-    } catch (error) {
-      console.error("Error fetching clients:", error);
-      res.status(500).json({ message: "Failed to fetch clients" });
-    }
-  });
-
-  app.get("/api/clients/store/:storeId", async (req, res) => {
-    try {
-      const { storeId } = req.params;
-      const clients = await storage.getClientsByStore(parseInt(storeId));
-      res.json(clients);
-    } catch (error) {
-      console.error("Error fetching clients by store:", error);
-      res.status(500).json({ message: "Failed to fetch clients" });
-    }
-  });
 
   // Users routes - sem autenticação para teste
   app.get("/api/users", async (req, res) => {
@@ -627,33 +606,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Clients routes - sem autenticação para teste
+  // Clients routes - usando clientsStorage para consistência
   app.get("/api/clients", async (req, res) => {
     try {
-      const clients = await storage.getClients();
+      console.log("🔍 Buscando clientes...");
+      const clients = await clientsStorage.getAllClients();
+      console.log(`✅ Encontrados ${clients.length} clientes`);
       res.json(clients);
     } catch (error) {
-      console.error("Error fetching clients:", error);
+      console.error("❌ Error fetching clients:", error);
       res.status(500).json({ message: "Failed to fetch clients" });
     }
   });
 
   app.post("/api/clients", async (req, res) => {
     try {
+      console.log("➕ Criando novo cliente:", req.body);
       const client = await clientsStorage.createClient(req.body);
+      console.log("✅ Cliente criado:", client);
       res.status(201).json(client);
     } catch (error) {
-      console.error("Error creating client:", error);
+      console.error("❌ Error creating client:", error);
       res.status(500).json({ message: "Failed to create client" });
     }
   });
 
   app.patch("/api/clients/:id", async (req, res) => {
     try {
+      console.log("✏️ Atualizando cliente ID:", req.params.id, "com dados:", req.body);
       const client = await clientsStorage.updateClient(parseInt(req.params.id), req.body);
       if (!client) {
         return res.status(404).json({ message: "Client not found" });
       }
+      console.log("✅ Cliente atualizado:", client);
       res.json(client);
     } catch (error) {
       console.error("Error updating client:", error);
