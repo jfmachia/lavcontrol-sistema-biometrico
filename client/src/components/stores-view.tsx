@@ -106,13 +106,29 @@ export default function StoresView() {
 
   const deleteStoreMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest(`/api/stores/${id}`, "DELETE");
-      if (response.ok) {
-        // Se a resposta está OK, tenta fazer parse do JSON se houver conteúdo
-        const text = await response.text();
-        return text ? JSON.parse(text) : { success: true };
+      const token = localStorage.getItem('token');
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
       }
-      throw new Error(`Erro ${response.status}: ${response.statusText}`);
+
+      const response = await fetch(`/api/stores/${id}`, {
+        method: "DELETE",
+        headers,
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Erro ${response.status}: ${text || response.statusText}`);
+      }
+
+      // Se OK, tenta ler a resposta como JSON se houver conteúdo
+      const text = await response.text();
+      return text ? JSON.parse(text) : { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/stores"] });
