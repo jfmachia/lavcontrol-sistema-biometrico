@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik:v3.0
+    command:
+      # API and dashboard
+      - --api.dashboard=true
+      - --api.insecure=false
+      
+      # Entrypoints
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      
+      # Docker provider
+      - --providers.docker=true
+      - --providers.docker.swarmmode=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=traefik-public
+      
+      # SSL configuration
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@exemplo.com}
+      - --certificatesresolvers.letsencrypt.acme.storage=/certificates/acme.json
+      
+      # Logs
+      - --log.level=INFO
+      - --accesslog=true
+      
+      # Metrics (opcional)
+      - --metrics.prometheus=true
+      
+    ports:
+      - target: 80
+        published: 80
+        mode: host
+      - target: 443
+        published: 443
+        mode: host
+        
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-certificates:/certificates
+      
+    networks:
+      - traefik-public
+      
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      labels:
+        # Dashboard
+        - "traefik.enable=true"
+        - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+        
+        # Dashboard HTTP -> HTTPS redirect
+        - "traefik.http.routers.traefik-http.rule=Host(`traefik.${DOMAIN:-localhost}`)"
+        - "traefik.http.routers.traefik-http.entrypoints=web"
+        - "traefik.http.routers.traefik-http.middlewares=redirect-to-https"
+        - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+        
+        # Dashboard HTTPS
+        - "traefik.http.routers.traefik-https.rule=Host(`traefik.${DOMAIN:-localhost}`)"
+        - "traefik.http.routers.traefik-https.entrypoints=websecure"
+        - "traefik.http.routers.traefik-https.tls=true"
+        - "traefik.http.routers.traefik-https.tls.certresolver=letsencrypt"
+        - "traefik.http.routers.traefik-https.service=api@internal"
+        - "traefik.http.routers.traefik-https.middlewares=traefik-auth"
+        
+        # Dashboard authentication
+        - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_AUTH:-admin:$$2y$$10$$mF/RCxMzNK1HiYGu.XDmBOvMi.HlYn/p2x.IbMsmnqNnMPnc0WOTS}"
+        
+volumes:
+  traefik-certificates:
+    driver: local
+
+networks:
+  traefik-public:
+    driver: overlay
+    attachable: true
+
+# Para usar esta stack do Traefik:
+# 1. Configure as variáveis de ambiente:
+#    - DOMAIN (seu domínio base, ex: meusite.com)  
+#    - ACME_EMAIL (seu email para certificados SSL)
+#    - TRAEFIK_AUTH (hash bcrypt do usuário:senha para dashboard)
+# 2. Deploy esta stack primeiro no Portainer
+# 3. Depois deploy a stack do LavControl
+# 
+# Comandos úteis para gerar senha:
+# echo $(htpasswd -nb admin sua-senha-aqui) | sed -e s/\\$/\\$\\$/g
+# 
+# Depois de deployar, acesse:
+# - Dashboard Traefik: https://traefik.seudominio.com
+# - LavControl: https://lavcontrol.seudominio.com

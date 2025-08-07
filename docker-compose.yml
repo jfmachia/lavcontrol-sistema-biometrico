@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  lavcontrol-app:
+    image: jfmachia/lavcontrol:latest
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+      labels:
+        # Traefik configuration
+        - "traefik.enable=true"
+        - "traefik.http.services.lavcontrol.loadbalancer.server.port=5000"
+        
+        # HTTP redirect to HTTPS
+        - "traefik.http.routers.lavcontrol-http.rule=Host(`lavcontrol.${DOMAIN:-localhost}`)"
+        - "traefik.http.routers.lavcontrol-http.entrypoints=web"
+        - "traefik.http.routers.lavcontrol-http.middlewares=redirect-to-https"
+        - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+        
+        # HTTPS
+        - "traefik.http.routers.lavcontrol-https.rule=Host(`lavcontrol.${DOMAIN:-localhost}`)"
+        - "traefik.http.routers.lavcontrol-https.entrypoints=websecure"
+        - "traefik.http.routers.lavcontrol-https.tls=true"
+        - "traefik.http.routers.lavcontrol-https.tls.certresolver=letsencrypt"
+        
+        # Security headers
+        - "traefik.http.routers.lavcontrol-https.middlewares=security-headers"
+        - "traefik.http.middlewares.security-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
+        - "traefik.http.middlewares.security-headers.headers.customrequestheaders.X-Forwarded-For="
+        - "traefik.http.middlewares.security-headers.headers.framedeny=true"
+        - "traefik.http.middlewares.security-headers.headers.contenttypenosniff=true"
+        - "traefik.http.middlewares.security-headers.headers.browserxssfilter=true"
+        - "traefik.http.middlewares.security-headers.headers.stsSeconds=31536000"
+        - "traefik.http.middlewares.security-headers.headers.stsIncludeSubdomains=true"
+        - "traefik.http.middlewares.security-headers.headers.stsPreload=true"
+    environment:
+      # Application
+      - NODE_ENV=production
+      - PORT=5000
+      
+      # PostgreSQL VPS (usando as credenciais existentes)
+      - DB_HOST=148.230.78.128
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=929d54bc0ff22387163f04cfb3b3d0fa
+      - DB_NAME=postgres
+      - DATABASE_URL=postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres
+      
+      # MQTT
+      - MQTT_BROKER_URL=broker.emqx.io
+      - MQTT_PORT=1883
+      
+      # JWT
+      - JWT_SECRET=${JWT_SECRET:-seu-jwt-secret-super-seguro-aqui}
+      
+      # Session
+      - SESSION_SECRET=${SESSION_SECRET:-sua-session-secret-super-segura-aqui}
+      
+      # Domain for CORS
+      - ALLOWED_ORIGINS=https://lavcontrol.${DOMAIN:-localhost},http://localhost:5000
+      
+    networks:
+      - traefik-public
+      
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  traefik-public:
+    external: true
+
+# Para usar esta stack no Portainer:
+# 1. Certifique-se que a rede 'traefik-public' existe
+# 2. Configure as variáveis de ambiente:
+#    - DOMAIN (seu domínio, ex: meusite.com)
+#    - JWT_SECRET (chave JWT segura)
+#    - SESSION_SECRET (chave de sessão segura)
+# 3. Faça o build da imagem e envie para um registry ou Docker Hub

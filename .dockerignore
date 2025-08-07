@@ -1,0 +1,79 @@
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build outputs (except client/dist which is needed)
+.next/
+out/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# TypeScript
+*.tsbuildinfo
+
+# Coverage
+coverage
+*.lcov
+.nyc_output
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose*.yml
+
+# Attached assets (não precisam no container)
+attached_assets/
+
+# Database files
+*.sql
+*.sql.backup
+*.dump
+
+# Test files
+test-*.js
+
+# Documentation
+*.md
+README*
+
+# Scripts
+scripts/
+
+# Development files
+.replit
+replit.md
