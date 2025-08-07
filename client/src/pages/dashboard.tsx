@@ -14,7 +14,7 @@ interface RecentActivity {
   user?: {
     id: number;
     name: string;
-    profileImage?: string;
+    profileImageUrl?: string;
   };
 }
 
@@ -96,7 +96,7 @@ export default function Dashboard() {
         user: log.user ? {
           id: log.user.id,
           name: log.user.name,
-          profileImage: log.user.profileImage
+          profileImageUrl: log.user.profileImageUrl
         } : undefined,
       })) as RecentActivity[];
     },
@@ -158,9 +158,9 @@ export default function Dashboard() {
                   return (
                     <div key={activity.id || index} className="flex items-center p-2 rounded-lg hover:bg-white/5 transition-colors">
                       <div className="flex items-center mr-3">
-                        {activity.user?.profileImage ? (
+                        {activity.user?.profileImageUrl ? (
                           <img 
-                            src={activity.user.profileImage} 
+                            src={activity.user.profileImageUrl} 
                             alt={activity.user.name}
                             className="h-8 w-8 rounded-full object-cover border border-blue-400/30"
                           />

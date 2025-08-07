@@ -24,7 +24,7 @@ export class ClientsStorage {
         email: row.email,
         phone: row.phone,
         cpf: row.cpf,
-        profile_image_url: row.profile_image_url, // Para compatibilidade com o front
+        profileImageUrl: row.profile_image_url, // Campo padronizado para frontend
         status: row.status,
         store_id: row.store_id, // Para compatibilidade com o front
         store_name: row.store_name, // Para compatibilidade com o front

@@ -1087,6 +1087,7 @@ export class DatabaseStorage implements IStorage {
           c.name as client_name,
           c.status as client_status,
           c.email as client_email,
+          c.profile_image_url as client_profile_image_url,
           d.name as device_name,
           d.ip_address as device_ip,
           s.name as store_name
@@ -1116,13 +1117,14 @@ export class DatabaseStorage implements IStorage {
           id: row.client_id,
           name: row.client_name,
           email: row.client_email,
-          profileImage: null
+          profileImageUrl: row.client_profile_image_url
         } : null,
         client: row.client_name ? {
           id: row.client_id,
           name: row.client_name,
           status: row.client_status,
-          email: row.client_email
+          email: row.client_email,
+          profileImageUrl: row.client_profile_image_url
         } : null,
         device: row.device_name ? {
           id: row.device_id,

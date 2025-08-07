@@ -20,7 +20,7 @@ interface Client {
   email?: string;
   phone?: string;
   cpf?: string;
-  profile_image_url?: string;
+  profileImageUrl?: string;
   status: string;
   store_id?: number;
   store_name?: string;
@@ -42,7 +42,7 @@ export default function ClientsManagement() {
     email: "",
     phone: "",
     cpf: "",
-    profile_image_url: "",
+    profileImageUrl: "",
     status: "active",
     store_id: null as number | null
   });
@@ -65,7 +65,7 @@ export default function ClientsManagement() {
         email: "",
         phone: "",
         cpf: "",
-        profile_image_url: "",
+        profileImageUrl: "",
         status: "active",
         store_id: null
       });
@@ -269,10 +269,10 @@ export default function ClientsManagement() {
                     <TableCell>
                       <div className="flex items-center space-x-3">
                         <div className="flex-shrink-0">
-                          {client.profile_image_url ? (
+                          {client.profileImageUrl ? (
                             <img
                               className="h-10 w-10 rounded-full"
-                              src={client.profile_image_url}
+                              src={client.profileImageUrl}
                               alt={client.name}
                             />
                           ) : (
@@ -347,10 +347,10 @@ export default function ClientsManagement() {
                           {selectedClient && (
                             <div className="space-y-4">
                               <div className="flex items-center space-x-4">
-                                {selectedClient.profile_image_url ? (
+                                {selectedClient.profileImageUrl ? (
                                   <img
                                     className="h-16 w-16 rounded-full"
-                                    src={selectedClient.profile_image_url}
+                                    src={selectedClient.profileImageUrl}
                                     alt={selectedClient.name}
                                   />
                                 ) : (
@@ -541,17 +541,17 @@ export default function ClientsManagement() {
             <div className="grid grid-cols-4 items-center gap-4">
               <Label className="text-right">Foto</Label>
               <div className="col-span-3 space-y-2">
-                {newClient.profile_image_url ? (
+                {newClient.profileImageUrl ? (
                   <div className="flex items-center space-x-2">
                     <img
                       className="h-12 w-12 rounded-full"
-                      src={newClient.profile_image_url}
+                      src={newClient.profileImageUrl}
                       alt="Preview"
                     />
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setNewClient({...newClient, profile_image_url: ""})}
+                      onClick={() => setNewClient({...newClient, profileImageUrl: ""})}
                     >
                       Remover
                     </Button>
@@ -560,8 +560,8 @@ export default function ClientsManagement() {
                   <div className="space-y-2">
                     <Input
                       placeholder="URL da imagem"
-                      value={newClient.profile_image_url}
-                      onChange={(e) => setNewClient({...newClient, profile_image_url: e.target.value})}
+                      value={newClient.profileImageUrl}
+                      onChange={(e) => setNewClient({...newClient, profileImageUrl: e.target.value})}
                     />
                     <p className="text-xs text-muted-foreground">Cole a URL da foto do cliente</p>
                   </div>
@@ -668,7 +668,7 @@ export default function ClientsManagement() {
                   email: "",
                   phone: "",
                   cpf: "",
-                  profile_image_url: "",
+                  profileImageUrl: "",
                   status: "active",
                   store_id: null
                 });
@@ -692,7 +692,7 @@ export default function ClientsManagement() {
                   email: newClient.email || null,
                   phone: newClient.phone || null,
                   cpf: newClient.cpf || null,
-                  profileImageUrl: newClient.profile_image_url || null,
+                  profileImageUrl: newClient.profileImageUrl || null,
                   status: newClient.status,
                   storeId: newClient.store_id
                 });

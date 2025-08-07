@@ -19,14 +19,14 @@ interface AccessLog {
   user?: {
     id: number;
     name: string;
-    profileImage?: string;
+    profileImageUrl?: string;
   };
   client?: {
     id: number;
     name: string;
     status: string;
     email?: string;
-    profileImage?: string;
+    profileImageUrl?: string;
   };
   device?: {
     id: number;
@@ -154,10 +154,10 @@ export default function Logs() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <div className="flex items-center">
-                        {log.client?.profileImage ? (
+                        {log.client?.profileImageUrl ? (
                           <Avatar className="h-12 w-12">
                             <AvatarImage 
-                              src={log.client.profileImage} 
+                              src={log.client.profileImageUrl} 
                               alt={log.client.name}
                               className="object-cover"
                             />

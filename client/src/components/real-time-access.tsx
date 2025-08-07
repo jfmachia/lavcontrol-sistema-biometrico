@@ -7,15 +7,16 @@ import { Activity, User, Zap } from "lucide-react";
 interface RealtimeAccess {
   id: number;
   userId: number;
+  clientId: number;
   deviceId: number;
   action: string;
   method: string;
   status: string;
   timestamp: string;
-  user?: {
+  client?: {
     id: number;
     name: string;
-    profileImage?: string;
+    profileImageUrl?: string;
   };
   device?: {
     id: number;
@@ -110,8 +111,8 @@ export default function RealTimeAccess() {
                 <div className="relative">
                   <Avatar className="h-10 w-10 border-2 border-blue-400/30">
                     <AvatarImage 
-                      src={access.user?.profileImage} 
-                      alt={access.user?.name}
+                      src={access.client?.profileImageUrl} 
+                      alt={access.client?.name}
                       className="object-cover"
                     />
                     <AvatarFallback className="bg-blue-500/20 text-blue-300">
@@ -128,7 +129,7 @@ export default function RealTimeAccess() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="font-medium text-white truncate">
-                      {access.user?.name || "Usuário desconhecido"}
+                      {access.client?.name || "Cliente desconhecido"}
                     </p>
                     {index === 0 && (
                       <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-400/30">
