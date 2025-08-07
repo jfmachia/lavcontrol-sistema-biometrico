@@ -420,14 +420,16 @@ export class DatabaseStorage implements IStorage {
     
     try {
       const result = await pool.query(`
-        INSERT INTO devices (name, type, status, store_id, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, NOW(), NOW())
+        INSERT INTO devices (name, type, status, store_id, device_id, serial_number, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
         RETURNING *
       `, [
         deviceData.name,
         deviceData.type || 'facial',
         deviceData.status || 'offline',
-        deviceData.storeId
+        deviceData.storeId,
+        deviceData.deviceId,
+        deviceData.serialNumber
       ]);
       
       return result.rows[0];
@@ -470,6 +472,14 @@ export class DatabaseStorage implements IStorage {
       if (updateData.location) {
         fields.push(`location = $${paramCount++}`);
         values.push(updateData.location);
+      }
+      if (updateData.deviceId) {
+        fields.push(`device_id = $${paramCount++}`);
+        values.push(updateData.deviceId);
+      }
+      if (updateData.serialNumber) {
+        fields.push(`serial_number = $${paramCount++}`);
+        values.push(updateData.serialNumber);
       }
       
       fields.push(`updated_at = NOW()`);
@@ -608,7 +618,8 @@ export class DatabaseStorage implements IStorage {
         id: row.id,
         name: row.name || row.device_name,
         type: row.type || row.device_type,
-        deviceId: row.device_serial || row.serial || row.id.toString(),
+        deviceId: row.device_id || row.device_serial || row.serial || row.id.toString(),
+        serialNumber: row.serial_number,
         storeId: row.store_id,
         status: row.status || 'offline',
         ipAddress: row.ip_address || row.ip,

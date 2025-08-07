@@ -11,6 +11,7 @@ interface Device {
   id: number;
   name: string;
   deviceId: string;
+  serialNumber?: string;
   location: string;
   status: string;
   lastPing: string | null;
@@ -154,7 +155,8 @@ export default function DevicesView() {
                       </div>
                       <div className="ml-4">
                         <h3 className="text-lg font-medium text-gray-900">{device.name}</h3>
-                        <p className="text-sm text-gray-500">{device.deviceId}</p>
+                        <p className="text-sm text-gray-500">ID: {device.deviceId}</p>
+                        {device.serialNumber && <p className="text-sm text-gray-400">Série: {device.serialNumber}</p>}
                       </div>
                     </div>
                     <Badge variant={statusConfig.variant}>

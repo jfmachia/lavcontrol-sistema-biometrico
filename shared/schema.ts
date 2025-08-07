@@ -95,6 +95,7 @@ export const devices = pgTable("devices", {
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
   deviceId: varchar("device_id"),
+  serialNumber: varchar("serial_number"),
   location: varchar("location"),
   biometria: varchar("biometria"),
   lastPing: timestamp("last_ping"),

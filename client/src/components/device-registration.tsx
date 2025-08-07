@@ -15,6 +15,7 @@ interface Device {
   id: number;
   name: string;
   deviceId?: string;
+  serialNumber?: string;
   storeId: number;
   store_id?: number;
   status: string;
@@ -40,6 +41,7 @@ export function DeviceRegistration() {
   const [formData, setFormData] = useState({
     name: '',
     deviceId: '',
+    serialNumber: '',
     storeId: ''
   });
 
@@ -65,7 +67,7 @@ export function DeviceRegistration() {
         title: "Dispositivo Cadastrado",
         description: "O dispositivo foi cadastrado com sucesso!",
       });
-      setFormData({ name: '', deviceId: '', storeId: '' });
+      setFormData({ name: '', deviceId: '', serialNumber: '', storeId: '' });
       setIsRegistering(false);
       queryClient.invalidateQueries({ queryKey: ['/api/devices'] });
     },
@@ -124,7 +126,7 @@ export function DeviceRegistration() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.deviceId || !formData.storeId) {
+    if (!formData.name || !formData.deviceId || !formData.serialNumber || !formData.storeId) {
       toast({
         title: "Campos Obrigatórios",
         description: "Preencha todos os campos obrigatórios.",
@@ -135,6 +137,7 @@ export function DeviceRegistration() {
     registerMutation.mutate({
       name: formData.name,
       deviceId: formData.deviceId,
+      serialNumber: formData.serialNumber,
       storeId: parseInt(formData.storeId)
     });
   };
@@ -209,6 +212,20 @@ export function DeviceRegistration() {
                     placeholder="Ex: DEV001"
                     value={formData.deviceId}
                     onChange={(e) => setFormData({ ...formData, deviceId: e.target.value })}
+                    className="bg-background border-input"
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="serialNumber" className="text-foreground">Número de Série*</Label>
+                  <Input
+                    id="serialNumber"
+                    type="text"
+                    placeholder="Ex: SN123456789"
+                    value={formData.serialNumber}
+                    onChange={(e) => setFormData({ ...formData, serialNumber: e.target.value })}
                     className="bg-background border-input"
                   />
                 </div>
@@ -300,6 +317,7 @@ export function DeviceRegistration() {
                       <div>
                         <h3 className="font-semibold text-foreground">{device.name}</h3>
                         <p className="text-sm text-muted-foreground">ID: {device.deviceId || device.id}</p>
+                        <p className="text-sm text-muted-foreground">Série: {device.serialNumber || 'Não definido'}</p>
                         <p className="text-sm text-muted-foreground">
                           Loja: {store ? (store.nome_loja || store.loja || store.name) : 'Não informado'}
                         </p>
