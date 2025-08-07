@@ -1395,6 +1395,12 @@ export class DatabaseStorage implements IStorage {
         )
       `);
       
+      // Add logo_url column if it doesn't exist
+      await pool.query(`
+        ALTER TABLE config_sistema 
+        ADD COLUMN IF NOT EXISTS logo_url VARCHAR(500) DEFAULT NULL
+      `);
+      
       const result = await pool.query('SELECT * FROM config_sistema ORDER BY id DESC LIMIT 1');
       return result.rows[0] || {
         sistema_nome: 'LavControl',
