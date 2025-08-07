@@ -414,42 +414,40 @@ export class DatabaseStorage implements IStorage {
   async createDevice(deviceData: any): Promise<any> {
     const { Pool } = await import('pg');
     const pool = new Pool({
-      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      host: '148.230.78.128',
+      port: 5432,
+      user: 'postgres',
+      password: '929d54bc0ff22387163f04cfb3b3d0fa',
+      database: 'postgres',
       ssl: false,
     });
     
-    const client = await pool.connect();
-    
     try {
-      await client.query('BEGIN');
-      
-      // Inserir dispositivo inicial
-      const result = await client.query(`
-        INSERT INTO devices (name, type, status, store_id, location, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+      // Inserir dispositivo completo com todos os campos necessários
+      const result = await pool.query(`
+        INSERT INTO devices (name, type, status, store_id, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, NOW(), NOW())
         RETURNING id
       `, [
         deviceData.name,
         deviceData.type || 'facial',
         deviceData.status || 'offline',
-        deviceData.storeId,
-        deviceData.location || 'Não especificado'
+        deviceData.storeId
       ]);
       
       const deviceId = `DEV${String(result.rows[0].id).padStart(3, '0')}`;
       const serialNumber = deviceData.serialNumber || `SN${String(result.rows[0].id).padStart(6, '0')}`;
+      const location = deviceData.location || 'Não especificado';
       
-      // Atualizar com device_id e serial_number
-      await client.query(`
+      // Atualizar com device_id, serial_number e location
+      await pool.query(`
         UPDATE devices 
-        SET device_id = $1, serial_number = $2, updated_at = NOW()
-        WHERE id = $3
-      `, [deviceId, serialNumber, result.rows[0].id]);
-      
-      await client.query('COMMIT');
+        SET device_id = $1, serial_number = $2, location = $3, updated_at = NOW()
+        WHERE id = $4
+      `, [deviceId, serialNumber, location, result.rows[0].id]);
       
       // Buscar o registro completo atualizado
-      const finalResult = await client.query(
+      const finalResult = await pool.query(
         'SELECT * FROM devices WHERE id = $1',
         [result.rows[0].id]
       );
@@ -457,11 +455,9 @@ export class DatabaseStorage implements IStorage {
       return finalResult.rows[0];
       
     } catch (error) {
-      await client.query('ROLLBACK');
       console.error('Erro ao criar device:', error);
       throw error;
     } finally {
-      client.release();
       await pool.end();
     }
   }
