@@ -7,8 +7,10 @@ import { Store, X } from 'lucide-react';
 
 interface StoreData {
   id: number;
-  loja: string;
-  nome_loja: string;
+  name: string;
+  address: string;
+  city: string;
+  state: string;
 }
 
 interface StoreSelectorProps {
@@ -56,7 +58,7 @@ export function StoreSelector({
 
   const getStoreName = (storeId: number) => {
     const store = stores.find(s => s.id === storeId);
-    return store?.nome_loja || `Loja ${storeId}`;
+    return store?.name || `Loja ${storeId}`;
   };
 
   return (
@@ -101,8 +103,8 @@ export function StoreSelector({
               disabled={multiSelect && selectedStores.includes(store.id)}
             >
               <div className="flex items-center gap-2">
-                <span className="font-medium">{store.loja}</span>
-                <span className="text-muted-foreground">- {store.nome_loja}</span>
+                <span className="font-medium">{store.name}</span>
+                <span className="text-muted-foreground">- {store.address}</span>
               </div>
             </SelectItem>
           ))}
