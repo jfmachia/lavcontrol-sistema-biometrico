@@ -420,7 +420,7 @@ export class DatabaseStorage implements IStorage {
     
     try {
       const result = await pool.query(`
-        INSERT INTO devices (name, type, status, store_id, device_id, serial_number, created_at, updated_at)
+        INSERT INTO devices (name, type, status, store_id, serial_number, location, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
         RETURNING *
       `, [
@@ -428,11 +428,24 @@ export class DatabaseStorage implements IStorage {
         deviceData.type || 'facial',
         deviceData.status || 'offline',
         deviceData.storeId,
-        deviceData.deviceId,
-        deviceData.serialNumber
+        deviceData.serialNumber,
+        deviceData.location || 'Não especificado'
       ]);
       
-      return result.rows[0];
+      // Atualizar device_id automaticamente baseado no ID
+      const deviceId = `DEV${String(result.rows[0].id).padStart(3, '0')}`;
+      await pool.query(
+        'UPDATE devices SET device_id = $1 WHERE id = $2',
+        [deviceId, result.rows[0].id]
+      );
+      
+      // Retornar o registro atualizado
+      const updatedResult = await pool.query(
+        'SELECT * FROM devices WHERE id = $1',
+        [result.rows[0].id]
+      );
+      
+      return updatedResult.rows[0];
     } catch (error) {
       console.error('Erro ao criar device:', error);
       throw error;
