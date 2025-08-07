@@ -420,23 +420,24 @@ export class DatabaseStorage implements IStorage {
     
     try {
       const result = await pool.query(`
-        INSERT INTO devices (name, type, status, store_id, serial_number, location, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+        INSERT INTO devices (name, type, status, store_id, location, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
         RETURNING *
       `, [
         deviceData.name,
         deviceData.type || 'facial',
         deviceData.status || 'offline',
         deviceData.storeId,
-        deviceData.serialNumber,
         deviceData.location || 'Não especificado'
       ]);
       
-      // Atualizar device_id automaticamente baseado no ID
+      // Atualizar device_id e serial_number automaticamente baseado no ID
       const deviceId = `DEV${String(result.rows[0].id).padStart(3, '0')}`;
+      const serialNumber = deviceData.serialNumber || `SN${String(result.rows[0].id).padStart(6, '0')}`;
+      
       await pool.query(
-        'UPDATE devices SET device_id = $1 WHERE id = $2',
-        [deviceId, result.rows[0].id]
+        'UPDATE devices SET device_id = $1, serial_number = $2 WHERE id = $3',
+        [deviceId, serialNumber, result.rows[0].id]
       );
       
       // Retornar o registro atualizado
@@ -485,10 +486,6 @@ export class DatabaseStorage implements IStorage {
       if (updateData.location) {
         fields.push(`location = $${paramCount++}`);
         values.push(updateData.location);
-      }
-      if (updateData.deviceId) {
-        fields.push(`device_id = $${paramCount++}`);
-        values.push(updateData.deviceId);
       }
       if (updateData.serialNumber) {
         fields.push(`serial_number = $${paramCount++}`);
