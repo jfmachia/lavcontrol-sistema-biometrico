@@ -20,6 +20,7 @@ import Login from "@/pages/login";
 import Register from "@/pages/register";
 import StoresView from "@/components/stores-view";
 import AlertsView from "@/components/alerts-view";
+import Logs from "@/pages/logs";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -145,6 +146,12 @@ function Router() {
       <Route path="/settings">
         <ProtectedRoute>
           <Settings />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/logs">
+        <ProtectedRoute>
+          <Logs />
         </ProtectedRoute>
       </Route>
       

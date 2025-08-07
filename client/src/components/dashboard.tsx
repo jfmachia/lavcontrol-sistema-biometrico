@@ -301,21 +301,21 @@ export function Dashboard() {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Button 
-              onClick={() => handleQuickAction('/store-management')}
+              onClick={() => handleQuickAction('/stores')}
               className="lavcontrol-button-primary p-4 h-auto flex flex-col items-center gap-2 hover:opacity-90 transition-opacity"
             >
               <Store className="w-6 h-6" />
               <span className="text-sm font-medium">Nova Loja</span>
             </Button>
             <Button 
-              onClick={() => handleQuickAction('/user-management')}
+              onClick={() => handleQuickAction('/users-management')}
               className="lavcontrol-button-primary p-4 h-auto flex flex-col items-center gap-2 hover:opacity-90 transition-opacity"
             >
               <Users className="w-6 h-6" />
               <span className="text-sm font-medium">Novo Usuário</span>
             </Button>
             <Button 
-              onClick={() => handleQuickAction('/device-management')}
+              onClick={() => handleQuickAction('/devices')}
               className="lavcontrol-button-primary p-4 h-auto flex flex-col items-center gap-2 hover:opacity-90 transition-opacity"
             >
               <Smartphone className="w-6 h-6" />
