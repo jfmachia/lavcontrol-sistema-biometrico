@@ -1,0 +1,76 @@
+version: "3.7"
+services:  
+
+## --------------------------- LAVCONTROL --------------------------- ##
+
+  lavcontrol:
+    image: jfmachia/lavcontrol:latest ## Imagem do LavControl
+
+    networks:
+      - laveagora ## Nome da rede interna
+
+    environment:
+      ## Aplicação
+      - NODE_ENV=production
+      - PORT=5000
+      
+      ## PostgreSQL VPS (usando as credenciais existentes)
+      - DB_HOST=148.230.78.128
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=929d54bc0ff22387163f04cfb3b3d0fa
+      - DB_NAME=postgres
+      - DATABASE_URL=postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres
+      
+      ## MQTT
+      - MQTT_BROKER_URL=broker.emqx.io
+      - MQTT_PORT=1883
+      
+      ## JWT e Session (Configure com valores seguros)
+      - JWT_SECRET=sua-chave-jwt-super-segura-de-32-caracteres-minimo-aqui
+      - SESSION_SECRET=sua-chave-sessao-super-segura-de-32-caracteres-minimo-aqui
+      
+      ## CORS
+      - ALLOWED_ORIGINS=https://lavcontrol.deliwise.com.br,http://localhost:5000
+
+    deploy:
+      mode: replicated
+      replicas: 2
+      placement:
+          constraints:
+            - node.role == manager
+      resources:
+          limits:
+            cpus: '1'
+            memory: 512M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+      labels:
+          - traefik.enable=true
+          - traefik.http.routers.lavcontrol.rule=Host(`lavcontrol.deliwise.com.br`) ## URL da Aplicação
+          - traefik.http.services.lavcontrol.loadbalancer.server.port=5000
+          - traefik.http.routers.lavcontrol.service=lavcontrol
+          - traefik.http.routers.lavcontrol.tls.certresolver=letsencryptresolver
+          - traefik.http.routers.lavcontrol.entrypoints=websecure
+          - traefik.http.routers.lavcontrol.tls=true
+          
+          ## Middleware de segurança (opcional)
+          - traefik.http.routers.lavcontrol.middlewares=lavcontrol-headers
+          - traefik.http.middlewares.lavcontrol-headers.headers.customrequestheaders.X-Forwarded-Proto=https
+          - traefik.http.middlewares.lavcontrol-headers.headers.framedeny=true
+          - traefik.http.middlewares.lavcontrol-headers.headers.contenttypenosniff=true
+          - traefik.http.middlewares.lavcontrol-headers.headers.browserxssfilter=true
+
+## --------------------------- LAVCONTROL --------------------------- ##
+    
+networks:
+  laveagora: ## Nome da rede interna
+    name: laveagora ## Nome da rede interna
+    external: true
