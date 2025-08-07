@@ -114,12 +114,12 @@ function SystemHeader() {
   const logoUrl = (config as any)?.logo_url;
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-col items-center gap-2">
       {logoUrl ? (
         <img 
           src={logoUrl} 
           alt="Logo" 
-          className="h-8 w-8 object-contain rounded"
+          className="h-12 w-12 object-contain rounded"
           onError={(e) => {
             e.currentTarget.style.display = 'none';
             e.currentTarget.nextElementSibling?.classList.remove('hidden');
@@ -127,7 +127,7 @@ function SystemHeader() {
         />
       ) : null}
       <Building className={cn("h-6 w-6 text-primary", logoUrl && "hidden")} />
-      <span className="text-xl font-bold">{systemName}</span>
+      <span className="text-lg font-bold text-center">{systemName}</span>
     </div>
   );
 }
