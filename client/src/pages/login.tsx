@@ -6,8 +6,52 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Shield } from "lucide-react";
+import { Shield, Building } from "lucide-react";
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+
+// Componente para Header do Sistema no Login
+function LoginSystemHeader() {
+  const { data: config } = useQuery({ queryKey: ["/api/config"] });
+  const systemName = (config as any)?.sistema_nome || "LavControl";
+  const logoUrl = (config as any)?.logo_url;
+
+  return (
+    <div className="text-center">
+      {logoUrl ? (
+        <div className="mx-auto mb-4">
+          <img 
+            src={logoUrl} 
+            alt="Logo" 
+            className="object-contain rounded mx-auto"
+            style={{
+              height: "48px",
+              width: "auto",
+              maxWidth: "120px"
+            }}
+            onError={(e) => {
+              // Fallback para o ícone padrão se a imagem falhar
+              e.currentTarget.style.display = 'none';
+              const fallback = e.currentTarget.parentElement?.querySelector('.fallback-icon');
+              if (fallback) {
+                fallback.classList.remove('hidden');
+              }
+            }}
+          />
+          <div className="fallback-icon hidden mx-auto h-12 w-12 bg-primary rounded-lg flex items-center justify-center">
+            <Building className="text-white h-6 w-6" />
+          </div>
+        </div>
+      ) : (
+        <div className="mx-auto h-12 w-12 bg-primary rounded-lg flex items-center justify-center mb-4">
+          <Building className="text-white h-6 w-6" />
+        </div>
+      )}
+      <h2 className="mt-6 text-3xl font-bold text-gray-900">{systemName}</h2>
+      <p className="mt-2 text-sm text-gray-600">Entre na sua conta para acessar o sistema</p>
+    </div>
+  );
+}
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -41,13 +85,7 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
       <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <div className="mx-auto h-12 w-12 bg-primary rounded-lg flex items-center justify-center">
-            <Shield className="text-white text-xl" />
-          </div>
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">AccessControl SaaS</h2>
-          <p className="mt-2 text-sm text-gray-600">Entre na sua conta para acessar o sistema</p>
-        </div>
+        <LoginSystemHeader />
         
         <Card>
           <CardContent className="pt-6">
