@@ -1755,11 +1755,33 @@ export class DatabaseStorage implements IStorage {
     });
     
     try {
-      await pool.query('DELETE FROM stores WHERE id = $1', [id]);
-      console.log('Loja deletada com sucesso, ID:', id);
+      console.log('🗑️ Tentando deletar loja ID:', id);
+      
+      // Primeiro, verificar se a loja existe
+      const checkResult = await pool.query('SELECT id, name FROM stores WHERE id = $1', [id]);
+      console.log('📋 Loja encontrada antes do delete:', checkResult.rows);
+      
+      if (checkResult.rows.length === 0) {
+        console.log('⚠️ Loja não encontrada no banco, ID:', id);
+        return; // Não é erro, apenas não existe
+      }
+      
+      // Tentar deletar
+      const deleteResult = await pool.query('DELETE FROM stores WHERE id = $1', [id]);
+      console.log('✅ Comando DELETE executado. Linhas afetadas:', deleteResult.rowCount);
+      
+      // Verificar se foi realmente deletada
+      const verifyResult = await pool.query('SELECT id FROM stores WHERE id = $1', [id]);
+      if (verifyResult.rows.length === 0) {
+        console.log('✅ Loja deletada com sucesso, ID:', id);
+      } else {
+        console.log('❌ Loja ainda existe após DELETE, ID:', id);
+        throw new Error('Loja não foi deletada - pode haver constraints impedindo');
+      }
+      
     } catch (error) {
-      console.error('Erro ao deletar loja:', error);
-      throw new Error('Falha ao deletar a loja');
+      console.error('❌ Erro ao deletar loja:', error);
+      throw new Error('Falha ao deletar a loja: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
     } finally {
       await pool.end();
     }
