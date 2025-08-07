@@ -94,24 +94,23 @@ export function BiometryManagement() {
 
   // Função para buscar dispositivos de uma loja específica
   const getStoreDevices = (storeId: number) => {
-    const store = stores?.find((s: any) => s.id === storeId);
-    console.log('🔍 Store data:', store); // Debug log
+    // Se não há dados ainda, retornar vazio
+    if (!stores || !allDevices) return [];
     
-    // Verificar ambos os campos possíveis (português e inglês)
-    const biometryField = store?.biometria || store?.biometry;
-    console.log('🔍 Biometry field:', biometryField); // Debug log
+    const store = stores.find((s: any) => s.id === storeId);
+    if (!store) return [];
     
-    if (!store || !biometryField || biometryField === null) return [];
+    // Verificar se a loja tem dispositivo vinculado no campo biometria
+    const biometryDeviceId = store.biometria;
+    if (!biometryDeviceId) return [];
     
-    const linkedDevice = allDevices?.find((device: any) => {
-      const match = device.id.toString() === biometryField.toString() || 
-                   device.deviceId === biometryField ||
-                   device.device_id === biometryField;
-      console.log('🔍 Checking device:', device.id, device.deviceId, 'against:', biometryField, 'match:', match);
-      return match;
-    });
+    // Encontrar o dispositivo pelo ID
+    const linkedDevice = allDevices.find((device: any) => 
+      device.id === parseInt(biometryDeviceId) ||
+      device.id === biometryDeviceId ||
+      device.deviceId === biometryDeviceId
+    );
     
-    console.log('🔍 Found linked device:', linkedDevice);
     return linkedDevice ? [linkedDevice] : [];
   };
 
