@@ -1484,6 +1484,50 @@ export class DatabaseStorage implements IStorage {
       await pool.end();
     }
   }
+
+  // ===== DASHBOARD TRAFFIC CHART =====
+  async getDashboardTrafficChart(): Promise<any[]> {
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+      ssl: false,
+    });
+    
+    try {
+      // Get traffic data for the last 7 days
+      const result = await pool.query(`
+        SELECT 
+          DATE(created_at) as date,
+          COUNT(*) as count,
+          COUNT(CASE WHEN access_type = 'entry' THEN 1 END) as entries,
+          COUNT(CASE WHEN access_type = 'exit' THEN 1 END) as exits
+        FROM access_logs 
+        WHERE created_at >= CURRENT_DATE - INTERVAL '7 days'
+        GROUP BY DATE(created_at)
+        ORDER BY date ASC
+      `);
+      
+      // Fill in missing dates with 0 counts
+      const chartData = [];
+      const now = new Date();
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        const dayData = result.rows.find(row => row.date === dateStr);
+        chartData.push({
+          date: dateStr,
+          count: dayData ? parseInt(dayData.count) : 0,
+          entries: dayData ? parseInt(dayData.entries) : 0,
+          exits: dayData ? parseInt(dayData.exits) : 0
+        });
+      }
+      
+      return chartData;
+    } finally {
+      await pool.end();
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();

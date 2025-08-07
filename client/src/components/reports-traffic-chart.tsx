@@ -25,12 +25,15 @@ import { StoreSelector } from './store-selector';
 
 interface AccessLog {
   id: number;
-  userId: number;
-  deviceId: number | null;
-  action: string;
+  user_id: string;
+  client_id: number;
+  device_id: number | null;
+  store_id: number;
+  access_type: string;
   method: string;
-  status: string;
-  timestamp: string;
+  success: boolean;
+  details?: string;
+  created_at: string;
   user_name?: string;
   store_name?: string;
 }
@@ -68,17 +71,17 @@ export function ReportsTrafficChart({ className }: ReportsTrafficChartProps) {
     switch (timeRange) {
       case 'today':
         filteredLogs = accessLogs.filter(log => {
-          const logDate = new Date(log.timestamp);
+          const logDate = new Date(log.created_at);
           return logDate.toDateString() === now.toDateString();
         });
         break;
       case 'week':
         const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        filteredLogs = accessLogs.filter(log => new Date(log.timestamp) >= weekAgo);
+        filteredLogs = accessLogs.filter(log => new Date(log.created_at) >= weekAgo);
         break;
       case 'month':
         const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        filteredLogs = accessLogs.filter(log => new Date(log.timestamp) >= monthAgo);
+        filteredLogs = accessLogs.filter(log => new Date(log.created_at) >= monthAgo);
         break;
     }
 
@@ -101,7 +104,7 @@ export function ReportsTrafficChart({ className }: ReportsTrafficChartProps) {
       const hourlyData = Array.from({ length: 24 }, (_, hour) => {
         const hourStr = `${hour.toString().padStart(2, '0')}:00`;
         const hourLogs = filteredLogs.filter(log => {
-          const logHour = new Date(log.timestamp).getHours();
+          const logHour = new Date(log.created_at).getHours();
           return logHour === hour;
         });
 

@@ -325,7 +325,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dashboard routes
-  app.get("/api/dashboard/stats", authenticateToken, async (req, res) => {
+  app.get("/api/dashboard/stats", async (req, res) => {
     try {
       const stats = await storage.getDashboardStats();
       res.json(stats);
@@ -334,7 +334,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/dashboard/traffic-chart", authenticateToken, async (req, res) => {
+  app.get("/api/dashboard/traffic-chart", async (req, res) => {
     try {
       const chartData = await storage.getTrafficChart();
       res.json(chartData);
@@ -982,6 +982,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error: any) {
       res.status(500).json({ message: error.message || "Erro ao atualizar status do usuário" });
+    }
+  });
+
+  // ===== REPORTS ROUTES =====
+  // Traffic chart for reports
+  app.get("/api/dashboard/traffic-chart", async (req, res) => {
+    try {
+      const trafficData = await storage.getDashboardTrafficChart();
+      res.json(trafficData);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Erro ao buscar dados de tráfego" });
+    }
+  });
+
+  // Store traffic report
+  app.get("/api/reports/store-traffic", async (req, res) => {
+    try {
+      const storeId = req.query.store_id ? parseInt(req.query.store_id as string) : undefined;
+      const timeRange = req.query.timeRange as string || 'today';
+      
+      const { Pool } = await import('pg');
+      const pool = new Pool({
+        connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
+        ssl: false,
+      });
+      
+      try {
+        let query = `
+          SELECT 
+            al.store_id,
+            s.name as store_name,
+            COUNT(*) as total_access,
+            COUNT(CASE WHEN al.access_type = 'entry' THEN 1 END) as entries,
+            COUNT(CASE WHEN al.access_type = 'exit' THEN 1 END) as exits,
+            DATE(al.created_at) as access_date,
+            EXTRACT(HOUR FROM al.created_at) as access_hour
+          FROM access_logs al
+          LEFT JOIN stores s ON al.store_id = s.id
+          WHERE 1=1
+        `;
+        
+        const params: any[] = [];
+        const now = new Date();
+        
+        if (timeRange === 'today') {
+          query += ` AND DATE(al.created_at) = CURRENT_DATE`;
+        } else if (timeRange === 'week') {
+          query += ` AND al.created_at >= $${params.length + 1}`;
+          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          params.push(weekAgo.toISOString());
+        } else if (timeRange === 'month') {
+          query += ` AND al.created_at >= $${params.length + 1}`;
+          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          params.push(monthAgo.toISOString());
+        }
+        
+        if (storeId) {
+          query += ` AND al.store_id = $${params.length + 1}`;
+          params.push(storeId);
+        }
+        
+        query += `
+          GROUP BY al.store_id, s.name, DATE(al.created_at), EXTRACT(HOUR FROM al.created_at)
+          ORDER BY access_date DESC, access_hour DESC
+        `;
+        
+        const result = await pool.query(query, params);
+        
+        res.json(result.rows);
+      } finally {
+        await pool.end();
+      }
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Erro ao buscar relatório de tráfego" });
     }
   });
 
