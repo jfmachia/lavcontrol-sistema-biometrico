@@ -27,8 +27,8 @@ services:
       - MQTT_PORT=1883
       
       ## JWT e Session (Configure com valores seguros)
-      - JWT_SECRET=sua-chave-jwt-super-segura-de-32-caracteres-minimo-aqui
-      - SESSION_SECRET=sua-chave-sessao-super-segura-de-32-caracteres-minimo-aqui
+      - JWT_SECRET=YTQ0HIOjuGcFP76AHcrxtSixT9Cme7bhq08MyZCNDbE
+      - SESSION_SECRET=SPJTZj_o57vD3nQiuc-hm75HJDt2sbLYK2X9sbW2PY4
       
       ## CORS
       - ALLOWED_ORIGINS=https://lavcontrol.deliwise.com.br,http://localhost:5000

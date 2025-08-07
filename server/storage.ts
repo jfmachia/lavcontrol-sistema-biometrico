@@ -1697,31 +1697,6 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // ===== USER UPDATE METHODS =====
-  async updateUser(id: number, data: any): Promise<any> {
-    const { Pool } = await import('pg');
-    const pool = new Pool({
-      connectionString: 'postgresql://postgres:929d54bc0ff22387163f04cfb3b3d0fa@148.230.78.128:5432/postgres',
-      ssl: false,
-    });
-    
-    try {
-      const result = await pool.query(`
-        UPDATE users 
-        SET name = $1, email = $2, role = $3, alert_level = $4, updated_at = NOW()
-        WHERE id = $5
-        RETURNING id, name, email, role, alert_level, is_active, created_at, updated_at
-      `, [data.name, data.email, data.role, data.alert_level, id]);
-      
-      if (result.rows.length === 0) {
-        throw new Error('Usuário não encontrado');
-      }
-      
-      return result.rows[0];
-    } finally {
-      await pool.end();
-    }
-  }
 
   // ===== DASHBOARD TRAFFIC CHART =====
   async getDashboardTrafficChart(): Promise<any[]> {
