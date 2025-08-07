@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -40,6 +41,7 @@ interface TrafficData {
 
 export function Dashboard() {
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
 
   const { data: stats } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
@@ -160,6 +162,11 @@ export function Dashboard() {
       bgColor: "bg-cyan-500/20"
     }
   ];
+
+  // Handlers para as ações rápidas
+  const handleQuickAction = (route: string) => {
+    setLocation(route);
+  };
 
   return (
     <div className="space-y-6 p-6">
@@ -293,22 +300,34 @@ export function Dashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <button className="lavcontrol-button-primary p-4 rounded-lg text-center hover:opacity-90 transition-opacity">
-              <Store className="w-6 h-6 mx-auto mb-2" />
+            <Button 
+              onClick={() => handleQuickAction('/store-management')}
+              className="lavcontrol-button-primary p-4 h-auto flex flex-col items-center gap-2 hover:opacity-90 transition-opacity"
+            >
+              <Store className="w-6 h-6" />
               <span className="text-sm font-medium">Nova Loja</span>
-            </button>
-            <button className="lavcontrol-button-primary p-4 rounded-lg text-center hover:opacity-90 transition-opacity">
-              <Users className="w-6 h-6 mx-auto mb-2" />
+            </Button>
+            <Button 
+              onClick={() => handleQuickAction('/user-management')}
+              className="lavcontrol-button-primary p-4 h-auto flex flex-col items-center gap-2 hover:opacity-90 transition-opacity"
+            >
+              <Users className="w-6 h-6" />
               <span className="text-sm font-medium">Novo Usuário</span>
-            </button>
-            <button className="lavcontrol-button-primary p-4 rounded-lg text-center hover:opacity-90 transition-opacity">
-              <Smartphone className="w-6 h-6 mx-auto mb-2" />
+            </Button>
+            <Button 
+              onClick={() => handleQuickAction('/device-management')}
+              className="lavcontrol-button-primary p-4 h-auto flex flex-col items-center gap-2 hover:opacity-90 transition-opacity"
+            >
+              <Smartphone className="w-6 h-6" />
               <span className="text-sm font-medium">Vincular Dispositivo</span>
-            </button>
-            <button className="lavcontrol-button-primary p-4 rounded-lg text-center hover:opacity-90 transition-opacity">
-              <Shield className="w-6 h-6 mx-auto mb-2" />
+            </Button>
+            <Button 
+              onClick={() => handleQuickAction('/logs')}
+              className="lavcontrol-button-primary p-4 h-auto flex flex-col items-center gap-2 hover:opacity-90 transition-opacity"
+            >
+              <Shield className="w-6 h-6" />
               <span className="text-sm font-medium">Ver Logs</span>
-            </button>
+            </Button>
           </div>
         </CardContent>
       </Card>
