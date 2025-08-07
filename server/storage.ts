@@ -30,6 +30,7 @@ export interface IStorage {
   getStore(id: number): Promise<Store | undefined>;
   createStore(store: InsertStore): Promise<Store>;
   updateStore(id: number, store: Partial<InsertStore>): Promise<Store | undefined>;
+  deleteStore(id: number): Promise<void>;
   getStores(): Promise<Store[]>;
   getStoresByUser(userId: number): Promise<Store[]>;
   getStoreStatistics(): Promise<{
@@ -1737,6 +1738,28 @@ export class DatabaseStorage implements IStorage {
       }
       
       return chartData;
+    } finally {
+      await pool.end();
+    }
+  }
+
+  async deleteStore(id: number): Promise<void> {
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      host: '148.230.78.128',
+      port: 5432,
+      user: 'postgres',
+      password: '929d54bc0ff22387163f04cfb3b3d0fa',
+      database: 'postgres',
+      ssl: false,
+    });
+    
+    try {
+      await pool.query('DELETE FROM stores WHERE id = $1', [id]);
+      console.log('Loja deletada com sucesso, ID:', id);
+    } catch (error) {
+      console.error('Erro ao deletar loja:', error);
+      throw new Error('Falha ao deletar a loja');
     } finally {
       await pool.end();
     }

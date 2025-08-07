@@ -545,6 +545,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/stores/:id", async (req, res) => {
+    try {
+      const storeId = parseInt(req.params.id);
+      console.log("Deletando loja ID:", storeId);
+      await storage.deleteStore(storeId);
+      res.json({ message: "Loja deletada com sucesso" });
+    } catch (error: any) {
+      console.error("Erro ao deletar loja:", error);
+      res.status(500).json({ message: error.message || "Failed to delete store" });
+    }
+  });
+
   app.post("/api/devices", authenticateToken, async (req, res) => {
     try {
       const { name, deviceId, location, storeId, status } = req.body;

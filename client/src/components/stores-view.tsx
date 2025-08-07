@@ -38,6 +38,7 @@ export default function StoresView() {
     address: "",
     phone: ""
   });
+  const [deleteConfirmStore, setDeleteConfirmStore] = useState<any>(null);
 
   const { data: stores = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/stores"],
@@ -98,6 +99,29 @@ export default function StoresView() {
       toast({
         title: "Erro ao atualizar",
         description: error.message || "Não foi possível atualizar a loja.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const deleteStoreMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest(`/api/stores/${id}`, "DELETE");
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/stores"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stores/statistics"] });
+      setDeleteConfirmStore(null);
+      toast({
+        title: "Loja deletada",
+        description: "A loja foi removida com sucesso.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao deletar",
+        description: error.message || "Não foi possível deletar a loja.",
         variant: "destructive",
       });
     }
@@ -467,9 +491,44 @@ export default function StoresView() {
                       )}
                     </DialogContent>
                   </Dialog>
-                  <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-red-600 hover:text-red-700"
+                        onClick={() => setDeleteConfirmStore(store)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Confirmar Exclusão</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <p>Tem certeza que deseja deletar a loja <strong>{store.name || store.nome_loja}</strong>?</p>
+                        <p className="text-sm text-muted-foreground">
+                          Esta ação não pode ser desfeita. Todos os dados relacionados a esta loja serão perdidos.
+                        </p>
+                        <div className="flex justify-end space-x-2">
+                          <Button 
+                            variant="outline" 
+                            onClick={() => setDeleteConfirmStore(null)}
+                          >
+                            Cancelar
+                          </Button>
+                          <Button 
+                            variant="destructive"
+                            onClick={() => deleteStoreMutation.mutate(store.id)}
+                            disabled={deleteStoreMutation.isPending}
+                          >
+                            {deleteStoreMutation.isPending ? "Deletando..." : "Deletar"}
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </CardContent>
             </Card>
